@@ -1,0 +1,12 @@
+LIBRARY chapro
+EXPORTS cha_version
+cha_fb_prepare
+cha_fb_process
+cha_fb_cleanup
+cha_filterbank_prepare
+cha_filterbank_analyze
+cha_filterbank_synthesize
+cha_filterbank_cleanup
+cha_compressor_prepare
+cha_compressor_process
+cha_compressor_cleanup

@@ -1,0 +1,88 @@
+# makefile for CHAPRO under MacOS
+
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -DSHA
+LFLAGS=-L$(LIBDIR)
+LIBS=-lsigpro -lm -lz
+SCLIB=-larsc $(LIBS)
+CC=gcc -arch i386
+AR=ar
+LIBDIR=/usr/local/lib
+INCDIR=/usr/local/include
+BINDIR=/usr/local/bin
+CHAPRO=cha_core.o rfft.o \
+	agc_prepare.o agc_process.o \
+	firfb_prepare.o firfb_process.o \
+	cgtfb_prepare.o cgtfb_process.o \
+	feedback_prepare.o feedback_process.o \
+	compressor_prepare.o compressor_process.o
+PGMS=tst_gfa tst_gfio tst_ffa tst_ffio 
+
+all: $(PGMS)
+
+tst: tstfb tstft tstsc
+
+tstfb: tst_gfa tst_gfio 
+	./tst_gfa
+	./tst_gfio
+	./tst_gfio -t
+
+tstft: tst_ffa tst_ffio 
+	./tst_ffa
+	./tst_ffio
+	./tst_ffio -t
+
+tstsc: tst_gfsc gha_demo
+	./tst_gfsc
+	./gha_demo
+
+tst_gfa : tst_gfa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_gfio : tst_gfio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_gfsc : tst_gfsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(SCLIB)
+
+tst_ffa : tst_ffa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_ffio : tst_ffio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+gha_demo : gha_demo.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(SCLIB)
+
+libchapro.a: $(CHAPRO)
+	$(AR) rus libchapro.a $(CHAPRO)
+
+install: libchapro.a
+	cp -f libchapro.a $(LIBDIR)
+	cp -f chapro.h $(INCDIR)
+
+zipsrc:
+	zip chaprosc *.mgw *.lnx *.mac
+	zip chaprosc *.h *.c *.plt *.std *.m *.def
+	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
+	zip chaprosc configure configure.bat 
+	zip chaprosc compress.bat suppress.bat shacmp.bat
+
+dist: zipsrc 
+	cp -f chapr*.zip ../dist
+	rm -f *.zip
+
+clean:
+	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
+	rm -f out*.mat out*.wav *.cfg *~
+
+# dependencies
+cha_core.o : chapro.h version.h
+cha_gf_prepare.o : chapro.h cha_gf.h
+cha_gf_process.o : chapro.h cha_gf.h
+compressor_prepare.o : chapro.h cha_gf.h
+compressor_process.o : chapro.h cha_gf.h
+filterbank_process.o : chapro.h cha_gf.h
+filterbank_prepare.o : chapro.h cha_gf.h
+tst_gfa.o : chapro.h cha_gf.h
+tst_gfio.o : chapro.h cha_gf.h
+tst_gfsc.o : chapro.h cha_gf.h
