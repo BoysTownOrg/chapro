@@ -6,7 +6,8 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
-#include "sigpro.h"
+
+#include <sigpro.h>
 #include "chapro.h"
 #include "cha_fb.h"
 

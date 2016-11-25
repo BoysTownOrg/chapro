@@ -7,8 +7,9 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
-#include "arsclib.h"
-#include "sigpro.h"
+
+#include <arsclib.h>
+#include <sigpro.h>
 #include "chapro.h"
 #include "cha_ff.h"
 

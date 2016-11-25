@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "sigpro.h"
+#include <sigpro.h>
 #include "chapro.h"
 #include "cha_ff.h"
 
