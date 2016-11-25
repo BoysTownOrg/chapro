@@ -121,9 +121,9 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
     x_spl = 20 * log10(RMS(x, n) / spl_ref);
     maxdB = dsl->maxdB;
     scale = pow(10, (x_spl - maxdB) / 20) / RMS(x, n);
-    cha_firfb_prepare(cp, dsl->cross_freq, dsl->nchannel, fs, nw, wt, cs, 1, 1);
-    cha_agc_prepare(cp, dsl, &gha, scale);
     nc = dsl->nchannel;
+    cha_firfb_prepare(cp, dsl->cross_freq, nc, fs, nw, wt, cs, 1, 1);
+    cha_agc_prepare(cp, dsl, &gha, scale);
     WDRC(cp, x, y, n, nc);
 }
 
@@ -132,7 +132,7 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 int
 main(int ac, char *av[])
 {
-    float fs, *x, *y;
+    float fs, t1, t2, *x, *y;
     int n;
     static char *ifn = "test/cat.wav";
     static char *ofn = "test/gha_demo.mat";
@@ -150,8 +150,13 @@ main(int ac, char *av[])
     x = audio_read(ifn, &fs, &n);
     y = (float *) calloc(n, sizeof(float));
     set_spl(x, n, speech_lev, spl_ref);
+    sp_tic();
     amplify(x, y, n, fs, &dsl);
+    t1 = sp_toc();
     save_mat(ofn, fs, x, y, n);
+    t2 = n / fs;
+    printf("%s -> %s\n", ifn, ofn);
+    printf("wall_time=%.3fs wave_time=%.3fs ratio=%.3f\n", t1, t2, t1 / t2);
     free(y);
 
     return (0);
