@@ -161,7 +161,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs, 1, 1);
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_ff_data.h");

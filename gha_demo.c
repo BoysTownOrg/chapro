@@ -121,7 +121,7 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
     x_spl = 20 * log10(RMS(x, n) / spl_ref);
     maxdB = dsl->maxdB;
     scale = pow(10, (x_spl - maxdB) / 20) / RMS(x, n);
-    cha_firfb_prepare(cp, dsl->cross_freq, dsl->nchannel, fs, nw, wt, cs);
+    cha_firfb_prepare(cp, dsl->cross_freq, dsl->nchannel, fs, nw, wt, cs, 1, 1);
     cha_agc_prepare(cp, dsl, &gha, scale);
     nc = dsl->nchannel;
     WDRC(cp, x, y, n, nc);

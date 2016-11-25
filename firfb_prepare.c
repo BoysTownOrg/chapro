@@ -106,7 +106,8 @@ fir_transform_lc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
 /***********************************************************/
 
 FUNC(int)
-cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double fs, int nw, int wt, int cs)
+cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double fs, 
+    int nw, int wt, int cs, int nmic, int nrec)
 {
     float   *bb;
     int      ns, nt;

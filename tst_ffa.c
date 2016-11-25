@@ -88,7 +88,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     init_wav(io);
     ns = io->nsmp;
     // prepare FIRFB
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs, 1, 1);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // output buffer

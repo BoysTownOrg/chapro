@@ -36,7 +36,8 @@ typedef struct {
 
 // firfb module
 
-FUNC(int) cha_firfb_prepare(CHA_PTR, double *, int, double, int, int, int);
+FUNC(int) cha_firfb_prepare(CHA_PTR, double *, int, double, 
+                            int, int, int, int, int);
 FUNC(void) cha_firfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_firfb_synthesize(CHA_PTR, float *, float *, int);
 
