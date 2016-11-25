@@ -73,7 +73,7 @@ dist: zipsrc
 
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
-	rm -f out*.mat out*.wav *.cfg *~
+	rm -f *.mat *.wav *.cfg *~ test/[fg]*.*
 
 # dependencies
 cha_core.o : chapro.h version.h
