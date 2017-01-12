@@ -1,10 +1,13 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.04, 15-Nov-2016"
-#define NOTICE	"Copyright 2005-2016 Boys Town National Research Hospital"
+#define VER     "CHAPro version 0.05, 12-Jan-17"
+#define NOTICE	"Copyright 2016-2017 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.05 - 12-Jan-17
+> Fixed allocation of chunk buffer in tst_gfsc.c/prepare
+> Fixed file-to-file processing in tst_gfsc.c/{prepare,process,cleanup}
 0.04 - 15-Nov-16
 > Four modules implemented:
 >   complex-gammatone filterbank

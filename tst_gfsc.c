@@ -355,8 +355,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fprintf(stdout, "compression gain=%.0f, ds=%d\n", gn, ds);
     // initialize waveform
     init_wav(io);
-    cs = io->nsmp * io->mseg;
-    fcopy(io->owav, io->iwav, cs);
+    cs = io->nsmp;
+    fcopy(io->owav, io->iwav, cs * io->mseg);
     sp_tic();
     // prepare filterbank
     cgtfb_init(&cls, sr);
@@ -364,8 +364,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fc = cls.fc;
     bw = cls.bw;
     cha_cgtfb_prepare(cp, fc, bw, sr, gd, tw, nc, cs, 1, 1);
-    // chunk size
-    cs = io->nsmp * io->mseg;
+    // prepare chunk buffer
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
     compressor_init(&cls, gn);
     cha_compressor_prepare(cp, &cls, lr, ds);
@@ -378,9 +378,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         fprintf(stdout, "\n");
     }
     io->pseg = io->mseg;
-    if (io->ofn) {
-        write_wave(io);
-    } else {
+    if (!io->ofn) {
         init_aud(io);
     }
 }
@@ -391,6 +389,7 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     if (io->ofn) {
+        gfic_process(cp, io->iwav, io->owav);
         return;
     }
     while (get_aud(io)) {
@@ -403,7 +402,11 @@ process(I_O *io, CHA_PTR cp)
 static void
 cleanup(I_O *io, CHA_PTR cp)
 {
-    stop_wav(io);
+    if (io->ofn) {
+        write_wave(io);
+    } else {
+        stop_wav(io);
+    }
     cha_cleanup(cp);
 }
 
