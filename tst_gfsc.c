@@ -36,7 +36,6 @@ usage()
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-k N  compression kneepoint=N (dB) [0]\n");
     fprintf(stdout, "-m    output MAT file\n");
-    fprintf(stdout, "-s N  suppress with gain=N (dB)\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
 }

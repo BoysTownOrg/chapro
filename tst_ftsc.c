@@ -29,7 +29,7 @@ typedef struct {
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_ffsc [-options]\n");
+    fprintf(stdout, "usage: tst_ffsc [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
@@ -43,6 +43,25 @@ version()
 {
     fprintf(stdout, "%s\n", cha_version());
     exit(0);
+}
+
+static int
+mat_file(char *fn)
+{
+    int d;
+
+    if (fn) {
+        d = strlen(fn) - 4;
+        if (d > 0) {
+            if ((tolower(fn[d + 1]) == 'm')
+             && (tolower(fn[d + 2]) == 'a')
+             && (tolower(fn[d + 3]) == 't')) {
+                return (1);
+            }
+        }
+    }
+
+    return (0);
 }
 
 static void
@@ -69,6 +88,31 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
             break;
         }
     }
+    io->ifn = (ac > 1) ? av[1] : NULL;
+    io->ofn = (ac > 2) ? av[2] : NULL;
+    if (mat_file(io->ofn)) {
+        io->mat = 1;
+    }
+}
+
+static void
+set_spl(float *x, int n, double speech_lev, double spl_ref)
+{
+    float scl;
+    double xx, rms, smsq, lev;
+    int i;
+
+    smsq = 0;
+    for (i = 0; i < n; i++) {
+        xx = x[i];
+        smsq += xx * xx;
+    }
+    rms = sqrt(smsq / n);
+    lev = 20 * log10(rms / spl_ref);
+    scl = (float) pow(10,(speech_lev - lev) / 20);
+    for (i = 0; i < n; i++) {
+        x[i] *= scl;
+    }
 }
 
 static void
@@ -78,6 +122,8 @@ init_wav(I_O *io)
     static char *wfn = "test/ft_output.wav";
     static char *mfn = "test/ft_output.mat";
     static VAR *vl;
+    static double spl_ref = 1.1219e-6;
+    static double speech_lev = 65;
 
     if (io->ifn) {
         // get WAV file info
@@ -96,6 +142,7 @@ init_wav(I_O *io)
         fprintf(stdout, "WAV input: %s", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
+	set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
     } else {    /* 8-second impulse input */
         fprintf(stdout, "impulse response: ");
         io->nwav = round(io->rate * 8);
@@ -162,9 +209,12 @@ fbsc_process(CHA_PTR cp, float *x, float *y)
     int n = CHA_IVAR[_cs];
 
     // process FIRFB+AGC
+    cha_agc_input(cp, x, x, n);
     cha_firfb_analyze(cp, x, z, n);
-    cha_agc_input(cp, z, z, n);
+    cha_agc_channel(cp, z, z, n);
     cha_firfb_synthesize(cp, z, y, n);
+    cha_agc_output(cp, y, y, n);
+
 }
 
 static void
@@ -258,7 +308,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
     char *s;
     double t1, t2, *cf;
-    int nc, nf, cs;
+    int nc, cs;
     static double sr = 24000;       // sampling rate (Hz)
     static double scale = 1;        // input signal scale factor
     static int    nw = 128;         // window size
@@ -278,16 +328,15 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fprintf(stdout, "AGC: nw=%d, ns=%d\n", nw);
     // initialize waveform
     init_wav(io);
-    cs = io->nsmp * io->mseg;
-    fcopy(io->owav, io->iwav, cs);
+    cs = io->nsmp;
+    fcopy(io->owav, io->iwav, cs * io->mseg);
     sp_tic();
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs, 1, 1);
     // prepare chunk buffer
-    nf = nw + 1;
-    cha_allocate(cp, cs * nf * 2, sizeof(float), _cc);
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha, scale);
     // prepare i/o
@@ -300,9 +349,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         fprintf(stdout, "\n");
     }
     io->pseg = io->mseg;
-    if (io->ofn) {
-        write_wave(io);
-    } else {
+    if (!io->ofn) {
         init_aud(io);
     }
 }
@@ -313,6 +360,7 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     if (io->ofn) {
+        fbsc_process(cp, io->iwav, io->owav);
         return;
     }
     while (get_aud(io)) {
@@ -325,6 +373,9 @@ process(I_O *io, CHA_PTR cp)
 static void
 cleanup(I_O *io, CHA_PTR cp)
 {
+    if (io->ofn) {
+        write_wave(io);
+    }
     stop_wav(io);
     cha_cleanup(cp);
 }

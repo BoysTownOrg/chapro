@@ -8,6 +8,7 @@
 0.05 - 12-Jan-17
 > Fixed allocation of chunk buffer in tst_gfsc.c/prepare
 > Fixed file-to-file processing in tst_gfsc.c/{prepare,process,cleanup}
+> Updated tst_ftsc.c
 0.04 - 15-Nov-16
 > Four modules implemented:
 >   complex-gammatone filterbank
