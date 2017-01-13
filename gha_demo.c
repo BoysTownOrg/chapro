@@ -132,7 +132,8 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 int
 main(int ac, char *av[])
 {
-    float fs, t1, t2, *x, *y;
+    double t1, t2;
+    float fs, *x, *y;
     int n;
     static char *ifn = "test/cat.wav";
     static char *ofn = "test/gha_demo.mat";
