@@ -87,7 +87,7 @@ cha_agc_input(CHA_PTR cp, float *x, float *y, int cs)
     tk = (float) CHA_DVAR[_tk];
     cr = (float) CHA_DVAR[_cr];
     bolt = (float) CHA_DVAR[_bolt];
-    ppk = (float *) cp[_ppk] + 1;   // second ppk for output
+    ppk = (float *) cp[_ppk];  // first ppk for input
     compress(cp, x, y, cs, ppk, alfa, beta, tkgn, tk, cr, bolt);
 }
 
