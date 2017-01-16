@@ -9,7 +9,7 @@ AR=ar
 LIBDIR=c:/usr/lib
 INCDIR=c:/usr/include
 BINDIR=c:/usr/bin
-CHAPRO=cha_core.o rfft.o \
+CHAPRO=cha_core.o cha_scale.o rfft.o \
 	agc_prepare.o agc_process.o \
 	firfb_prepare.o firfb_process.o \
 	cgtfb_prepare.o cgtfb_process.o \
