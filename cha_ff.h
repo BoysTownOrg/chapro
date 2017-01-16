@@ -37,13 +37,13 @@ typedef struct {
 // firfb module
 
 FUNC(int) cha_firfb_prepare(CHA_PTR, double *, int, double, 
-                            int, int, int, int, int);
+                            int, int, int);
 FUNC(void) cha_firfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_firfb_synthesize(CHA_PTR, float *, float *, int);
 
 // compressor module
 
-FUNC(int) cha_agc_prepare(CHA_PTR, CHA_DSL *, CHA_WDRC *, double);
+FUNC(int) cha_agc_prepare(CHA_PTR, CHA_DSL *, CHA_WDRC *);
 FUNC(void) cha_agc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_agc_channel(CHA_PTR, float *, float *, int);
 FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
@@ -64,9 +64,8 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 #define _gctkgn   _offset+7
 #define _gcbolt   _offset+8
 #define _gcppk    _offset+9
-#define _xsc      _offset+10
-#define _xpk      _offset+11
-#define _ppk      _offset+12
+#define _xpk      _offset+10
+#define _ppk      _offset+11
 
 // integer variable indices
 
@@ -84,8 +83,7 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 #define _tk       5
 #define _cr       6
 #define _bolt     7
-#define _scl      8
-#define _gcalfa   9
-#define _gcbeta   10
+#define _gcalfa   8
+#define _gcbeta   9
 
 #endif /* CHA_FF_H */

@@ -427,7 +427,7 @@ cgtfb_prep(CHA_PTR cp)
 
 FUNC(int)
 cha_cgtfb_prepare(CHA_PTR cp, double *fc, double *bw, 
-    double sr, double gd, double tw, int nc, int cs, int nmic, int nrec)
+    double sr, double gd, double tw, int nc, int cs)
 {
     if (cs <= 0) {
         return (1);

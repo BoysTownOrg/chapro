@@ -109,7 +109,7 @@ WDRC(CHA_PTR cp, float *x, float *y, int n, int nc)
 static void
 amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 {
-    double x_spl, maxdB, scale;
+    double x_spl, maxdB;
     int nc;
     static int    nw = 256;         // window size
     static int    cs = 32;          // chunk size
@@ -120,10 +120,9 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 
     x_spl = 20 * log10(RMS(x, n) / spl_ref);
     maxdB = dsl->maxdB;
-    scale = pow(10, (x_spl - maxdB) / 20) / RMS(x, n);
     nc = dsl->nchannel;
-    cha_firfb_prepare(cp, dsl->cross_freq, nc, fs, nw, wt, cs, 1, 1);
-    cha_agc_prepare(cp, dsl, &gha, scale);
+    cha_firfb_prepare(cp, dsl->cross_freq, nc, fs, nw, wt, cs);
+    cha_agc_prepare(cp, dsl, &gha);
     WDRC(cp, x, y, n, nc);
 }
 

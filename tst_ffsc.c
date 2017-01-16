@@ -314,7 +314,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     double t1, t2, *cf;
     int nc, cs;
     static double sr = 24000;       // sampling rate (Hz)
-    static double scale = 1;        // input signal scale factor
     static int    nw = 128;         // window size
     static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
     // DSL prescription
@@ -338,11 +337,11 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs, 1, 1);
+    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffers
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AGC
-    cha_agc_prepare(cp, &dsl, &gha, scale);
+    cha_agc_prepare(cp, &dsl, &gha);
     // prepare i/o
     if (io->nseg == 1) {
         t1 = sp_toc();

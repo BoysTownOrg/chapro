@@ -51,6 +51,7 @@ FUNC(int)    cha_data_gen(CHA_PTR, char *);
 FUNC(int)    cha_fft_cr(float *, int);
 FUNC(int)    cha_fft_rc(float *, int);
 FUNC(void)   cha_prepare(CHA_PTR);
+FUNC(void)   cha_scale(float *, int, float);
 FUNC(char *) cha_version(void);
 
 /*****************************************************/

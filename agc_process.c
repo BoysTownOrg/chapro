@@ -79,15 +79,7 @@ FUNC(void)
 cha_agc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
     float alfa, beta, tkgn, tk, cr, bolt, *ppk;
-    float scale, *xsc;
-    int k;
 
-    // scale input signal
-    xsc = (float *) cp[_xsc];
-    scale = (float) CHA_DVAR[_scl];
-    for (k = 0; k < cs; k++) {
-        xsc[k] = x[k] * scale;
-    }
     // initialize WDRC variables
     alfa = (float) CHA_DVAR[_alfa];
     beta = (float) CHA_DVAR[_beta];
@@ -95,8 +87,8 @@ cha_agc_input(CHA_PTR cp, float *x, float *y, int cs)
     tk = (float) CHA_DVAR[_tk];
     cr = (float) CHA_DVAR[_cr];
     bolt = (float) CHA_DVAR[_bolt];
-    ppk = (float *) cp[_ppk];  // first ppk for input
-    compress(cp, xsc, y, cs, ppk, alfa, beta, tkgn, tk, cr, bolt);
+    ppk = (float *) cp[_ppk] + 1;   // second ppk for output
+    compress(cp, x, y, cs, ppk, alfa, beta, tkgn, tk, cr, bolt);
 }
 
 FUNC(void)

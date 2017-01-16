@@ -23,7 +23,7 @@ time_const(double atk, double rel, double fs, float *alfa, float *beta)
 /***********************************************************/
 
 FUNC(int)
-cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha, double scale)
+cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha)
 {
     double cltk;
     float *tk, *cr, *tkgn, *bolt, alfa, beta;
@@ -34,10 +34,7 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha, double scale)
     if (cs == 0) {
         return (1);
     }
-    // save input scale factor
-    CHA_DVAR[_scl]  = scale;
-    // allocate scale & envelope buffers
-    cha_allocate(cp, cs, sizeof(float), _xsc);
+    // allocate envelope buffer
     cha_allocate(cp, cs, sizeof(float), _xpk);
     // save WDRC parameters
     time_const(gha->attack, gha->release, gha->fs, &alfa, &beta);

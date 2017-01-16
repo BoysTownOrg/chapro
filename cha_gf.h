@@ -28,7 +28,7 @@ typedef struct {
 // filterbank module
 
 FUNC(int) cha_cgtfb_prepare(CHA_PTR, double *, double *, double, double, double, 
-                            int, int, int, int);
+                            int, int);
 FUNC(void) cha_cgtfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_cgtfb_synthesize(CHA_PTR, float *, float *, int);
 
