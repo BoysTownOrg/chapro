@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\cha_scale.c"
+				>
+			</File>
+			<File
 				RelativePath="..\compressor_prepare.c"
 				>
 			</File>
