@@ -18,7 +18,7 @@ Download repo from https://github.com/BTNRH/chapro. Makefiles are provided for b
 
 API Reference
 
-The API is described in the User Manual at https://github.com/BTNRH/chapro/chapro.pdf.
+The API is described in the User Manual at https://github.com/BTNRH/chapro/blob/master/chapro.pdf.
 
 Tests
 
