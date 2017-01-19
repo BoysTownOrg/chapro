@@ -91,13 +91,13 @@ init_wav(I_O *io)
     fprintf(stdout, "FIRFB i/o with ");
     if (tone_io == 0) {
         fprintf(stdout, "impulse: \n");
-        io->ofn = "test/ftio_impulse.mat";
+        io->ofn = "test/ffio_impulse.mat";
         io->iwav[0] = 1;
     } else {
         fprintf(stdout, "tone: \n");
         f = 1000;
         p = (float) ((2 * M_PI * f) / io->rate);
-        io->ofn = "test/ftio_tone.mat";
+        io->ofn = "test/ffio_tone.mat";
         for (i = 0; i < io->nwav; i++) {
             io->iwav[i] = (float) sin(i * p);
         }
@@ -177,7 +177,7 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;

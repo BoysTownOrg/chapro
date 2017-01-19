@@ -1,13 +1,13 @@
 % test FIR filterbank analysis
 function tst_ffio
-tst_ftio_impulse(1)
-tst_ftio_tone(3)
+tst_ffio_impulse(1)
+tst_ffio_tone(3)
 return
 
 %===============================================================
 
-function tst_ftio_impulse(fig)
-load('test/ftio_impulse')
+function tst_ffio_impulse(fig)
+load('test/ffio_impulse')
 p_lim=[-0.1 1.1];
 t_lim=[-1 21];
 t=1000*(0:(length(y)-1))/rate;
@@ -68,8 +68,8 @@ return
 
 %===============================================================
 
-function tst_ftio_tone(fig)
-load('test/ftio_tone')
+function tst_ffio_tone(fig)
+load('test/ffio_tone')
 t_lim=[-0.001 0.021];
 p_lim=[-1 1]*1.5;
 t=(0:(length(y)-1))/rate;

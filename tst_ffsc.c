@@ -209,8 +209,9 @@ fbsc_process(CHA_PTR cp, float *x, float *y)
     float *zz;
     int cs;
 
+    // next line switches to compiled data
+    //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
-    cp = (CHA_PTR) cha_data;
     cs = CHA_IVAR[_cs];
     zz = (float *) cp[_cc];
     // process FIRFB+AGC
