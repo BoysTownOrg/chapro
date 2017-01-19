@@ -6,11 +6,19 @@ CHAPRO is a library of functions that may be used to implement simulations of co
 
 Code Example
 
-Show what the library does as concisely as possible, developers should be able to figure out how your project solves their problem by looking at the code example. Make sure the API you are showing off is obvious, and that your code is short and concise.
+Show whatThe following sequence of function calls implement signal processing for a generic hearing aid:
+
+    cha_agc_input(cp, x, x, cs);
+    cha_firfb_analyze(cp, x, zz, cs);
+    cha_agc_channel(cp, zz, zz, cs);
+    cha_firfb_synthesize(cp, zz, y, cs);
+    cha_agc_output(cp, y, y, cs);
+
+In these function calls, cp is a pointer to a data structure, x is a pointer to the input stream, y is a pointer to the output stream, and zz is an intermediate buffer. The three "agc" functions perform compression. The two "firfb" perfrom frequency analysis and synthesis.
 
 Motivation
 
-The objective or this library is to provide an example of basic hearing-aid signal processing as a foundation for developing better methods.
+The objective or this library is to provide an example of basic hearing-aid signal processing as a foundation for developing better signal-processing algorithms.
 
 Installation
 
