@@ -140,12 +140,12 @@ init_wav(I_O *io)
             getchar();
             exit(2);
         }
-        fprintf(stdout, "WAV input: %s", io->ifn);
+        fprintf(stdout, "WAV input: %s...\n", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
 	set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
     } else {    /* 8-second impulse input */
-        fprintf(stdout, "impulse response: ");
+        fprintf(stdout, "impulse response...\n");
         io->nwav = round(io->rate * 8);
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
@@ -311,8 +311,7 @@ stop_wav(I_O *io)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    char *s;
-    double t1, t2, *cf;
+    double *cf;
     int nc, cs;
     static double sr = 24000;       // sampling rate (Hz)
     static int    nw = 128;         // window size
@@ -334,7 +333,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     init_wav(io);
     cs = io->nsmp;
     fcopy(io->owav, io->iwav, cs * io->mseg);
-    sp_tic();
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
@@ -344,14 +342,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
     // prepare i/o
-    if (io->nseg == 1) {
-        t1 = sp_toc();
-        t2 = io->nwav / io->rate;
-        s = io->ifn ? ", " : "";
-        fprintf(stdout, "%s(tp/tw) = (%.3f/%.3f) = %.3f\n", s, t1, t2, t1/t2);
-    } else {
-        fprintf(stdout, "\n");
-    }
     io->pseg = io->mseg;
     if (!io->ofn) {
         init_aud(io);
@@ -365,13 +355,19 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 static void
 process(I_O *io, CHA_PTR cp)
 {
+    double t1, t2;
+
+    sp_tic();
     if (io->ofn) {
         fbsc_process(cp, io->iwav, io->owav);
-        return;
+    } else {
+        while (get_aud(io)) {
+            put_aud(io, cp);
+        }
     }
-    while (get_aud(io)) {
-        put_aud(io, cp);
-    }
+    t1 = sp_toc();
+    t2 = io->nwav / io->rate;
+    fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
 }
 
 // clean up io

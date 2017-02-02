@@ -7,6 +7,11 @@
 #include "chapro.h"
 #include "cha_ff.h"
 
+//#define db2(x)          ((20/logf(10))*logf(x))
+//#define undb2(x)        expf((x)/(20/logf(10)))
+#define db2(x)          cha_db2(x)
+#define undb2(x)        cha_undb2(x)
+
 /***********************************************************/
 
 static __inline void
@@ -49,7 +54,7 @@ WDRC_circuit(float *x, float *y, float *pdb, int n,
         } else {
             gdb = ((1 / cr) - 1) * pdb[k] + tkgo;
         }
-        y[k] = x[k] * powf(10, gdb / 20); 
+        y[k] = x[k] * undb2(gdb); 
     }
 }
 
@@ -66,7 +71,7 @@ compress(CHA_PTR cp, float *x, float *y, int n, float *ppk,
     // convert envelope to dB
     mxdb = (float) CHA_DVAR[_mxdb];
     for (k = 0; k < n; k++) {
-        xpk[k] = mxdb + 20 * log10f(xpk[k]);
+        xpk[k] = mxdb + db2(xpk[k]);
     }
     // apply wide-dynamic range compression
     WDRC_circuit(x, y, xpk, n, tkgn, tk, cr, bolt);
