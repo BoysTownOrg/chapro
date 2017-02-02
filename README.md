@@ -32,7 +32,7 @@ Tests
 
 The following test programs are included.
 
-    tst_ffa - test FIR filterbank analysis
+    tst_ffa  - test FIR filterbank analysis
     tst_ffio - test FIR filterbank analysis & synthesis
     tst_ffsc - test FIR filterbank (analysis & synthesis) and AGC processing
 
