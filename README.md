@@ -6,7 +6,7 @@ CHAPRO is a library of functions that may be used to implement simulations of co
 
 Code Example
 
-Show whatThe following sequence of function calls implement signal processing for a generic hearing aid:
+The following sequence of function calls implement signal processing for a generic hearing aid:
 
     cha_agc_input(cp, x, x, cs);
     cha_firfb_analyze(cp, x, zz, cs);
@@ -30,7 +30,11 @@ The API is described in the User Manual at https://github.com/BTNRH/chapro/blob/
 
 Tests
 
-Test programs are .
+The following test programs are included.
+
+    tst_ffa - test FIR filterbank analysis
+    tst_ffio - test FIR filterbank analysis & synthesis
+    tst_ffsc - test FIR filterbank (analysis & synthesis) and AGC processing
 
 Contributors
 
