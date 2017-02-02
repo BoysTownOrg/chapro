@@ -205,6 +205,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\db.c"
+				>
+			</File>
+			<File
 				RelativePath="..\feedback_prepare.c"
 				>
 			</File>
