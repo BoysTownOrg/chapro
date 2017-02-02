@@ -9,13 +9,13 @@ AR=ar
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
-CHAPRO=cha_core.o cha_scale.o rfft.o \
+CHAPRO=cha_core.o cha_scale.o db.o rfft.o \
 	agc_prepare.o agc_process.o \
 	firfb_prepare.o firfb_process.o \
 	cgtfb_prepare.o cgtfb_process.o \
 	feedback_prepare.o feedback_process.o \
 	compressor_prepare.o compressor_process.o
-PGMS=tst_fba tst_fbio tst_fta tst_ftio 
+PGMS=tst_fba tst_fbio tst_fta tst_ftio tst_ffsc 
 
 all: $(PGMS)
 
@@ -31,9 +31,9 @@ tstff: tst_ffa tst_ffio
 	./tst_ffio
 	./tst_ffio -t
 
-tstsc: tst_gfsc gha_demo
+tstsc: tst_gfsc tst_ffsc
 	./tst_gfsc
-	./gha_demo
+	./tst_ffsc
 
 tst_gfa : tst_gfa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
@@ -50,7 +50,7 @@ tst_ffa : tst_ffa.o  libchapro.a
 tst_ffio : tst_ffio.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-gha_demo : gha_demo.o  libchapro.a
+tst_ffsc : tst_ffsc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 libchapro.a: $(CHAPRO)

@@ -11,9 +11,6 @@
 #include "chapro.h"
 #include "cha_ff.h"
 
-#define fcopy(x,y,n)    memcpy(x,y,(n)*sizeof(float))
-#define round(x)        ((int)floor((x)+0.5))
-
 typedef struct {
     char *ifn, *ofn, mat;
     double rate;

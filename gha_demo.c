@@ -65,21 +65,6 @@ save_mat(char *fn, float fs, float *x, float *y, int n)
     free(t);
 }
 
-static double
-RMS(float *x, int n)
-{
-    double rms, smsq;
-    int i;
-
-    smsq = 0;
-    for (i = 0; i < n; i++) {
-        smsq += x[i] * x[i];
-    }
-    rms = sqrt(smsq / n);
-
-    return (rms);
-}
-
 static void
 WDRC(CHA_PTR cp, float *x, float *y, int n, int nc)
 {
@@ -109,17 +94,13 @@ WDRC(CHA_PTR cp, float *x, float *y, int n, int nc)
 static void
 amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 {
-    double x_spl, maxdB;
     int nc;
     static int    nw = 256;         // window size
     static int    cs = 32;          // chunk size
     static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
-    static double spl_ref = 1.1219e-6;
     static void *cp[NPTR] = {0};
     static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
 
-    x_spl = 20 * log10(RMS(x, n) / spl_ref);
-    maxdB = dsl->maxdB;
     nc = dsl->nchannel;
     cha_firfb_prepare(cp, dsl->cross_freq, nc, fs, nw, wt, cs);
     cha_agc_prepare(cp, dsl, &gha);

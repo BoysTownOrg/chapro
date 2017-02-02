@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.05, 12-Jan-17"
+#define VER     "CHAPro version 0.06, 1-Feb-17"
 #define NOTICE	"Copyright 2016-2017 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.06 - 1-Feb-17
+> Added db & undb functions
 0.05 - 12-Jan-17
 > Fixed allocation of chunk buffer in tst_gfsc.c/prepare
 > Fixed file-to-file processing in tst_gfsc.c/{prepare,process,cleanup}

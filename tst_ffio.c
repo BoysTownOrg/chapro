@@ -12,9 +12,6 @@
 #include "cha_ff.h"
 #include "cha_ff_data.h"
 
-#define fcopy(x,y,n)    memcpy(x,y,(n)*sizeof(float))
-#define round(x)        ((int)floor((x)+0.5))
-
 typedef struct {
     char *ifn, *ofn, mat;
     double rate;
@@ -177,7 +174,7 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;

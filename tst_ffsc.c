@@ -210,7 +210,7 @@ fbsc_process(CHA_PTR cp, float *x, float *y)
     int cs;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     cs = CHA_IVAR[_cs];
     zz = (float *) cp[_cc];
@@ -328,7 +328,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 
     parse_args(io, ac, av, sr, &nw);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    fprintf(stdout, "AGC: nw=%d, ns=%d\n", nw);
+    fprintf(stdout, "AGC: nw=%d\n", nw);
     // initialize waveform
     init_wav(io);
     cs = io->nsmp;
