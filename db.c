@@ -8,6 +8,10 @@
 
 #undef EXACT // define to check exact values
 
+/***********************************************************/
+
+#ifndef EXACT
+
 static __inline float
 pow_ap(float x) // approximate 2^x
 {
@@ -50,6 +54,8 @@ log_ap(float x) // approximate ln(x)
     return (z * p / q);
 }
 
+#endif // EXACT
+
 /***********************************************************/
 
 FUNC(float)
@@ -73,11 +79,11 @@ cha_db1(float x) // 10 * log10(x)
 	e--;
     }
 #ifdef EXACT
-    ln = logf(m) + c7 * e; // exact
+    ln = logf(m); // exact
 #else
-    ln = log_ap(m) + c7 * e;
+    ln = log_ap(m);
 #endif
-    return (c5 * ln);
+    return (c5 * ln + c7 * e);
 }
 
 FUNC(float)
@@ -133,11 +139,11 @@ cha_db2(float x) // 20 * log10(x)
 	e--;
     }
 #ifdef EXACT
-    ln = logf(m) + c7 * e; // exact
+    ln = logf(m); // exact
 #else
-    ln = log_ap(m) + c7 * e;
+    ln = log_ap(m);
 #endif
-    return (c5 * ln);
+    return (c5 * ln + c7 * e);
 }
 
 FUNC(float)
