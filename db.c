@@ -90,7 +90,7 @@ FUNC(float)
 cha_undb1(float x) // 10 ^ (x / 10)
 {
     float m, p2;
-    int   e, n;
+    int   e;
     static float c1 = 1e-38;
     static float c2 = -380;
     static float c3 = 1e38;
@@ -99,15 +99,9 @@ cha_undb1(float x) // 10 ^ (x / 10)
 
     if (x < c2) return (c1);
     if (x > c4) return (c3);
-    n = (x < 0);
-    if (n) x = -x;
     x *= c5;
     e = (int) x;
     m = x - e;
-    if (n) {
-	e = -e;
-	m = -m;
-    }
 #ifdef EXACT
     p2 = powf(2, m); // exact
 #else
@@ -150,7 +144,7 @@ FUNC(float)
 cha_undb2(float x) // 10 ^ (x / 20)
 {
     float m, p2;
-    int   e, n;
+    int   e;
     static float c1 = 1e-38;
     static float c2 = -760;
     static float c3 = 1e38;
@@ -159,15 +153,9 @@ cha_undb2(float x) // 10 ^ (x / 20)
 
     if (x < c2) return (c1);
     if (x > c4) return (c3);
-    n = (x < 0);
-    if (n) x = -x;
     x *= c5;
     e = (int) x;
     m = x - e;
-    if (n) {
-	e = -e;
-	m = -m;
-    }
 #ifdef EXACT
     p2 = powf(2, m); // exact
 #else

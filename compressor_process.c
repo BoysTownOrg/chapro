@@ -6,10 +6,10 @@
 #include "chapro.h"
 #include "cha_gf.h"
 
-#define db1(x)          ((10/logf(10))*logf(x))
-#define db2(x)          ((20/logf(10))*logf(x))
-#define undb1(x)        expf((x)/(10/logf(10)))
-#define undb2(x)        expf((x)/(20/logf(10)))
+#define db1(x)          (10*log10f(x))
+#define db2(x)          (20*log10f(x))
+#define undb1(x)        powf(10,(x)/10)
+#define undb2(x)        powf(10,(x)/20)
 
 /***********************************************************/
 

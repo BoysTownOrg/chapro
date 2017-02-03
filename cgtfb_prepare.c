@@ -345,7 +345,7 @@ cgtfb_zero_gain(CHA_PTR cp, double tw)
             ir = 2 * i;
             ii = ir + 1;
             az = _hypot(z[ir], z[ii]);
-            M[i] = (az < eps) ? -200 : (float) (20 * log10(az));
+            M[i] = (az < eps) ? -200 : (20 * log10f(az));
         }
         n = nc - 1;
         for (k = 0; k < nc; k++) {
