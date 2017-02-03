@@ -83,7 +83,7 @@ cha_db1(float x) // 10 * log10(x)
 #else
     ln = log_ap(m);
 #endif
-    return (c5 * ln + c7 * e);
+    return (c5 * (ln + c7 * e));
 }
 
 FUNC(float)
@@ -143,7 +143,7 @@ cha_db2(float x) // 20 * log10(x)
 #else
     ln = log_ap(m);
 #endif
-    return (c5 * ln + c7 * e);
+    return (c5 * (ln + c7 * e));
 }
 
 FUNC(float)
