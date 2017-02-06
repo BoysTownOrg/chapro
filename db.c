@@ -237,6 +237,7 @@ cha_db2(float x) // 20 * log10(x)
         m *= 2;
 	e--;
     }
+    // assume: x > sqrt(0.5) and x < sqrt(2)
 #if METHOD == 0
     ln = logf(m); // exact
 #elif METHOD == 1
