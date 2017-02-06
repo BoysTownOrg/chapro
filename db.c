@@ -1,4 +1,5 @@
 // db.c - convert magnitudes to and from decibels
+#include <stdio.h>
 #include <math.h>
 #include "chapro.h"
 
@@ -260,15 +261,8 @@ cha_undb2(float x) // 10 ^ (x / 20)
     if (x < c2) return (c1);
     if (x > c4) return (c3);
     x *= c5;
-    e = (int) x;
+    e = (int) ((x < 0) ? (x - 0.5) : (x + 0.5));
     m = x - e;
-    if (m < -0.5) {
-        m++;
-        e--;
-    } else if (m > 0.5) {
-        m--;
-        e++;
-    }
     // assume: x > -0.5 and x < 0.5
 #if METHOD == 0
     p2 = powf(2, m); // exact
