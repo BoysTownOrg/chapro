@@ -1,4 +1,4 @@
-// tst_ffa.c - test FIR-filterbank analysis
+// tst_cffa.c - test complex FIR-filterbank analysis
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_ff.h"
+#include "cha_cf.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -31,7 +31,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "impulse response: \n");
-    io->ofn = "test/ffa_impulse.mat";
+    io->ofn = "test/cffa_impulse.mat";
     io->iwav[0] = 1;
     io->nsmp = io->nwav;
     io->mseg = 1;
@@ -56,9 +56,30 @@ write_waves(I_O *io, CHA_PTR cp, int c)
     vl = sp_var_alloc(3);
     sp_var_set(vl + 0, "rate", r, 1, 1, "f4");
     sp_var_set(vl + 1,    "x", x, n, 1, "f4");
-    sp_var_set(vl + 2,    "y", y, n, c, "f4");
+    sp_var_set(vl + 2,    "y", y, n, c, "f4c");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
+}
+
+/***********************************************************/
+
+// specify filterbank center frequecies and bandwidths
+
+static int
+cross_freq(double *cf, double sr)
+{
+    int i, nh, nc, nm = 10;
+
+    nh = (int) floor(log2(sr / 2000) * 6);
+    nc = nh + nm;
+    for (i = 0; i < nm; i++) {
+        cf[i] = 100 * (i + 1) + 50;
+    }
+    for (i = nm; i < nc; i++) {
+        cf[i] = 1000 * pow(2.0, (i - 8.5) / 6.0);
+    }
+
+    return (nc);
 }
 
 /***********************************************************/
@@ -68,29 +89,28 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    int ns;
+    double cf[32];
+    int nc, ns;
 
     static double sr = 24000;   // sampling rate (Hz)
     static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
-    static int    nc = 8;       // number of frequency bands
-    // cross frequencies
-    static double cf[] = {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
 
     io->rate = sr;
     io->mat = 0;
-    fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
-    fprintf(stdout, "FIRFB: nw=%d \n", nw);
+    fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
+    fprintf(stdout, "CFIRFB: nw=%d \n", nw);
     // initialize waveform
     init_wav(io);
     ns = io->nsmp;
-    // prepare FIRFB
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+    // prepare CFIRFB
+    nc = cross_freq(cf, sr);
+    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffer
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // output buffer
-    io->owav = (float *) calloc(nc * ns, sizeof(float));
+    io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
 }
 
 // unscramble channel outputs
@@ -122,8 +142,8 @@ process(I_O *io, CHA_PTR cp)
     cs = CHA_IVAR[_cs]; // chunk size
     nk = ns / cs;       // number of chunks
     for (j = 0; j < nk; j++) {
-        cha_firfb_analyze(cp, x + j * cs, z, cs);
-        unscramble_out(y, z, nc, ns, cs, j);
+        cha_cfirfb_analyze(cp, x + j * cs, z, cs);
+        unscramble_out(y, z, nc, ns * 2, cs * 2, j);
     }
 }
 

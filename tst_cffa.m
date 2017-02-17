@@ -1,12 +1,14 @@
-% test FIR filterbank analysis
-function tst_ffa
-load('test/ffa_impulse')
+% test complex FIR filterbank analysis
+function tst_cffa
+load('test/cffa_impulse')
+nc=size(y,2);
+yk=y(:,round(nc/2));
 y=real(y);
 t=1000*(0:(length(y)-1))/rate;
 % plot impulse responses
 figure(1);clf
 plot(t,y)
-title('FIR filterbank impulse responses')
+title('complex FIR filterbank impulse responses')
 y_lim=[min(min(y)) max(max(y))]* 1.05;
 t_lim=[-0.5 12.5];
 axis([t_lim y_lim])
@@ -26,12 +28,24 @@ subplot(2,1,1)
 semilogx(f,M)
 axis(m_lim)
 ylabel('magnitude (dB)')
-title('FIR filterbank transfer functions')
+title('complex FIR filterbank transfer functions')
 subplot(2,1,2)
 semilogx(f,D,f,d,':k')
 axis(d_lim)
 xlabel('frequency (kHz)')
 ylabel('delay (ms)')
+% plot analytic impulse response
+figure(3);clf
+yr=real(yk);
+yi=imag(yk);
+ya= abs(yk);
+plot(t,yr,t,yi,t,ya)
+title('complex FIR filterbank impulse response')
+y_lim=[min(yr) max(yr)]* 1.05;
+t_lim=[-0.5 12.5];
+axis([t_lim y_lim])
+xlabel('time (ms)')
+legend('real','imag','abs')
 return
 
 function y=db(x)

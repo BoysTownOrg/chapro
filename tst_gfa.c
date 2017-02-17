@@ -115,7 +115,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_cgtfb_prepare(cp, fc, bw, sr, gd, tw, nc, cs);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
-    // initialize spectral buffer
+    // output buffer
     io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
 }
 

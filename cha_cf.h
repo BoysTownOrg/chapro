@@ -1,6 +1,6 @@
-// cha_gf.h - gammatone-filterbank & instantaneous-compression
-#ifndef CHA_GF_H
-#define CHA_GF_H
+// cha_cf.h - complex FIR-filterbank & instantaneous-compression
+#ifndef CHA_CF_H
+#define CHA_CF_H
 
 /*****************************************************/
 
@@ -25,12 +25,12 @@ typedef struct {
 
 /*****************************************************/
 
-// cgtfb module
+// cfirfb module
 
-FUNC(int) cha_cgtfb_prepare(CHA_PTR, double *, double *, double, double, double, 
-                            int, int);
-FUNC(void) cha_cgtfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void) cha_cgtfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_cfirfb_prepare(CHA_PTR, double *, int, double, 
+                            int, int, int);
+FUNC(void) cha_cfirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_cfirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // compressor module
 
@@ -44,12 +44,10 @@ FUNC(void) cha_compressor_process(CHA_PTR, float *, float *, int);
 // pointer indices
 
 #define _cc       _offset+0
-#define _dn       _offset+1
-#define _ydr      _offset+2
-#define _br       _offset+3
-#define _ar       _offset+4
-#define _zr       _offset+5
-#define _zg       _offset+6
+#define _ffhh     _offset+1
+#define _ffxx     _offset+2
+#define _ffyy     _offset+3
+#define _ffzz     _offset+4
 
 #define _dsm      _offset+7
 #define _dso      _offset+8
@@ -78,7 +76,7 @@ FUNC(void) cha_compressor_process(CHA_PTR, float *, float *, int);
 
 #define _cs       0 
 #define _nc       1
-#define _ns       2
+#define _nw       2
 
 #define _cm       3
 #define _klo      4
@@ -89,4 +87,4 @@ FUNC(void) cha_compressor_process(CHA_PTR, float *, float *, int);
 #define _fs       0
 #define _lrpk     1
 
-#endif /* CHA_GF_H */
+#endif /* CHA_CF_H */

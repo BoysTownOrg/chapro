@@ -1,9 +1,6 @@
-// rfft.c - FFT functions for real-valued time signals
+// rfft.c - FFTs for real-valued time signals
 
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>
-#include <assert.h>
 #include "chapro.h"
 #include "cha_ff.h"
 
@@ -360,36 +357,28 @@ crfft2(float *x, int m)
 
 // real-to-complex FFT
 
-FUNC(int)
+FUNC(void)
 cha_fft_rc(float *x, int n)
 {
-    int m, err;
+    int m;
 
     // assume n is a power of two 
     m = ilog2(n);
-    if (m <= 0) return (1);
-    err = rcfft2(x, m);
-
-    return (err);
+    rcfft2(x, m);
 }
 
 // complex-to-real inverse FFT
 
-FUNC(int)
+FUNC(void)
 cha_fft_cr(float *x, int n)
 {
-    int i, m, err;
+    int i, m;
 
     // assume n is a power of two 
     m = ilog2(n);
-    if (m <= 0) return (1);
-    err = crfft2(x, m);
-
-// scale inverse by 1/n
-
+    crfft2(x, m);
+    // scale inverse by 1/n
     for (i = 0; i < n; i++) {
         x[i] /= n;
     }
-
-    return (err);
 }

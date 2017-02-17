@@ -1,4 +1,4 @@
-// tst_ffsc.c - test FIRFB+AGC
+// tst_ffsc.c - test FIR-filterbank & AGC-compression
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -22,6 +22,25 @@ typedef struct {
     long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
+
+/***********************************************************/
+
+static void
+process_chunk(CHA_PTR cp, float *x, float *y, int cs)
+{
+    float *z;
+
+    // next line switches to compiled data
+    //cp = (CHA_PTR) cha_data; 
+    // initialize data pointers
+    z = (float *) cp[_cc];
+    // process FIRFB+AGC
+    cha_agc_input(cp, x, x, cs);
+    cha_firfb_analyze(cp, x, z, cs);
+    cha_agc_channel(cp, z, z, cs);
+    cha_firfb_synthesize(cp, z, y, cs);
+    cha_agc_output(cp, y, y, cs);
+}
 
 /***********************************************************/
 
@@ -69,7 +88,8 @@ static void
 parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
 {
     io->rate = rate;
-    io->mat = 0;
+    io->ifn = "test/cat.wav";
+    io->mat = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
@@ -89,7 +109,7 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
             break;
         }
     }
-    io->ifn = (ac > 1) ? av[1] : NULL;
+    //io->ifn = (ac > 1) ? av[1] : NULL;
     io->ofn = (ac > 2) ? av[2] : NULL;
     if (mat_file(io->ofn)) {
         io->mat = 1;
@@ -120,8 +140,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/ft_output.wav";
-    static char *mfn = "test/ft_output.mat";
+    static char *wfn = "test/tst_ffsc.wav";
+    static char *mfn = "test/tst_ffsc.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -149,12 +169,12 @@ init_wav(I_O *io)
         io->nwav = round(io->rate * 8);
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
-        io->ofn = io->mat ? mfn : wfn; 
     }
+    io->ofn = io->mat ? mfn : wfn; 
     if (io->ofn) {
         io->nsmp = io->nwav;
-        io->mseg = 1;
         io->nseg = 1;
+        io->mseg = 1;
         io->owav = (float *) calloc(io->nsmp, sizeof(float));
     } else {    /* DAC output */
         io->nsmp = round(io->rate / 10);
@@ -204,25 +224,6 @@ get_aud(I_O *io)
 }
 
 static void
-fbsc_process(CHA_PTR cp, float *x, float *y)
-{
-    float *zz;
-    int cs;
-
-    // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
-    // initialize data pointers
-    cs = CHA_IVAR[_cs];
-    zz = (float *) cp[_cc];
-    // process FIRFB+AGC
-    cha_agc_input(cp, x, x, cs);
-    cha_firfb_analyze(cp, x, zz, cs);
-    cha_agc_channel(cp, zz, zz, cs);
-    cha_firfb_synthesize(cp, zz, y, cs);
-    cha_agc_output(cp, y, y, cs);
-}
-
-static void
 put_aud(I_O *io, CHA_PTR cp)
 {
     int od, ow, nd;
@@ -240,7 +241,7 @@ put_aud(I_O *io, CHA_PTR cp)
             fzero(io->owav, io->nsmp);
         }
         io->pseg++;
-        fbsc_process(cp, io->owav + ow, io->owav + ow);
+	process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
     }
 }
 
@@ -294,11 +295,7 @@ stop_wav(I_O *io)
     }
     if (io->nseg == 1) {
         fprintf(stdout, "...done");
-#ifdef WAIT
         getchar();
-#else
-        fprintf(stdout, "\n");
-#endif
     } else {
         fprintf(stdout, "\n");
     }
@@ -312,10 +309,11 @@ static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
     double *cf;
-    int nc, cs;
-    static double sr = 24000;       // sampling rate (Hz)
-    static int    nw = 128;         // window size
-    static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
+    int nc;
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    nw = 128;     // window size
+    static int    cs = 32;      // chunk size
+    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
     // DSL prescription
     static CHA_DSL dsl = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -328,11 +326,16 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 
     parse_args(io, ac, av, sr, &nw);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    fprintf(stdout, "AGC: nw=%d\n", nw);
+    fprintf(stdout, "AGC compression: nw=%d\n", nw);
     // initialize waveform
     init_wav(io);
-    cs = io->nsmp;
-    fcopy(io->owav, io->iwav, cs * io->mseg);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        cs = io->nsmp;
+        init_aud(io);
+    }
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
@@ -341,11 +344,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        init_aud(io);
-    }
     // generate C code from prepared data
     cha_data_gen(cp, "cha_ff_data.h");
 }
@@ -355,19 +353,29 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 static void
 process(I_O *io, CHA_PTR cp)
 {
+    float *x, *y;
+    int i, n, cs, nk;
     double t1, t2;
 
-    sp_tic();
     if (io->ofn) {
-        fbsc_process(cp, io->iwav, io->owav);
+        // initialize i/o pointers
+        x = io->iwav;
+        y = io->owav;
+        n = io->nsmp;
+        sp_tic();
+        cs = CHA_IVAR[_cs]; // chunk size
+        nk = n / cs;        // number of chunks
+        for (i = 0; i < nk; i++) {
+            process_chunk(cp, x + i * cs, y + i * cs, cs);
+        }
+        t1 = sp_toc();
+        t2 = io->nwav / io->rate;
+        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);
         }
     }
-    t1 = sp_toc();
-    t2 = io->nwav / io->rate;
-    fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
 }
 
 // clean up io

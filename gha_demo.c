@@ -91,7 +91,7 @@ WDRC(CHA_PTR cp, float *x, float *y, int n, int nc)
     free(zz);
 }
 
-static void
+static double
 amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 {
     int nc;
@@ -104,7 +104,9 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
     nc = dsl->nchannel;
     cha_firfb_prepare(cp, dsl->cross_freq, nc, fs, nw, wt, cs);
     cha_agc_prepare(cp, dsl, &gha);
+    sp_tic();
     WDRC(cp, x, y, n, nc);
+    return (sp_toc());
 }
 
 /***********************************************************/
@@ -131,9 +133,7 @@ main(int ac, char *av[])
     x = audio_read(ifn, &fs, &n);
     y = (float *) calloc(n, sizeof(float));
     set_spl(x, n, speech_lev, spl_ref);
-    sp_tic();
-    amplify(x, y, n, fs, &dsl);
-    t1 = sp_toc();
+    t1 = amplify(x, y, n, fs, &dsl);
     save_mat(ofn, fs, x, y, n);
     t2 = n / fs;
     printf("%s -> %s\n", ifn, ofn);

@@ -261,8 +261,8 @@ cgtfb_peak_align(CHA_PTR cp,  double gd)
 
     fs = CHA_DVAR[_fs];
     nc = CHA_IVAR[_nc];
-        fc = (float *) cp[_fc];
-        bw = (float *) cp[_bw];
+    fc = (float *) cp[_fc];
+    bw = (float *) cp[_bw];
     nd = round(gd * fs);
     nt = nd + 1;
     x = (float *) calloc(nt, sizeof(float));
@@ -345,7 +345,7 @@ cgtfb_zero_gain(CHA_PTR cp, double tw)
             ir = 2 * i;
             ii = ir + 1;
             az = _hypot(z[ir], z[ii]);
-            M[i] = (az < eps) ? -200 : (20 * log10f(az));
+            M[i] = (az < eps) ? -200 : (float) (20 * log10(az));
         }
         n = nc - 1;
         for (k = 0; k < nc; k++) {

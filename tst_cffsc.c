@@ -1,4 +1,4 @@
-// tst_gfsc.c - test gammatone-filterbank & instantaneous-compression
+// tst_cffsc.c - test complex-FIR-filterbank & instantaneous-compression
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -11,7 +11,8 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_gf.h"
+#include "cha_cf.h"
+#include "cha_cf_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -34,9 +35,9 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     // initialize data pointers
     z = (float *) cp[_cc];
     // process filterbank+compressor
-    cha_cgtfb_analyze(cp, x, z, cs);
+    cha_cfirfb_analyze(cp, x, z, cs);
     cha_compressor_process(cp, z, z, cs);
-    cha_cgtfb_synthesize(cp, z, y, cs);
+    cha_cfirfb_synthesize(cp, z, y, cs);
 }
 
 /***********************************************************/
@@ -46,7 +47,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_gfsc [-options] [input_file] [output_file]\n");
+    fprintf(stdout, "usage: tst_cffsc [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
     fprintf(stdout, "-d N  set downsample factor to N [24]\n");
@@ -148,8 +149,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/tst_gfsc.wav";
-    static char *mfn = "test/tst_gfsc.mat";
+    static char *wfn = "test/tst_cffsc.wav";
+    static char *mfn = "test/tst_cffsc.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -173,7 +174,7 @@ init_wav(I_O *io)
         io->iwav = vl[0].data;
 	set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
     } else {    /* 8-second impulse input */
-        fprintf(stdout, "impulse response: ");
+        fprintf(stdout, "impulse response...\n");
         io->nwav = round(io->rate * 8);
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
@@ -313,24 +314,21 @@ stop_wav(I_O *io)
 
 // specify filterbank center frequecies and bandwidths
 
-static void
-cgtfb_init(CHA_CLS *cls, double sr)
+static int
+cross_freq(double *cf, double sr)
 {
     int i, nh, nc, nm = 10;
 
     nh = (int) floor(log2(sr / 2000) * 6);
     nc = nh + nm;
-    cls->nc = nc;
-    for (i = 0; i < (nm - 1); i++) {
-        cls->fc[i] = 100 * (i + 1);
-        cls->bw[i] = 100;
+    for (i = 0; i < nm; i++) {
+        cf[i] = 100 * (i + 1) + 50;
     }
-    cls->fc[nm - 1] = 1000;
-    cls->bw[nm - 1] = 111;
     for (i = nm; i < nc; i++) {
-        cls->fc[i] = 1000 * pow(2.0, (i - 9) / 6.0);
-        cls->bw[i] = cls->fc[i] / 8.65;
+        cf[i] = 1000 * pow(2.0, (i - 8.5) / 6.0);
     }
+
+    return (nc);
 }
 
 // CSL prescription
@@ -363,20 +361,20 @@ compressor_init(CHA_CLS *cls, double gn, int nc)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double *fc, *bw;
+    double cf[32];
     int nc;
     CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
+    static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
-    static double gd = 4;       // filterbank target delay (ms)
-    static double tw = 500;     // cgtfb_zero_gain buffer size (ms)
+    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
     static double lr = 2e-5;    // signal-level reference (Pa)
     static double gn = 20;      // flat suppressor gain (dB)
-    static int ds = 24;         // downsample factor
+    static int    ds = 24;      // downsample factor
 
     parse_args(io, ac, av, sr, &ds, &gn);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    fprintf(stdout, "compression gain=%.0f, ds=%d\n", gn, ds);
+    fprintf(stdout, "inst. compression: gain=%.0f, ds=%d\n", gn, ds);
     // initialize waveform
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
@@ -386,17 +384,16 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         cs = io->nsmp;
         init_aud(io);
     }
-    // prepare gammatone filterbank
-    cgtfb_init(&cls, sr);
-    nc = cls.nc;
-    fc = cls.fc;
-    bw = cls.bw;
-    cha_cgtfb_prepare(cp, fc, bw, sr, gd, tw, nc, cs);
+    // prepare CFIRFB
+    nc = cross_freq(cf, sr);
+    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
     compressor_init(&cls, gn, nc);
     cha_compressor_prepare(cp, &cls, lr, ds);
+    // generate C code from prepared data
+    cha_data_gen(cp, "cha_cf_data.h");
 }
 
 // process io

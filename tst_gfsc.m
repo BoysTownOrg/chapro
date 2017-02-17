@@ -1,7 +1,7 @@
-% tst_ffsc - CHAPRO demonstration of GHA processing
-function tst_ffsc
+% tst_gfsc - CHAPRO demonstration of GFIC processing
+function tst_gfsc
 x=audioread('test/cat.wav')/5;
-load('test/tst_ffsc')
+load('test/tst_gfsc')
 y=wave;
 figure(1); clf
 nx=length(x);
@@ -14,5 +14,7 @@ tlim=[min(ty) max(ty)]*1.05;
 xylim=[min(min(x),min(y)) max(max(x),max(y))]*1.05;
 axis([tlim xylim])
 legend('output','input')
-title('CHAPRO demonstration of GHA processing')
+title('CHAPRO demonstration of GFIC processing')
+
 return
+

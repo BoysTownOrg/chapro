@@ -6,10 +6,17 @@
 #include "chapro.h"
 #include "cha_gf.h"
 
+#ifdef NEVER
 #define db1(x)          (10*log10f(x))
 #define db2(x)          (20*log10f(x))
 #define undb1(x)        powf(10,(x)/10)
 #define undb2(x)        powf(10,(x)/20)
+#else
+#define db1(x)          cha_db1(x)
+#define db2(x)          cha_db2(x)
+#define undb1(x)        cha_undb1(x)
+#define undb2(x)        cha_undb2(x)
+#endif
 
 /***********************************************************/
 
@@ -19,15 +26,15 @@ cha_compressor_process(CHA_PTR cp, float *x, float *y, int cs)
     float *Lcs, *Lcm, *Lce, *Lmx, *Gcs, *Gcm, *Gce, *Gmx;
     float *Gmn, *Lfb, *Gsup, *Gpre, *gsup, *ginc, *zdr, *zdi;
     float Lsup, rnge, head;
-    double agtf, lrpk;
+    float agtf, lrpk;
     int *dsm, *dso;
     int i, k, kr, ki, nc, dsmx, id, kd, dsmo, dsi, im, cm, jm;
-    static double eps = 1e-20;
+    static float eps = 1e-20f;
 
     // compression
-    cm = CHA_IVAR[_cm];
     nc = CHA_IVAR[_nc];
-    lrpk = CHA_DVAR[_lrpk];
+    cm = CHA_IVAR[_cm];
+    lrpk = (float) CHA_DVAR[_lrpk];
     dsm = (int *) cp[_dsm];
     dso = (int *) cp[_dso];
     Lcs = (float *) cp[_Lcs];
@@ -67,7 +74,7 @@ cha_compressor_process(CHA_PTR cp, float *x, float *y, int cs)
             zdi[kd] = x[ki];
             im = dsi ? ((i - dso[k]) % dsm[k]) : 0;
             if (im == 0) {              /* calculate channel levels ?? */
-                agtf = _hypot(zdr[kd], zdi[kd]);
+                agtf = (float) _hypot(zdr[kd], zdi[kd]);
                 if (agtf < eps) {
                     agtf = eps;
                 }

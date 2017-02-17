@@ -9,39 +9,47 @@ AR=ar
 LIBDIR=c:/usr/lib
 INCDIR=c:/usr/include
 BINDIR=c:/usr/bin
-CHAPRO=cha_core.o cha_scale.o db.o rfft.o \
+CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
+	cfirfb_prepare.o cfirfb_process.o \
 	firfb_prepare.o firfb_process.o \
 	cgtfb_prepare.o cgtfb_process.o \
 	feedback_prepare.o feedback_process.o \
 	compressor_prepare.o compressor_process.o
-PGMS=tst_gfa tst_gfio tst_ffa tst_ffio tst_ffsc 
+PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
+     tst_gfa tst_gfio tst_gfsc
 
 all: $(PGMS)
 
 tst: tstgf tstff tstsc
 
-tstgf: tst_gfa tst_gfio 
-	./tst_gfa
-	./tst_gfio
-	./tst_gfio -t
+tstcf: tst_cfa tst_cfio 
+	./tst_cffa
+	./tst_cffio
+	./tst_cffio -t
 
 tstff: tst_ffa tst_ffio 
 	./tst_ffa
 	./tst_ffio
 	./tst_ffio -t
 
-tstsc: tst_gfsc tst_ffsc
-	./tst_gfsc
+tstgf: tst_gfa tst_gfio 
+	./tst_gfa
+	./tst_gfio
+	./tst_gfio -t
+
+tstsc: tst_cffsc tst_ffsc tst_gfsc
+	./tst_cffsc
 	./tst_ffsc
+	./tst_gfsc
 
-tst_gfa : tst_gfa.o  libchapro.a
+tst_cffa : tst_cffa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_gfio : tst_gfio.o  libchapro.a
+tst_cffio : tst_cffio.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_gfsc : tst_gfsc.o  libchapro.a
+tst_cffsc : tst_cffsc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 tst_ffa : tst_ffa.o  libchapro.a
@@ -51,6 +59,15 @@ tst_ffio : tst_ffio.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 tst_ffsc : tst_ffsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_gfa : tst_gfa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_gfio : tst_gfio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_gfsc : tst_gfsc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 libchapro.a: $(CHAPRO)

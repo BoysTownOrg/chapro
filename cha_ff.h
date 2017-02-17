@@ -59,6 +59,7 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 #define _ffxx     _offset+2
 #define _ffyy     _offset+3
 #define _ffzz     _offset+4
+
 #define _gctk     _offset+5
 #define _gccr     _offset+6
 #define _gctkgn   _offset+7
@@ -70,8 +71,8 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 // integer variable indices
 
 #define _cs       0 
-#define _nw       1
-#define _nc       2
+#define _nc       1
+#define _nw       2
 
 // double variable indices
 

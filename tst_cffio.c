@@ -1,4 +1,4 @@
-// tst_ffio.c - test FIR-filterbank i/o with impulse signal
+// tst_cffio.c - test complex FIR-filterbank i/o with impulse signal
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +9,8 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_ff.h"
-#include "cha_ff_data.h"
+#include "cha_cf.h"
+#include "cha_cf_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -85,16 +85,16 @@ init_wav(I_O *io)
     /* second impulse input */
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
-    fprintf(stdout, "FIRFB i/o with ");
+    fprintf(stdout, "CFIRFB i/o with ");
     if (tone_io == 0) {
         fprintf(stdout, "impulse: \n");
-        io->ofn = "test/ffio_impulse.mat";
+        io->ofn = "test/cffio_impulse.mat";
         io->iwav[0] = 1;
     } else {
         fprintf(stdout, "tone: \n");
         f = 1000;
         p = (float) ((2 * M_PI * f) / io->rate);
-        io->ofn = "test/ffio_tone.mat";
+        io->ofn = "test/cffio_tone.mat";
         for (i = 0; i < io->nwav; i++) {
             io->iwav[i] = (float) sin(i * p);
         }
@@ -130,39 +130,51 @@ write_wave(I_O *io)
 
 /***********************************************************/
 
+// specify filterbank center frequecies and bandwidths
+
+static int
+cross_freq(double *cf, double sr)
+{
+    int i, nh, nc, nm = 10;
+
+    nh = (int) floor(log2(sr / 2000) * 6);
+    nc = nh + nm;
+    for (i = 0; i < nm; i++) {
+        cf[i] = 100 * (i + 1) + 50;
+    }
+    for (i = nm; i < nc; i++) {
+        cf[i] = 1000 * pow(2.0, (i - 8.5) / 6.0);
+    }
+
+    return (nc);
+}
+
+/***********************************************************/
+
 // prepare io
 
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double *cf;
+    double cf[32];
     int nc;
-
-    static double sr = 24000;       // sampling rate (Hz)
-    static int    nw = 256;         // window size
-    static int    cs = 32;          // chunk size
-    static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    nw = 256;     // window size
+    static int    cs = 32;      // chunk size
+    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
 
     parse_args(io, ac, av, sr, &nw);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
-    fprintf(stdout, "FIRFB: nw=%d\n", nw);
+    fprintf(stdout, "CFIRFB: nw=%d\n", nw);
     // initialize waveform
     init_wav(io);
-    // prepare FIRFB
-    nc = dsl.nchannel;
-    cf = dsl.cross_freq;
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
+    // prepare CFIRFB
+    nc = cross_freq(cf, sr);
+    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+    // prepare chunk buffer
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_ff_data.h");
+    cha_data_gen(cp, "cha_cf_data.h");
 }
 
 // process io
@@ -174,18 +186,18 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;
     z = (float *) cp[_cc];
     n = io->nsmp;
-    // process FIRFB
+    // process CFIRFB
     cs = CHA_IVAR[_cs]; // chunk size
     nk = n / cs;        // number of chunks
     for (i = 0; i < nk; i++) {
-        cha_firfb_analyze(cp, x + i * cs, z, cs);
-        cha_firfb_synthesize(cp, z, y + i * cs, cs);
+        cha_cfirfb_analyze(cp, x + i * cs, z, cs);
+        cha_cfirfb_synthesize(cp, z, y + i * cs, cs);
     }
 }
 
