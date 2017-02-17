@@ -98,6 +98,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
+			EnableManagedIncrementalBuild="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -181,6 +182,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\cfirfb_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\cfirfb_process.c"
+				>
+			</File>
+			<File
 				RelativePath="..\cgtfb_prepare.c"
 				>
 			</File>
@@ -217,6 +226,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fft.c"
+				>
+			</File>
+			<File
 				RelativePath="..\firfb_prepare.c"
 				>
 			</File>
@@ -233,6 +246,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
+			<File
+				RelativePath="..\cha_cf.h"
+				>
+			</File>
 			<File
 				RelativePath="..\cha_ff.h"
 				>

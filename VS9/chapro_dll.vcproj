@@ -17,13 +17,14 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\$(ConfigurationName)"
-			IntermediateDirectory=".\$(ConfigurationName)\$(ProjectName)"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
+			EnableManagedIncrementalBuild="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -48,20 +49,24 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="../zlib"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SIGPRO_DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;ZLIB"
-				StringPooling="true"
+				Optimization="0"
+				InlineFunctionExpansion="0"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="c:\usr\include"
+				PreprocessorDefinitions="SHA;WIN32;NDEBUG;_WINDOWS;_USRDLL;CHAPRO_DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;ZLIB"
+				StringPooling="false"
+				MinimalRebuild="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/chapro_dll.pch"
-				AssemblerListingLocation="$(IntDir)"
-				ObjectFile="$(IntDir)\$(InputName).obj"
-				ProgramDataBaseFileName="$(IntDir)\$(InputName).pdb"
-				XMLDocumentationFileName="$(IntDir)\$(InputName).xml"
+				FloatingPointModel="2"
+				PrecompiledHeaderFile=""
+				AssemblerListingLocation=""
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="$(IntDir)\vc90.pdb"
+				XMLDocumentationFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -110,18 +115,19 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy chapro.dll"
-				CommandLine="Copy $(TargetPath) .\Release&#x0D;&#x0A;Copy $(TargetPath) c:\usr\lib&#x0D;&#x0A;Copy ..\chapro.h c:\usr\include&#x0D;&#x0A;"
+				CommandLine="Copy $(IntDir)\chapro.dll $(OutDir)"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\$(ConfigurationName)"
-			IntermediateDirectory=".\$(ConfigurationName)\$(ProjectName)"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
+			EnableManagedIncrementalBuild="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -147,19 +153,22 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\zlib"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;SIGPRO_DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;ZLIB"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="c:\usr\include"
+				PreprocessorDefinitions="SHA;WIN32;_DEBUG;_WINDOWS;_USRDLL;CHAPRO_DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
-				PrecompiledHeaderFile=".\Debug/chapro_dll.pch"
-				AssemblerListingLocation="$(IntDir)"
-				ObjectFile="$(IntDir)\$(InputName).obj"
-				ProgramDataBaseFileName="$(IntDir)\$(InputName).pdb"
-				XMLDocumentationFileName="$(IntDir)\$(InputName).xml"
+				FloatingPointModel="2"
+				PrecompiledHeaderFile=""
+				AssemblerListingLocation=""
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="$(IntDir)\vc90.pdb"
+				XMLDocumentationFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -174,8 +183,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(InputName).dll"
-				LinkIncremental="2"
+				OutputFile="$(IntDir)\chapro.dll"
+				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="..\chapro.def"
 				GenerateDebugInformation="true"
@@ -207,6 +216,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(IntDir)\chapro.dll $(OutDir)"
 			/>
 		</Configuration>
 	</Configurations>
@@ -218,7 +228,71 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath="..\agc_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\agc_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\cfirfb_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\cgtfb_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\cgtfb_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\cha_core.c"
+				>
+			</File>
+			<File
+				RelativePath="..\cha_scale.c"
+				>
+			</File>
+			<File
 				RelativePath="..\chapro.c"
+				>
+			</File>
+			<File
+				RelativePath="..\compressor_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\compressor_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\db.c"
+				>
+			</File>
+			<File
+				RelativePath="..\feedback_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\feedback_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fft.c"
+				>
+			</File>
+			<File
+				RelativePath="..\firfb_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\firfb_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\rfft.c"
 				>
 			</File>
 		</Filter>
@@ -227,7 +301,23 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
+				RelativePath="..\cha_ff.h"
+				>
+			</File>
+			<File
+				RelativePath="..\cha_fm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\cha_gf.h"
+				>
+			</File>
+			<File
 				RelativePath="..\chapro.h"
+				>
+			</File>
+			<File
+				RelativePath="..\version.h"
 				>
 			</File>
 		</Filter>
