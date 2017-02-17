@@ -2,7 +2,7 @@ CHAPRO
 
 Synopsis
 
-CHAPRO is a library of functions that may be used to implement simulations of compression hearing-aid signal processing. Two different types of signal processing strategies are included: (1) gammatone filter-bank frequency analysis with instantaneous compression and (2) FIR filter-bank frequency analysis with automatic gain control. A modular design has been adopted to facilitate replacement of library functions with alternative signal-processing implementations.
+CHAPRO is a library of functions that may be used to implement simulations of compression hearing-aid signal processing. Two different types of signal processing strategies are included: (1) complex-FIR-filterbank frequency analysis with instantaneous compression and (2) real-FIR-filterbank frequency analysis with automatic-gain-control (AGC) compression. A modular design has been adopted to facilitate replacement of library functions with alternative signal-processing implementations.
 
 Code Example
 
