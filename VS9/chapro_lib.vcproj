@@ -214,10 +214,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\db.c"
-				>
-			</File>
-			<File
 				RelativePath="..\feedback_prepare.c"
 				>
 			</File>
@@ -235,6 +231,14 @@
 			</File>
 			<File
 				RelativePath="..\firfb_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\iirfb_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\iirfb_process.c"
 				>
 			</File>
 			<File
@@ -260,6 +264,10 @@
 			</File>
 			<File
 				RelativePath="..\cha_gf.h"
+				>
+			</File>
+			<File
+				RelativePath="..\cha_if.h"
 				>
 			</File>
 			<File
