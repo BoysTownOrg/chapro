@@ -76,7 +76,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _ppk      _offset+13
 
 #define _ring     _offset+14
-#define _filt     _offset+15
+#define _efbp     _offset+15
 #define _sfbp     _offset+16
 #define _merr     _offset+17
 
@@ -110,5 +110,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _mu       10
 #define _rho      11
 #define _pwr      12
+#define _fbm      13
 
 #endif /* CHA_IF_H */

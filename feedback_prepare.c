@@ -27,7 +27,8 @@ static float ite_fbp[100] = {
 FUNC(int)
 cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
 {
-	float *sfbp, *filt, *merr, gn;
+    double fbm = 0;
+	float *sfbp, *efbp, *merr, gn;
 	int i, cs, fbl = 0, nqm = 0, rsz = 32;
 
     cha_prepare(cp);
@@ -39,9 +40,9 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
     CHA_IVAR[_rtl] = 0;
     // allocate afc-filter buffers
     if (afl > 0) {
-        cha_allocate(cp, afl, sizeof(float), _filt);
-        filt = (float *) cp[_filt];
-        fzero(filt, afl);
+        cha_allocate(cp, afl, sizeof(float), _efbp);
+        efbp = (float *) cp[_efbp];
+        fzero(efbp, afl);
     }
     CHA_DVAR[_mu]  = mu;
     CHA_DVAR[_rho] = rho;
@@ -52,11 +53,14 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
         cha_allocate(cp, fbl, sizeof(float), _sfbp);
         sfbp = (float *) cp[_sfbp];
         gn = (float) fbg;
+        fbm = 0;
         for (i = 0; i < fbl; i++) {
             sfbp[i] = ite_fbp[i] * gn;
+            fbm += sfbp[i] * sfbp[i];
         }
 	}
     CHA_IVAR[_fbl] = fbl;
+    CHA_DVAR[_fbm] = fbm;
     // initialize quality metrics
 	if (sqm && (afl > 0) && (fbl > 0)) {
         nqm = (fbl < afl) ? fbl : afl;

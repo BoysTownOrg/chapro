@@ -13,20 +13,21 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-	double mu, rho, pwr, eps = 1e-9;
-	float *ring, *filt, *sfbp, *merr, fbe, fbs, mum, dif, fbp, dm, fm, s0, s1;
+	float *ring, *efbp, *sfbp, *merr;
+    float fbe, fbs, mum, dif, fbp, fbm, dm, s0, s1, mu, rho, pwr, eps = 1e-9;
 	int i, ii, ij, j, afl, fbl, nqm, rsz, rhd;
 
-    mu  = CHA_DVAR[_mu];
-    rho = CHA_DVAR[_rho];
-    pwr = CHA_DVAR[_pwr];
+    mu  = (float) CHA_DVAR[_mu];
+    rho = (float) CHA_DVAR[_rho];
+    pwr = (float) CHA_DVAR[_pwr];
+    fbm = (float) CHA_DVAR[_fbm];
     rsz = CHA_IVAR[_rsz];
     rhd = CHA_IVAR[_rhd];
     afl = CHA_IVAR[_afl];
     fbl = CHA_IVAR[_fbl];
     nqm = CHA_IVAR[_nqm];
     ring = (float *) cp[_ring];
-    filt = (float *) cp[_filt];
+    efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
     merr = (float *) cp[_merr];
 	// subtract estimated feedback signal
@@ -53,13 +54,13 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 			} else if (ij < 0) {
 				ij += rsz;
 			}
-            fbe += ring[ij] * filt[j];
+            fbe += ring[ij] * efbp[j];
 		}
 		// apply feedback to input signal
 		s1 = s0 + fbs - fbe;
 		// update adaptive feedback coefficients
 		pwr = rho * pwr + s0 * s0 + s1 * s1;
-        mum = (float) (mu / (eps + pwr));  // modified mu
+        mum = mu / (eps + pwr);  // modified mu
 		for (j = 0; j < afl; j++) {
             ij = ii - j;
             if (ij >= rsz) {
@@ -67,18 +68,16 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 			} else if (ij < 0) {
 				ij += rsz;
 			}
-            filt[j] += mum * ring[ij] * s1;
+            efbp[j] += mum * ring[ij] * s1;
 		}
 		// save quality metrics
 		if (nqm > 0) {
-            dm = fm = 0;
+            dm = 0;
             for (j = 0; j < nqm; j++) {
-                dif = sfbp[j] - filt[j];
-                fbp = sfbp[j];
+                dif = sfbp[j] - efbp[j];
                 dm += dif * dif;
-                fm += fbp * fbp;
             }
-            merr[i] = db1(dm / fm);
+            merr[i] = dm / fbm;
         }
         // copy AFC signal to output
         y[i] = s1;

@@ -40,7 +40,7 @@ save_qm(CHA_PTR cp, int cs)
     iqm += n;
     // copy filters
     fbl =     CHA_IVAR[_fbl];
-    efbp = (float *) cp[_filt];
+    efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
 }
 

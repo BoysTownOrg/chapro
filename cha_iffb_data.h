@@ -14,7 +14,7 @@ static CHA_DATA p01[      16] = { // _ivar
 static double   p02[      16] = { // _dvar
                       0,              0,          24000,              0,              0,
                       0,              0,              0,              0,              0,
-                  0.001,          0.984
+                  0.001,          0.984,              0,   0.0884767669
 };
 static CHA_DATA p03[     512] = {         0};
 static CHA_DATA p04[      40] = {

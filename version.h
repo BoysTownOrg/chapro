@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.07, 22-Apr-18"
+#define VER     "CHAPro version 0.08, 22-Apr-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.08 - 22-Apr-18
+> Removed log function from AFC quality metric
 0.07 - 22-Apr-18
 > Added support for IIR filterbank and adaptive feedback cancelation
 0.06 - 1-Feb-17

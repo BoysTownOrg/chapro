@@ -34,6 +34,7 @@ grid on
 drawnow
 % plot quality metrics
 figure(3); clf
+merr=10*log10(merr);
 ny=length(merr);
 ty=linspace(0,(ny - 1) / rate, ny);
 my=(max(ty)-min(ty))/20;
