@@ -58,6 +58,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     cha_iirfb_analyze(cp, x, z, cs);
     cha_iirfb_synthesize(cp, z, y, cs);
     cha_afc_output(cp, y, cs);
+    // save quality metric
     save_qm(cp, cs);
 }
 
@@ -396,7 +397,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double  mu = 1e-3;    // step size
     static double rho = 0.984;   // forgetting factor
     static int    afl = 100;     // adaptive filter length
-    static int    sqm = 1;       // save quality metrics ?
+    static int    sqm = 1;       // save quality metric ?
 	// simulation parameters
     static double fbg = 1;       // simulated feedback length
     static int     ds = 200;     // simulated processing delay

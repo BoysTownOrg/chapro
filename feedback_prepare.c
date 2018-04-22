@@ -34,18 +34,18 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
     // allocate ring buffer
 	while (rsz < afl) rsz *= 2;
     cha_allocate(cp, rsz, sizeof(float), _ring);
-    CHA_IVAR[_rsz]   = rsz;
-    CHA_IVAR[_rhd]   = 0;
-    CHA_IVAR[_rtl]   = 0;
+    CHA_IVAR[_rsz] = rsz;
+    CHA_IVAR[_rhd] = 0;
+    CHA_IVAR[_rtl] = 0;
     // allocate afc-filter buffers
     if (afl > 0) {
         cha_allocate(cp, afl, sizeof(float), _filt);
         filt = (float *) cp[_filt];
         fzero(filt, afl);
     }
-    CHA_DVAR[_mu]    = mu;
-    CHA_DVAR[_rho]   = rho;
-    CHA_IVAR[_afl]   = afl;
+    CHA_DVAR[_mu]  = mu;
+    CHA_DVAR[_rho] = rho;
+    CHA_IVAR[_afl] = afl;
     // initialize simulated feedback path
 	if (fbg > 0) {
         fbl = 100;
@@ -56,7 +56,7 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
             sfbp[i] = ite_fbp[i] * gn;
         }
 	}
-    CHA_IVAR[_fbl]   = fbl;
+    CHA_IVAR[_fbl] = fbl;
     // initialize quality metrics
 	if (sqm && (afl > 0) && (fbl > 0)) {
         nqm = (fbl < afl) ? fbl : afl;
@@ -65,8 +65,8 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
         merr = (float *) cp[_merr];
         fzero(merr, cs);
 	}
-    CHA_IVAR[_nqm]   = nqm;
+    CHA_IVAR[_nqm] = nqm;
     // initialize instantaneous-power estimate
-    CHA_DVAR[_pwr]   = 0;
+    CHA_DVAR[_pwr] = 0;
     return (0);
 }
