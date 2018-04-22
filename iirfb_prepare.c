@@ -12,14 +12,14 @@
 static __inline void
 iir_filterbank(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, int op, double fs)
 {
-	float *bb, *aa, *gg, *dd;
-	int i, mxd;
+    float *bb, *aa, *gg, *dd;
+    int i, mxd;
 
-	bb = (float *) cp[_bb];
-	aa = (float *) cp[_aa];
-	gg = (float *) cp[_gg];
-	dd = (float *) cp[_dd];
-	// copy IIR coefficients
+    bb = (float *) cp[_bb];
+    aa = (float *) cp[_aa];
+    gg = (float *) cp[_gg];
+    dd = (float *) cp[_dd];
+    // copy IIR coefficients
     for (i = 0; i < (nc * op); i++) {
         bb[i] = (float) b[i];
         aa[i] = (float) a[i];
@@ -28,13 +28,13 @@ iir_filterbank(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, i
         gg[i] = (float) g[i];
         dd[i] = (float) d[i];
     }
-	// find maximum delay
-	mxd = 0;
-	for (i = 0; i < nc; i++) {
-		if (mxd < (int) dd[i]) {
-		    mxd = (int) dd[i];
-		}
-	}
+    // find maximum delay
+    mxd = 0;
+    for (i = 0; i < nc; i++) {
+        if (mxd < (int) dd[i]) {
+            mxd = (int) dd[i];
+        }
+    }
     CHA_IVAR[_ns] = mxd + 1;
 }
 
