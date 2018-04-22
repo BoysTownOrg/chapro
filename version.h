@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.06, 1-Feb-17"
-#define NOTICE	"Copyright 2016-2017 Boys Town National Research Hospital"
+#define VER     "CHAPro version 0.07, 22-Apr-18"
+#define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.07 - 22-Apr-18
+> Added support for IIR filterbank and adaptive feedback cancelation
 0.06 - 1-Feb-17
 > Added db & undb functions
 0.05 - 12-Jan-17
