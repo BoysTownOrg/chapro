@@ -1,13 +1,17 @@
 % test FIR filterbank analysis
 function tst_ffa
 load('test/ffa_impulse')
+td=5;
 y=real(y);
 t=1000*(0:(length(y)-1))/rate;
 % plot impulse responses
 figure(1);clf
 plot(t,y)
 title('FIR filterbank impulse responses')
-y_lim=[min(min(y)) max(max(y))]* 1.05;
+ymn=min(min(y));
+ymx=max(max(y));
+ymg=(ymx-ymn)/20;
+y_lim=[ymn-ymg ymx+ymg];
 t_lim=[-0.5 12.5];
 axis([t_lim y_lim])
 xlabel('time (ms)')
@@ -15,7 +19,7 @@ xlabel('time (ms)')
 figure(2);clf
 H=ffa(y);
 f=linspace(0,rate/2000,length(H))';
-d=5*ones(size(f));
+d=td*ones(size(f));
 fm=max(max(f));
 m_lim=[0.05 fm -50 10];
 d_lim=[0.05 fm   0  8];

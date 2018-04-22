@@ -6,9 +6,9 @@
 
 // feedback module
 
-FUNC(int) cha_feedback_prepare(CHA_PTR, int);
-FUNC(void) cha_feedback_manage(CHA_PTR, float *, float *, int);
-FUNC(void) cha_feedback_record(CHA_PTR, float *, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, double, double, int, double, int);
+FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
+FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 /*****************************************************/
 

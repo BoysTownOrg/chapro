@@ -34,8 +34,14 @@
 #define fmove(x,y,n)    memmove(x,y,(n)*sizeof(float))
 #define fcopy(x,y,n)    memcpy(x,y,(n)*sizeof(float))
 #define fzero(x,n)      memset(x,0,(n)*sizeof(float))
+#define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
 #define round(x)        ((int)floorf((x)+0.5))
 #define log2(x)         (logf(x)/M_LN2)
+
+#define db1(x)          (10*log10f(x))
+#define db2(x)          (20*log10f(x))
+#define undb1(x)        powf(10,(x)/10)
+#define undb2(x)        powf(10,(x)/20)
 
 typedef unsigned long CHA_DATA;
 typedef unsigned long *CHA_LPTR;
@@ -48,16 +54,12 @@ typedef void **CHA_PTR;
 FUNC(void *) cha_allocate(CHA_PTR, int, int, int);
 FUNC(void)   cha_cleanup(CHA_PTR);
 FUNC(int)    cha_data_gen(CHA_PTR, char *);
-FUNC(float)  cha_db1(float);
-FUNC(float)  cha_db2(float);
 FUNC(void)   cha_fft_cr(float *, int);
 FUNC(void)   cha_fft_rc(float *, int);
 FUNC(void)   cha_fft(float *, int);
 FUNC(void)   cha_ifft(float *, int);
 FUNC(void)   cha_prepare(CHA_PTR);
 FUNC(void)   cha_scale(float *, int, float);
-FUNC(float)  cha_undb1(float);
-FUNC(float)  cha_undb2(float);
 FUNC(char *) cha_version(void);
 
 /*****************************************************/

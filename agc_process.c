@@ -7,14 +7,6 @@
 #include "chapro.h"
 #include "cha_ff.h"
 
-#ifdef NEVER
-#define db2(x)          (20*log10f(x))
-#define undb2(x)        powf(10,(x)/20)
-#else
-#define db2(x)          cha_db2(x)
-#define undb2(x)        cha_undb2(x)
-#endif
-
 /***********************************************************/
 
 static __inline void

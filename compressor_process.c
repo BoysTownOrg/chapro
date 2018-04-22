@@ -6,18 +6,6 @@
 #include "chapro.h"
 #include "cha_gf.h"
 
-#ifdef NEVER
-#define db1(x)          (10*log10f(x))
-#define db2(x)          (20*log10f(x))
-#define undb1(x)        powf(10,(x)/10)
-#define undb2(x)        powf(10,(x)/20)
-#else
-#define db1(x)          cha_db1(x)
-#define db2(x)          cha_db2(x)
-#define undb1(x)        cha_undb1(x)
-#define undb2(x)        cha_undb2(x)
-#endif
-
 /***********************************************************/
 
 FUNC(void)

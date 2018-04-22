@@ -3,10 +3,6 @@ EXPORTS cha_version
 cha_allocate
 cha_cleanup
 cha_data_gen
-cha_db1
-cha_db2
-cha_undb1
-cha_undb2
 cha_scale
 cha_fft_cr
 cha_fft_rc
@@ -20,9 +16,9 @@ cha_agc_channel
 cha_agc_output
 cha_compressor_prepare
 cha_compressor_process
-cha_feedback_prepare
-cha_feedback_manage
-cha_feedback_record
+cha_afc_prepare
+cha_afc_input
+cha_afc_output
 cha_cgtfb_prepare
 cha_cgtfb_analyze
 cha_cgtfb_synthesize

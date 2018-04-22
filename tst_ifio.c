@@ -1,4 +1,4 @@
-// tst_ffio.c - test FIR-filterbank i/o with impulse signal
+// tst_ifio.c - test IIR-filterbank i/o with impulse signal
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +9,8 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_ff.h"
-#include "cha_ff_data.h"
+#include "cha_if.h"
+#include "cha_if_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -37,7 +37,6 @@ usage()
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
-    fprintf(stdout, "-w N  window size [128]\n");
     exit(0);
 }
 
@@ -49,7 +48,7 @@ version()
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
+parse_args(I_O *io, int ac, char *av[], double rate)
 {
     io->rate = rate;
     io->mat = 0;
@@ -63,10 +62,6 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
                 tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
-            } else if (av[1][1] == 'w') {
-                *nw = atoi(av[2]);
-                ac--;
-                av++;
             }
             ac--;
             av++;
@@ -85,16 +80,16 @@ init_wav(I_O *io)
     /* second impulse input */
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
-    fprintf(stdout, "FIRFB i/o with ");
+    fprintf(stdout, "IIRFB i/o with ");
     if (tone_io == 0) {
         fprintf(stdout, "impulse: \n");
-        io->ofn = "test/ffio_impulse.mat";
+        io->ofn = "test/ifio_impulse.mat";
         io->iwav[0] = 1;
     } else {
         fprintf(stdout, "tone: \n");
         f = 1000;
         p = (float) ((2 * M_PI * f) / io->rate);
-        io->ofn = "test/ffio_tone.mat";
+        io->ofn = "test/ifio_tone.mat";
         for (i = 0; i < io->nwav; i++) {
             io->iwav[i] = (float) sin(i * p);
         }
@@ -128,6 +123,39 @@ write_wave(I_O *io)
     sp_var_clear(vl);
 }
 
+static void
+load_iirfb(double *b, double *a, double *g, double *d, int *nc, int *op)
+{
+    int i, m, n;
+    static VAR *vl;
+    static char *ifn = "iirfb.mat";
+
+    vl = sp_mat_load(ifn);
+    if (vl == NULL) {
+        fprintf(stderr, "*** Failed to load %s.\n", ifn);
+        exit(1);
+    }
+    for (i = 0; i < 9; i++) {
+        if (strcmp(vl[i].name, "b") == 0) {
+            n = vl[i].rows;
+            m = vl[i].cols;
+            dcopy(b, vl[i].data, m * n);
+        } else if (strcmp(vl[i].name, "a") == 0) {
+            dcopy(a, vl[i].data, m * n);
+        } else if (strcmp(vl[i].name, "g") == 0) {
+            dcopy(g, vl[i].data, m);
+        } else if (strcmp(vl[i].name, "d") == 0) {
+            dcopy(d, vl[i].data, m);
+        }
+        if (vl[i].last) {
+            break;
+        }
+    }
+    sp_var_clear(vl);
+    *nc = m; // number of filter bands
+    *op = n; // number of filter coefficients
+}
+
 /***********************************************************/
 
 // prepare io
@@ -135,13 +163,10 @@ write_wave(I_O *io)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double *cf;
-    int nc;
-
-    static double sr = 24000;       // sampling rate (Hz)
-    static int    nw = 256;         // window size
-    static int    cs = 32;          // chunk size
-    static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
+    double  b[64], a[64], g[8], d[8];
+    int     nc, op;
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    cs = 32;      // chunk size
     // DSL prescription
     static CHA_DSL dsl = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -151,19 +176,18 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
     };
 
-    parse_args(io, ac, av, sr, &nw);
+    parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
     // initialize waveform
     init_wav(io);
-    // prepare FIRFB
-    nc = dsl.nchannel;
-    cf = dsl.cross_freq;
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    fprintf(stdout, "FIRFB: nw=%d\n", nw);
+    // prepare IIRFB
+    load_iirfb(b, a, g, d, &nc, &op);
+    cha_iirfb_prepare(cp, b, a, g, d, nc, op, sr, cs);
+    fprintf(stdout, "IIRFB: nc=%d op=%d\n", nc, op);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_ff_data.h");
+    cha_data_gen(cp, "cha_if_data.h");
 }
 
 // process io
@@ -181,12 +205,12 @@ process(I_O *io, CHA_PTR cp)
     y = io->owav;
     z = (float *) cp[_cc];
     n = io->nsmp;
-    // process FIRFB
+    // process IIRFB
     cs = CHA_IVAR[_cs]; // chunk size
     nk = n / cs;        // number of chunks
     for (i = 0; i < nk; i++) {
-        cha_firfb_analyze(cp, x + i * cs, z, cs);
-        cha_firfb_synthesize(cp, z, y + i * cs, cs);
+        cha_iirfb_analyze(cp, x + i * cs, z, cs);
+        cha_iirfb_synthesize(cp, z, y + i * cs, cs);
     }
 }
 

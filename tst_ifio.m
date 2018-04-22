@@ -1,18 +1,18 @@
-% test FIR filterbank analysis
-function tst_ffio
-tst_ffio_impulse(1)
-tst_ffio_tone(3)
+% test IIR filterbank analysis
+function tst_ifio
+tst_ifio_impulse(1)
+tst_ifio_tone(3)
 return
 
 %===============================================================
 
-function tst_ffio_impulse(fig)
-load('test/ffio_impulse')
-td=5;
+function tst_ifio_impulse(fig)
+load('test/ifio_impulse')
+td=2.5;
 t=1000*(0:(length(y)-1))/rate;
 figure(fig);clf
 plot(t,y)
-title('FIRFB impulse response')
+title('IIRFB impulse response')
 ymn=min(min(y));
 ymx=max(max(y));
 ymg=(ymx-ymn)/20;
@@ -36,7 +36,7 @@ semilogx(f,M)
 axis(m_lim)
 xlabel('frequency (kHz)')
 ylabel('magnitude (dB)')
-title('FIRFB transfer function')
+title('IIRFB transfer function')
 subplot(2,1,2)
 semilogx(f,D,f,d,':k')
 axis(d_lim)
@@ -71,8 +71,8 @@ return
 
 %===============================================================
 
-function tst_ffio_tone(fig)
-load('test/ffio_tone')
+function tst_ifio_tone(fig)
+load('test/ifio_tone')
 t_lim=[-0.001 0.021];
 p_lim=[-1 1]*1.5;
 t=(0:(length(y)-1))/rate;

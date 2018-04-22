@@ -1,6 +1,6 @@
-// cha_ff.h - FIR-filterbank & AGC
-#ifndef CHA_FF_H
-#define CHA_FF_H
+// cha_if.h - IIR-filterbank & AGC
+#ifndef CHA_IF_H
+#define CHA_IF_H
 
 /*****************************************************/
 
@@ -34,12 +34,11 @@ typedef struct {
 
 /*****************************************************/
 
-// firfb module
+// iirfb module
 
-FUNC(int) cha_firfb_prepare(CHA_PTR, double *, int, double, 
-                            int, int, int);
-FUNC(void) cha_firfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void) cha_firfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_iirfb_prepare(CHA_PTR, double *, double *, double *, double *, int, int, double, int);
+FUNC(void) cha_iirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_iirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // compressor module
 
@@ -61,10 +60,12 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 // pointer indices
 
 #define _cc       _offset+0
-#define _ffhh     _offset+1
-#define _ffxx     _offset+2
-#define _ffyy     _offset+3
-#define _ffzz     _offset+4
+#define _bb       _offset+1
+#define _aa       _offset+2
+#define _zz       _offset+3
+#define _yd       _offset+4
+#define _gg       _offset+5
+#define _dd       _offset+6
 
 #define _gctk     _offset+7
 #define _gccr     _offset+8
@@ -83,7 +84,8 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 #define _cs       0 
 #define _nc       1
-#define _nw       2
+#define _op       2
+#define _ns       3
 
 #define _rsz      4
 #define _rhd      5
@@ -109,4 +111,4 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _rho      11
 #define _pwr      12
 
-#endif /* CHA_FF_H */
+#endif /* CHA_IF_H */
