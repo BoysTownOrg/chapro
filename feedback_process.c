@@ -13,9 +13,9 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-	float *ring, *efbp, *sfbp, *merr;
-    float fbe, fbs, mum, dif, fbm, dm, s0, s1, mu, rho, pwr, eps = 1e-9;
-	int i, ii, ij, j, afl, fbl, nqm, rsz, rhd;
+    float *ring, *efbp, *sfbp, *merr;
+    float fbe, fbs, mum, dif, fbm, dm, s0, s1, mu, rho, pwr, eps = 1e-9f;
+    int i, ii, ij, j, afl, fbl, nqm, rsz, rhd;
 
     mu  = (float) CHA_DVAR[_mu];
     rho = (float) CHA_DVAR[_rho];
@@ -30,48 +30,48 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
     merr = (float *) cp[_merr];
-	// subtract estimated feedback signal
-	for (i = 0; i < cs; i++) {
+    // subtract estimated feedback signal
+    for (i = 0; i < cs; i++) {
         s0 = x[i];
-		ii = rhd + i;
-		// simulate feedback
+        ii = rhd + i;
+        // simulate feedback
         fbs = 0;
-		for (j = 0; j < fbl; j++) {
+        for (j = 0; j < fbl; j++) {
             ij = ii - j;
             if (ij >= rsz) {
                 ij -= rsz;
-			} else if (ij < 0) {
-				ij += rsz;
-			}
+            } else if (ij < 0) {
+                ij += rsz;
+            }
             fbs += ring[ij] * sfbp[j];
-		}
-		// estimate feedback
+        }
+        // estimate feedback
         fbe = 0;
-		for (j = 0; j < afl; j++) {
+        for (j = 0; j < afl; j++) {
             ij = ii - j;
             if (ij >= rsz) {
                 ij -= rsz;
-			} else if (ij < 0) {
-				ij += rsz;
-			}
+            } else if (ij < 0) {
+                ij += rsz;
+            }
             fbe += ring[ij] * efbp[j];
-		}
-		// apply feedback to input signal
-		s1 = s0 + fbs - fbe;
-		// update adaptive feedback coefficients
-		pwr = rho * pwr + s0 * s0 + s1 * s1;
+        }
+        // apply feedback to input signal
+        s1 = s0 + fbs - fbe;
+        // update adaptive feedback coefficients
+        pwr = rho * pwr + s0 * s0 + s1 * s1;
         mum = mu / (eps + pwr);  // modified mu
-		for (j = 0; j < afl; j++) {
+        for (j = 0; j < afl; j++) {
             ij = ii - j;
             if (ij >= rsz) {
                 ij -= rsz;
-			} else if (ij < 0) {
-				ij += rsz;
-			}
+            } else if (ij < 0) {
+                ij += rsz;
+            }
             efbp[j] += mum * ring[ij] * s1;
-		}
-		// save quality metrics
-		if (nqm > 0) {
+        }
+        // save quality metrics
+        if (nqm > 0) {
             dm = 0;
             for (j = 0; j < nqm; j++) {
                 dif = sfbp[j] - efbp[j];
@@ -81,7 +81,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         }
         // copy AFC signal to output
         y[i] = s1;
-	}
+    }
     // save power estimate
     CHA_DVAR[_pwr] = pwr;
 }
@@ -89,23 +89,23 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 FUNC(void)
 cha_afc_output(CHA_PTR cp, float *x, int cs)
 {
-	float *ring;
-	int i, j, rsz, rhd, rtl;
+    float *ring;
+    int i, j, rsz, rhd, rtl;
 
     rsz = CHA_IVAR[_rsz];
     rhd = CHA_IVAR[_rhd];
     rtl = CHA_IVAR[_rtl];
     ring = (float *) cp[_ring];
-	rhd = rtl;
-	// copy chunk to ring buffer
-	for (i = 0; i < cs; i++) {
-		j = rhd + i;
-		if (j >= rsz) {
-			j -= rsz;
-		}
-		ring[j] = x[i];
-	}
-	rtl = (rhd + cs) % rsz;
+    rhd = rtl;
+    // copy chunk to ring buffer
+    for (i = 0; i < cs; i++) {
+        j = rhd + i;
+        if (j >= rsz) {
+            j -= rsz;
+        }
+        ring[j] = x[i];
+    }
+    rtl = (rhd + cs) % rsz;
     CHA_IVAR[_rhd] = rhd;
     CHA_IVAR[_rtl] = rtl;
 }

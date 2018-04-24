@@ -20,7 +20,7 @@ static double ite_fbp[100] = {
     -0.000580,-0.001069,-0.001569,-0.002153,-0.002737,-0.003321,-0.003905,-0.004489,-0.005073,-0.004653,
     -0.004184,-0.003715,-0.003246,-0.002778,-0.002309,-0.001965,-0.001722,-0.001479,-0.001236,-0.000993,
     -0.000750,-0.000819,-0.000969,-0.001118,-0.001268,-0.001418,-0.001567,-0.001717,-0.001867,-0.002016,
-	-0.002166,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200};
+    -0.002166,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200};
 
 /***********************************************************/
 
@@ -28,12 +28,12 @@ FUNC(int)
 cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
 {
     double fbm = 0;
-	float *sfbp, *efbp, *merr;
-	int i, cs, fbl = 0, nqm = 0, rsz = 32;
+    float *sfbp, *efbp, *merr;
+    int i, cs, fbl = 0, nqm = 0, rsz = 32;
 
     cha_prepare(cp);
     // allocate ring buffer
-	while (rsz < afl) rsz *= 2;
+    while (rsz < afl) rsz *= 2;
     cha_allocate(cp, rsz, sizeof(float), _ring);
     CHA_IVAR[_rsz] = rsz;
     CHA_IVAR[_rhd] = 0;
@@ -48,7 +48,7 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
     CHA_DVAR[_rho] = rho;
     CHA_IVAR[_afl] = afl;
     // initialize simulated feedback path
-	if (fbg > 0) {
+    if (fbg > 0) {
         fbl = 100;
         cha_allocate(cp, fbl, sizeof(float), _sfbp);
         sfbp = (float *) cp[_sfbp];
@@ -57,17 +57,17 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
             sfbp[i] = (float) (ite_fbp[i] * fbg);
             fbm += sfbp[i] * sfbp[i];
         }
-	}
+    }
     CHA_IVAR[_fbl] = fbl;
     CHA_DVAR[_fbm] = fbm;
     // initialize quality metrics
-	if (sqm && (afl > 0) && (fbl > 0)) {
+    if (sqm && (afl > 0) && (fbl > 0)) {
         nqm = (fbl < afl) ? fbl : afl;
         cs = CHA_IVAR[_cs];
         cha_allocate(cp,  cs, sizeof(float), _merr);
         merr = (float *) cp[_merr];
         fzero(merr, cs);
-	}
+    }
     CHA_IVAR[_nqm] = nqm;
     // initialize instantaneous-power estimate
     CHA_DVAR[_pwr] = 0;

@@ -156,7 +156,7 @@ init_wav(I_O *io)
         fprintf(stdout, "WAV input: %s...\n", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
-	set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
+        set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
     } else {    /* 8-second impulse input */
         fprintf(stdout, "impulse response...\n");
         io->nwav = round(io->rate * 8);
@@ -234,7 +234,7 @@ put_aud(I_O *io, CHA_PTR cp)
             fzero(io->owav, io->nsmp);
         }
         io->pseg++;
-	process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
+        process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
     }
 }
 

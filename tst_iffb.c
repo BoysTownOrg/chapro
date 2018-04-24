@@ -80,17 +80,17 @@ usage()
 static void
 var_string(VAR *vl, char *name, char *s)
 {
-	int i, n;
-	float *data;
+    int i, n;
+    float *data;
 
-	n = strlen(s);
-	data = (float *) calloc(n, sizeof(float));
-	for (i = 0; i < n; i++) {
-		data[i] = s[i];
-	}
+    n = strlen(s);
+    data = (float *) calloc(n, sizeof(float));
+    for (i = 0; i < n; i++) {
+        data[i] = s[i];
+    }
     sp_var_set(vl, "ifn", data, 1, n, "f4");
-	vl[0].text = 1;
-	free(data);
+    vl[0].text = 1;
+    free(data);
 }
 
 static void
@@ -192,7 +192,7 @@ init_wav(I_O *io)
         fprintf(stdout, "WAV input: %s...\n", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
-	set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
+        set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
     } else {    /* 8-second impulse input */
         fprintf(stdout, "impulse response...\n");
         io->nwav = round(io->rate * 8);
@@ -270,7 +270,7 @@ put_aud(I_O *io, CHA_PTR cp)
             fzero(io->owav, io->nsmp);
         }
         io->pseg++;
-	process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
+    process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
     }
 }
 
@@ -384,14 +384,14 @@ load_iirfb(double *z, double *p, double *g, double *d, int *nc, int *nz)
 static void
 simulate_processing(double *g, double *d, int nc, int ds, double gs)
 {
-	int i;
+    int i;
 
-	ds -= (int) d[nc - 1];
+    ds -= (int) d[nc - 1];
      // adjust IIR gain & delay to simulate processing
-	for (i = 0; i < nc; i++) {
-		g[i] *= gs;
-		if (ds > 0) d[i] += ds;
-	}
+    for (i = 0; i < nc; i++) {
+        g[i] *= gs;
+        if (ds > 0) d[i] += ds;
+    }
 }
 
 /***********************************************************/
@@ -405,12 +405,12 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     int     nc, nz;
     static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
-	// AFC parameters
+    // AFC parameters
     static double  mu = 1e-3;    // step size
     static double rho = 0.984;   // forgetting factor
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
-	// simulation parameters
+    // simulation parameters
     static double fbg = 1;       // simulated feedback length
     static int     ds = 200;     // simulated processing delay
     static double  gs = 4;       // simulated processing gain
