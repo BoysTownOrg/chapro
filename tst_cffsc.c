@@ -31,7 +31,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process filterbank+compressor

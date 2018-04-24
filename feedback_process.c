@@ -14,7 +14,7 @@ FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
 	float *ring, *efbp, *sfbp, *merr;
-    float fbe, fbs, mum, dif, fbp, fbm, dm, s0, s1, mu, rho, pwr, eps = 1e-9;
+    float fbe, fbs, mum, dif, fbm, dm, s0, s1, mu, rho, pwr, eps = 1e-9;
 	int i, ii, ij, j, afl, fbl, nqm, rsz, rhd;
 
     mu  = (float) CHA_DVAR[_mu];

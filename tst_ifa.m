@@ -1,6 +1,6 @@
 % test IIR filterbank analysis
 function tst_ifa
-load('test/ifa_impulse','rate','x','y')
+load('test/tst_ifa','rate','x','y')
 td=2.5;
 y=real(y);
 t=1000*(0:(length(y)-1))/rate;

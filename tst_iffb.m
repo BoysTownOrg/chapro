@@ -1,6 +1,8 @@
 % tst_iffb - CHAPRO demonstration of GHA processing
 function tst_iffb
-load('test/tst_iffb')
+pfn='test/tst_iffb.mat'; % AFC results produced by tst_iffb
+load(pfn)
+play_audio=1;
 gn=0.317858; % audioread scale factor 
 x=audioread(ifn)*gn;
 y=wave;
@@ -44,4 +46,14 @@ axis([tlim -25 5])
 ylabel('dB')
 xlabel('time (s)')
 title('misalignment error')
+
+if play_audio
+    fprintf('     Original signal: %s\n',ifn);
+    [x,fs]=audioread(ifn);
+    p = audioplayer(x, fs);
+    playblocking(p)
+    fprintf('AFC-processed signal: %s\n',pfn);
+    p = audioplayer(wave, rate);
+    playblocking(p)
+end
 return

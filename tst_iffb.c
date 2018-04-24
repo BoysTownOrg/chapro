@@ -330,43 +330,57 @@ stop_wav(I_O *io)
     }
     if (io->nseg == 1) {
         fprintf(stdout, "...done");
-        getchar();
-    } else {
-        fprintf(stdout, "\n");
     }
+    fprintf(stdout, "\n");
 }
 
 static void
-load_iirfb(double *b, double *a, double *g, double *d, int *nc, int *op)
+load_iirfb(double *z, double *p, double *g, double *d, int *nc, int *nz)
 {
-    int i, m, n;
+    double *b = NULL, *a = NULL, *h = NULL;
+    int i, m, n, nb, no;
     static VAR *vl;
     static char *ifn = "iirfb.mat";
 
     vl = sp_mat_load(ifn);
     if (vl == NULL) {
-        fprintf(stderr, "*** Failed to load %s.\n", ifn);
+        fprintf(stderr, "*** Can't load %s.\n", ifn);
         exit(1);
     }
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 99; i++) {
+        n = vl[i].rows;
+        m = vl[i].cols;
         if (strcmp(vl[i].name, "b") == 0) {
-            n = vl[i].rows;
-            m = vl[i].cols;
+            b = (double *) calloc(m * n * 2, sizeof(double));
             dcopy(b, vl[i].data, m * n);
         } else if (strcmp(vl[i].name, "a") == 0) {
+            a = (double *) calloc(m * n * 2, sizeof(double));
             dcopy(a, vl[i].data, m * n);
         } else if (strcmp(vl[i].name, "g") == 0) {
-            dcopy(g, vl[i].data, m);
+            dcopy(g, vl[i].data, m * n);
         } else if (strcmp(vl[i].name, "d") == 0) {
-            dcopy(d, vl[i].data, m);
+            dcopy(d, vl[i].data, m * n);
+        } else if (strcmp(vl[i].name, "z") == 0) {
+            nb = m;
+            no = n;
+            dcopy(z, vl[i].data, m * n * 2);
+        } else if (strcmp(vl[i].name, "p") == 0) {
+            dcopy(p, vl[i].data, m * n * 2);
+        } else if (strcmp(vl[i].name, "h") == 0) {
+            h = (double *) calloc(m * n, sizeof(double));
+            dcopy(h, vl[i].data, m * n);
         }
         if (vl[i].last) {
             break;
         }
     }
     sp_var_clear(vl);
-    *nc = m; // number of filter bands
-    *op = n; // number of filter coefficients
+    for (i = 0; i < nb; i++) g[i] *= h[i];
+    if (b) free(b);
+    if (a) free(a);
+    if (h) free(h);
+    *nc = nb; // number of filter bands
+    *nz = no; // number of zeros & poles
 }
 
 static void
@@ -389,8 +403,8 @@ simulate_processing(double *g, double *d, int nc, int ds, double gs)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double  b[64], a[64], g[8], d[8];
-    int     nc, op;
+    double  z[64], p[64], g[8], d[8];
+    int     nc, nz;
     static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
 	// AFC parameters
@@ -415,11 +429,11 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         init_aud(io);
     }
     // prepare IIRFB
-    load_iirfb(b, a, g, d, &nc, &op);
+    load_iirfb(z, p, g, d, &nc, &nz);
     ds -= cs; // subtract chunk size from simulated processing delay
     simulate_processing(g, d, nc, ds, gs); // adjust IIR gain & delay to simulate processing
-    cha_iirfb_prepare(cp, b, a, g, d, nc, op, sr, cs);
-    fprintf(stdout, "IIRFB+AFC: nc=%d op=%d\n", nc, op);
+    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
+    fprintf(stdout, "IIRFB+AFC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffers
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC

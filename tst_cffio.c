@@ -186,7 +186,7 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;

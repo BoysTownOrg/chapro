@@ -8,6 +8,62 @@
 
 /***********************************************************/
 
+
+static void
+root2poly(double *r, double *p, int n)
+{
+    double *pp, *qq;
+    int i, ir, ii, j, jr, ji;
+
+    pp = (double *) calloc((n + 1) * 2, sizeof(double));
+    qq = (double *) calloc((n + 1) * 2, sizeof(double));
+    dzero(pp, (n + 1) * 2);
+    dzero(qq, (n + 1) * 2);
+    pp[0] = qq[0] = 1;
+    for (i = 0; i < n; i++) {
+        ir = i * 2;
+        ii = i * 2 + 1;
+        for (j = 0; j < i; j++) {
+            jr = j * 2;
+            ji = j * 2 + 1;
+            qq[jr + 4] = pp[jr + 4] - (pp[jr + 2] * r[ir] - pp[ji + 2] * r[ii]);
+            qq[ji + 4] = pp[ji + 4] - (pp[ji + 2] * r[ir] + pp[jr + 2] * r[ii]);
+        }
+        qq[2] = pp[2] - r[ir];
+        qq[3] = pp[3] - r[ii];
+        for (j = 0; j <= n; j++) {
+            jr = j * 2;
+            ji = j * 2 + 1;
+            pp[jr] = qq[jr];
+            pp[ji] = qq[ji];
+        }
+    }
+    // return real part of product-polynomial coefficients
+    for (i = 0; i < (n + 1); i++) {
+        p[i] = pp[i * 2];
+    }
+}
+
+static void
+zp2ba(double *z, double *p, int nz, int nb, double *b, double *a)
+{
+    double *zk, *pk, *bk, *ak;
+    int k;
+
+    if ((nz > 0) && (nb > 0)) {
+        for (k = 0; k < nb; k++) {
+            zk = z + k * nz * 2;
+            pk = p + k * nz * 2;
+            bk = b + k * (nz + 1);
+            ak = a + k * (nz + 1);
+            root2poly(zk, bk, nz);
+            root2poly(pk, ak, nz);
+        }
+    }
+}
+
+/***********************************************************/
+
 // compute IIR-filterbank coefficients
 static __inline void
 iir_filterbank(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, int op, double fs)
@@ -15,11 +71,11 @@ iir_filterbank(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, i
     float *bb, *aa, *gg, *dd;
     int i, mxd;
 
+    // copy IIR coefficients
     bb = (float *) cp[_bb];
     aa = (float *) cp[_aa];
     gg = (float *) cp[_gg];
     dd = (float *) cp[_dd];
-    // copy IIR coefficients
     for (i = 0; i < (nc * op); i++) {
         bb[i] = (float) b[i];
         aa[i] = (float) a[i];
@@ -41,9 +97,10 @@ iir_filterbank(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, i
 /***********************************************************/
 
 FUNC(int)
-cha_iirfb_prepare(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, int op, double fs, int cs)
+cha_iirfb_prepare(CHA_PTR cp, double *z, double *p, double *g, double *d, int nc, int nz, double fs, int cs)
 {
-    int      ns;
+    double *b, *a;
+    int      ns, op;
 
     if (cs <= 0) {
         return (1);
@@ -51,6 +108,11 @@ cha_iirfb_prepare(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc
     cha_prepare(cp);
     CHA_IVAR[_cs] = cs;
     CHA_DVAR[_fs] = fs;
+    // covert zeros & poles to IIR coefficients
+    op = nz + 1;
+    b = (double *) calloc(nc * op, sizeof(double));
+    a = (double *) calloc(nc * op, sizeof(double));
+    zp2ba(z, p, nz, nc, b, a);
     // allocate filter-coefficient buffers
     CHA_IVAR[_nc] = nc;
     CHA_IVAR[_op] = op;
@@ -58,11 +120,13 @@ cha_iirfb_prepare(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc
     cha_allocate(cp, nc * op, sizeof(float), _aa);
     cha_allocate(cp, nc, sizeof(float), _gg);
     cha_allocate(cp, nc, sizeof(float), _dd);
-    // compute IIR-filterbank coefficients
+    // save IIR-filterbank coefficients
     iir_filterbank(cp, b, a, g, d, nc, op, fs);
     ns = CHA_IVAR[_ns];
     cha_allocate(cp, nc * op, sizeof(float), _zz);
     cha_allocate(cp, nc * ns, sizeof(float), _yd);
+    free(b);
+    free(a);
 
     return (0);
 }
