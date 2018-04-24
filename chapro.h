@@ -35,6 +35,7 @@
 #define fcopy(x,y,n)    memcpy(x,y,(n)*sizeof(float))
 #define fzero(x,n)      memset(x,0,(n)*sizeof(float))
 #define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
+#define dzero(x,n)      memset(x,0,(n)*sizeof(double))
 #define round(x)        ((int)floorf((x)+0.5))
 #define log2(x)         (logf(x)/M_LN2)
 

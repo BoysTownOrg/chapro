@@ -13,35 +13,23 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
 	cfirfb_prepare.o cfirfb_process.o \
 	firfb_prepare.o firfb_process.o \
+	iirfb_prepare.o iirfb_process.o \
 	cgtfb_prepare.o cgtfb_process.o \
 	feedback_prepare.o feedback_process.o \
 	compressor_prepare.o compressor_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
-     tst_gfa tst_gfio tst_gfsc
+     tst_gfa tst_gfio tst_gfsc tst_ifa tst_ifio tst_ifsc tst_iffb
 
 all: $(PGMS)
 
-tst: tstgf tstff tstsc
+tst: tstif
 
-tstcf: tst_cfa tst_cfio 
-	./tst_cffa
-	./tst_cffio
-	./tst_cffio -t
-
-tstff: tst_ffa tst_ffio 
-	./tst_ffa
-	./tst_ffio
-	./tst_ffio -t
-
-tstgf: tst_gfa tst_gfio 
-	./tst_gfa
-	./tst_gfio
-	./tst_gfio -t
-
-tstsc: tst_cffsc tst_ffsc tst_gfsc
-	./tst_cffsc
-	./tst_ffsc
-	./tst_gfsc
+tstif: tst_ifa tst_ifio tst_ifsc tst_iffb
+	./tst_ifa
+	./tst_ifio
+	./tst_ifio -t
+	./tst_ifsc
+	./tst_iffb
 
 tst_cffa : tst_cffa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
@@ -68,6 +56,18 @@ tst_gfio : tst_gfio.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 tst_gfsc : tst_gfsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifa : tst_ifa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifio : tst_ifio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifsc : tst_ifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_iffb : tst_iffb.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 libchapro.a: $(CHAPRO)

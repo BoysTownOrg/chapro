@@ -10,7 +10,7 @@
 
 // ITE feedback path from Kosgen (2006)
 
-static float ite_fbp[100] = {
+static double ite_fbp[100] = {
      0.000000,-0.001715, 0.000306, 0.007936,-0.014126, 0.001207, 0.001541, 0.040498, 0.077863, 0.069577,
     -0.008025,-0.106044,-0.151131,-0.124264,-0.055777, 0.013607, 0.075156, 0.082472, 0.048781, 0.004444,
     -0.033910,-0.033370,-0.013614, 0.011497, 0.031987, 0.040751, 0.031424, 0.014976,-0.001471,-0.006256,
@@ -28,7 +28,7 @@ FUNC(int)
 cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
 {
     double fbm = 0;
-	float *sfbp, *efbp, *merr, gn;
+	float *sfbp, *efbp, *merr;
 	int i, cs, fbl = 0, nqm = 0, rsz = 32;
 
     cha_prepare(cp);
@@ -52,10 +52,9 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
         fbl = 100;
         cha_allocate(cp, fbl, sizeof(float), _sfbp);
         sfbp = (float *) cp[_sfbp];
-        gn = (float) fbg;
         fbm = 0;
         for (i = 0; i < fbl; i++) {
-            sfbp[i] = ite_fbp[i] * gn;
+            sfbp[i] = (float) (ite_fbp[i] * fbg);
             fbm += sfbp[i] * sfbp[i];
         }
 	}

@@ -183,14 +183,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     int     nc, nz;
     static double sr = 24000;   // sampling rate (Hz)
     static int    cs = 32;      // chunk size
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
 
     parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
