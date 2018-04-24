@@ -159,13 +159,11 @@ init_wav(I_O *io)
         vl = sp_wav_read(io->ifn, 0, 0, &fs);
         if (vl == NULL) {
             fprintf(stderr, "can't open %s\n", io->ifn);
-            getchar();
             exit(1);
         }
         if (fs != io->rate) {
             fprintf(stderr, "%s rate mismatch: ", io->ifn);
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
-            getchar();
             exit(2);
         }
         fprintf(stdout, "WAV input: %s...\n", io->ifn);
@@ -303,10 +301,8 @@ stop_wav(I_O *io)
     }
     if (io->nseg == 1) {
         fprintf(stdout, "...done");
-        getchar();
-    } else {
-        fprintf(stdout, "\n");
     }
+    fprintf(stdout, "\n");
 }
 
 /***********************************************************/
