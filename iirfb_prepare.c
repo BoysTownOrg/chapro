@@ -23,20 +23,15 @@ root2poly(double *r, double *p, int n)
     for (i = 0; i < n; i++) {
         ir = i * 2;
         ii = i * 2 + 1;
+        qq[2] = pp[2] - r[ir];
+        qq[3] = pp[3] - r[ii];
         for (j = 0; j < i; j++) {
             jr = j * 2;
             ji = j * 2 + 1;
             qq[jr + 4] = pp[jr + 4] - (pp[jr + 2] * r[ir] - pp[ji + 2] * r[ii]);
             qq[ji + 4] = pp[ji + 4] - (pp[ji + 2] * r[ir] + pp[jr + 2] * r[ii]);
         }
-        qq[2] = pp[2] - r[ir];
-        qq[3] = pp[3] - r[ii];
-        for (j = 0; j <= n; j++) {
-            jr = j * 2;
-            ji = j * 2 + 1;
-            pp[jr] = qq[jr];
-            pp[ji] = qq[ji];
-        }
+        dcopy(pp, qq, (n + 1) * 2);
     }
     // return real part of product-polynomial coefficients
     for (i = 0; i < (n + 1); i++) {
