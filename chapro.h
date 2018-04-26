@@ -27,6 +27,7 @@
 #endif
 #ifndef WIN32
 #define _hypot          hypot
+#define _strdup         strdup
 #define __inline        inline
 #endif
 

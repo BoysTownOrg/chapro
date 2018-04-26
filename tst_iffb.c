@@ -123,7 +123,6 @@ static void
 parse_args(I_O *io, int ac, char *av[], double rate)
 {
     io->rate = rate;
-    io->ifn = "test/carrots.wav";
     io->mat = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
@@ -140,8 +139,8 @@ parse_args(I_O *io, int ac, char *av[], double rate)
             break;
         }
     }
-    //io->ifn = (ac > 1) ? av[1] : NULL;
-    io->ofn = (ac > 2) ? av[2] : NULL;
+    io->ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
+    io->ofn = (ac > 2) ? _strdup(av[2]) : NULL;
     if (mat_file(io->ofn)) {
         io->mat = 1;
     }

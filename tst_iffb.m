@@ -22,31 +22,33 @@ xylim=[min(min(x),min(y)) max(max(x),max(y))]*1.05;
 axis([tlim xylim])
 legend('output','input')
 title('CHAPRO demonstration of AFC processing')
-figure(2);clf
-ny=length(sfbp);
-ty=linspace(0,(ny - 1) / rate, ny)*1000;
-my=(max(ty)-min(ty))/20;
-tlim=[min(ty)-my max(ty)+my];
-plot(ty,sfbp,ty,efbp)
-xlim(tlim)
-xlabel('time (ms)')
-title('fedback path')
-legend('simulated','estimated')
-grid on
-drawnow
-% plot quality metrics
-figure(3); clf
-merr=10*log10(merr);
-ny=length(merr);
-ty=linspace(0,(ny - 1) / rate, ny);
-my=(max(ty)-min(ty))/20;
-tlim=[min(ty)-my max(ty)+my];
-plot(ty,merr); 
-axis([tlim -25 5])
-ylabel('dB')
-xlabel('time (s)')
-title('misalignment error')
-
+if (exist('sfbp'))
+    % plot feedback path
+    figure(2);clf
+    ny=length(sfbp);
+    ty=linspace(0,(ny - 1) / rate, ny)*1000;
+    my=(max(ty)-min(ty))/20;
+    tlim=[min(ty)-my max(ty)+my];
+    plot(ty,sfbp,ty,efbp)
+    xlim(tlim)
+    xlabel('time (ms)')
+    title('fedback path')
+    legend('simulated','estimated')
+    grid on
+    drawnow
+    % plot quality metrics
+    figure(3); clf
+    merr=10*log10(merr);
+    ny=length(merr);
+    ty=linspace(0,(ny - 1) / rate, ny);
+    my=(max(ty)-min(ty))/20;
+    tlim=[min(ty)-my max(ty)+my];
+    plot(ty,merr); 
+    axis([tlim -25 5])
+    ylabel('dB')
+    xlabel('time (s)')
+    title('misalignment error')
+end
 if play_audio
     fprintf('     Original signal: %s\n',ifn);
     [x,fs]=audioread(ifn);
