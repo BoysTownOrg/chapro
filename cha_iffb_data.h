@@ -2,6 +2,7 @@
 #ifndef CHA_DATA_H
 #define CHA_DATA_H
 
+static CHA_DATA cha_magic[4] = {0,0x55530,0x68131,0};
 static CHA_DATA p00[      64] = { // _size
                256,        64,       128,      2048,       160,       160,       160,      5408,
                 32,        32,         0,         0,         0,         0,         0,         0,
@@ -65,10 +66,11 @@ static CHA_DATA p19[     100] = {
 };
 static CHA_DATA p20[      32] = {         0};
 
-static CHA_DATA *cha_data[NPTR] = {
+static CHA_DATA *cha_data[NPTR+1] = {
     (CHA_DATA *)p00,(CHA_DATA *)p01,(CHA_DATA *)p02,
-     p03, p04, p05, p06, p07, p08, p09,NULL,NULL,NULL,NULL,NULL,NULL,NULL, p17, p18,
-     p19, p20
+    p03, p04, p05, p06, p07, p08, p09,NULL,NULL,NULL,NULL,NULL,NULL,NULL, p17, p18,
+    p19, p20,
+    cha_magic
 };
 
 #endif // CHA_DATA_H

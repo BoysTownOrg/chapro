@@ -95,11 +95,16 @@ cha_data_gen(CHA_PTR cp, char *fn)
     for (i = 0; i < hdsz; i++) {
         fprintf(fp, "%s\n", head[i]);
     }
-    // initialize ptr arrays
+    // compute total array size
     ptsiz = 0;
     for (i = 0; i < NPTR; i++) {
         if (cp[i]) ptsiz = i + 1;
     }
+    // initialize magic number
+    if (ptsiz > 0) {
+        fprintf(fp, "static CHA_DATA cha_magic[4] = {0,0x55530,0x68131,0};\n");
+    }
+    // initialize ptr arrays
     for (i = 0; i < ptsiz; i++) {
         if (i == _size) {
             arlen = cpsiz[i] / sizeof(long);
@@ -187,9 +192,9 @@ cha_data_gen(CHA_PTR cp, char *fn)
     fprintf(fp, "\n");
     // initialize ptr
     if (ptsiz < 1) {
-        fprintf(fp, "static CHA_DATA *cha_data[NPTR] = {0};\n");
+        fprintf(fp, "static CHA_DATA *cha_data[1] = {cha_magic};\n");
     } else {
-        fprintf(fp, "static CHA_DATA *cha_data[NPTR] = {\n");
+        fprintf(fp, "static CHA_DATA *cha_data[NPTR+1] = {\n");
         fprintf(fp, "    ");
         for (i = 0; i < _reserve; i++) {
             fprintf(fp, "(CHA_DATA *)p%02d,", i);
@@ -197,16 +202,17 @@ cha_data_gen(CHA_PTR cp, char *fn)
         fprintf(fp, "\n");
         for (i = _reserve; i < ptsiz; i++) {
             j = i - _reserve;
-            if ((j % ptpl) == 0) fprintf(fp, "    ");
+            if ((j % ptpl) == 0) fprintf(fp, "   ");
             if (cpsiz[i] == 0) {
                 fprintf(fp, "NULL");
             } else {
                 fprintf(fp, " p%02d", i);
             }
-           if (i < (ptsiz - 1)) fprintf(fp, ",");
+           fprintf(fp, ",");
            if ((j % ptpl) == (ptpl - 1)) fprintf(fp, "\n");
         }
         if ((j % ptpl) != (ptpl - 1)) fprintf(fp, "\n");
+        fprintf(fp, "    cha_magic\n");
         fprintf(fp, "};\n");
     }
     // print trailer
