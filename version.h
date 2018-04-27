@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.11, 26-Apr-18"
+#define VER     "CHAPro version 0.12, 27-Apr-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.12 - 27-Apr-18
+> Added tst_gha to test IIR+AFC+AGC
 0.11 - 26-Apr-18
 > Reduced eps to 1e-30 in feedback_process.c
 > Fix ifn arg in tst_iffb.c

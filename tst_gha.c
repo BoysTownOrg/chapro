@@ -1,4 +1,4 @@
-// tst_iffb.c - test IIR-filterbank + AFC
+// tst_gha.c - test IIR-filterbank + AFC + AGC
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <sigpro.h>
 #include "chapro.h"
 #include "cha_if.h"
-#include "cha_iffb_data.h"
+#include "cha_gha_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -53,10 +53,13 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIRFB+AFC
+    // process IIRFB+AFC+AGC
     cha_afc_input(cp, x, x, cs);
+    cha_agc_input(cp, x, x, cs);
     cha_iirfb_analyze(cp, x, z, cs);
+    cha_agc_channel(cp, z, z, cs);
     cha_iirfb_synthesize(cp, z, y, cs);
+    cha_agc_output(cp, y, y, cs);
     cha_afc_output(cp, y, cs);
     // save quality metric
     save_qm(cp, cs);
@@ -69,7 +72,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_iffb [-options] [input_file] [output_file]\n");
+    fprintf(stdout, "usage: tst_gha [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
@@ -170,8 +173,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/tst_iffb.wav";
-    static char *mfn = "test/tst_iffb.mat";
+    static char *wfn = "test/tst_gha.wav";
+    static char *mfn = "test/tst_gha.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -413,6 +416,15 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double fbg = 1;       // simulated feedback length
     static int     ds = 200;     // simulated processing delay
     static double  gs = 4;       // simulated processing gain
+    // DSL prescription
+    static CHA_DSL dsl = {5, 50, 119, 0, 8,
+        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
+        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
+        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
+        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
+        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
+    };
+    static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
 
     parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
@@ -430,17 +442,19 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     ds -= cs; // subtract chunk size from simulated processing delay
     simulate_processing(g, d, nc, ds, gs); // adjust IIR gain & delay to simulate processing
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIRFB+AFC: nc=%d nz=%d\n", nc, nz);
+    fprintf(stdout, "IIRFB+AFC+AGC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
     cha_afc_prepare(cp, mu, rho, afl, fbg, sqm);
+    // prepare AGC
+    cha_agc_prepare(cp, &dsl, &gha);
     // initialize quality metric
     nqm = io->nsmp;
     iqm = 0;
     qm = (float *) calloc(nqm, sizeof(float));
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_iffb_data.h");
+    cha_data_gen(cp, "cha_gha_data.h");
 }
 
 // process io
