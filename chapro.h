@@ -2,6 +2,10 @@
 #ifndef CHAPRO_H
 #define CHAPRO_H
 
+#ifndef MATH_H
+#include <math.h>
+#endif
+
 #ifdef DLL
 #define FUNC(type) __declspec(dllexport) type _stdcall
 #else
@@ -40,10 +44,10 @@
 #define round(x)        ((int)floorf((x)+0.5))
 #define log2(x)         (logf(x)/M_LN2)
 
-#define db1(x)          (10*log10f(x))
-#define db2(x)          (20*log10f(x))
-#define undb1(x)        powf(10,(x)/10)
-#define undb2(x)        powf(10,(x)/20)
+#define db1(x)          (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
+#define db2(x)          (logf(x)*8.685889638065035f) //   db2(x)=(log(x)*20/log(10))
+#define undb1(x)        expf((x)*0.230258509299405f) // undb1(x)=exp((x)*log(10)/10)
+#define undb2(x)        expf((x)*0.115129254649702f) // undb2(x)=exp((x)*log(10)/20)
 
 typedef unsigned long CHA_DATA;
 typedef unsigned long *CHA_LPTR;
@@ -56,6 +60,7 @@ typedef void **CHA_PTR;
 FUNC(void *) cha_allocate(CHA_PTR, int, int, int);
 FUNC(void)   cha_cleanup(CHA_PTR);
 FUNC(int)    cha_data_gen(CHA_PTR, char *);
+FUNC(int)    cha_hex_patch(CHA_PTR, char *, char *);
 FUNC(void)   cha_fft_cr(float *, int);
 FUNC(void)   cha_fft_rc(float *, int);
 FUNC(void)   cha_fft(float *, int);

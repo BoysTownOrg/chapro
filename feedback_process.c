@@ -6,8 +6,6 @@
 #include "chapro.h"
 #include "cha_ff.h"
 
-#define db1(x)          (10*log10f(x))
-
 /***********************************************************/
 
 FUNC(void)
