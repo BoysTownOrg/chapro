@@ -224,3 +224,32 @@ cha_data_gen(CHA_PTR cp, char *fn)
 
     return (0);
 };
+
+FUNC(int)
+cha_hex_patch(CHA_PTR cp, char *ifn, char *ofn)
+{
+    char s[256];
+    int count;
+    FILE *ifp, *ofp;
+
+    ifp = fopen(ifn, "r");
+    if (ifp == NULL) {
+        return (1);
+    }
+    ofp = fopen(ofn, "w");
+    if (ifp == NULL) {
+        return (2);
+    }
+    count = 0;
+    while (fgets(s, 256, ifp) != NULL) {
+        count++;
+    }
+    rewind(ifp);
+    while (fgets(s, 256, ifp) != NULL) {
+        fputs(s, ofp);
+    }
+    fclose(ifp);
+    fclose(ofp);
+
+    return (0);
+};
