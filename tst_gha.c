@@ -383,19 +383,6 @@ load_iirfb(double *z, double *p, double *g, double *d, int *nc, int *nz)
     *nz = no; // number of zeros & poles
 }
 
-static void
-simulate_processing(double *g, double *d, int nc, int ds, double gs)
-{
-    int i;
-
-    ds -= (int) d[nc - 1];
-     // adjust IIR gain & delay to simulate processing
-    for (i = 0; i < nc; i++) {
-        g[i] *= gs;
-        if (ds > 0) d[i] += ds;
-    }
-}
-
 /***********************************************************/
 
 // prepare io
@@ -413,9 +400,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
     // simulation parameters
-    static double fbg = 1;       // simulated feedback length
-    static int     ds = 200;     // simulated processing delay
-    static double  gs = 4;       // simulated processing gain
+    static double fbg = 1;       // simulated feedback gain
     // DSL prescription
     static CHA_DSL dsl = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -439,8 +424,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     }
     // prepare IIRFB
     load_iirfb(z, p, g, d, &nc, &nz);
-    ds -= cs; // subtract chunk size from simulated processing delay
-    simulate_processing(g, d, nc, ds, gs); // adjust IIR gain & delay to simulate processing
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB+AFC+AGC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffer

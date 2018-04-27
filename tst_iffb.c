@@ -410,7 +410,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
     // simulation parameters
-    static double fbg = 1;       // simulated feedback length
+    static double fbg = 1;       // simulated feedback gain
     static int     ds = 200;     // simulated processing delay
     static double  gs = 4;       // simulated processing gain
 
