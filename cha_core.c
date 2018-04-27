@@ -82,7 +82,12 @@ cha_data_gen(CHA_PTR cp, char *fn)
         fclose(fp);
         return (2);
     }
-    // print header
+    // count pointers
+    ptsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) ptsiz = i + 1;
+    }
+    // sum array sizes
     arsiz = 0;
     for (i = 0; i < NPTR; i++) {
         arsiz += cpsiz[i];
@@ -91,18 +96,14 @@ cha_data_gen(CHA_PTR cp, char *fn)
         fclose(fp);
         return (3);
     }
-    fprintf(fp, "// cha_data.h - array size = %d bytes\n", arsiz);
+    // print header
+    fprintf(fp, "// cha_data.h - data size = %d bytes\n", arsiz);
     for (i = 0; i < hdsz; i++) {
         fprintf(fp, "%s\n", head[i]);
     }
-    // compute total array size
-    ptsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        if (cp[i]) ptsiz = i + 1;
-    }
     // initialize magic number
     if (ptsiz > 0) {
-        fprintf(fp, "static CHA_DATA cha_magic[4] = {0,0x55530,0x68131,0};\n");
+        fprintf(fp, "static CHA_DATA cha_magic[4] = {0x55530,0x68131,%d,%d};\n", ptsiz, arsiz);
     }
     // initialize ptr arrays
     for (i = 0; i < ptsiz; i++) {

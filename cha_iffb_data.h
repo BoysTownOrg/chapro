@@ -1,8 +1,8 @@
-// cha_data.h - array size = 9888 bytes
+// cha_data.h - data size = 9888 bytes
 #ifndef CHA_DATA_H
 #define CHA_DATA_H
 
-static CHA_DATA cha_magic[4] = {0,0x55530,0x68131,0};
+static CHA_DATA cha_magic[4] = {0x55530,0x68131,21,9888};
 static CHA_DATA p00[      64] = { // _size
                256,        64,       128,      2048,       160,       160,       160,      5408,
                 32,        32,         0,         0,         0,         0,         0,         0,
