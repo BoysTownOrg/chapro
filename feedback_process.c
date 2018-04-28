@@ -12,8 +12,8 @@ FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *ring, *efbp, *sfbp, *merr;
-    float fbe, fbs, mum, dif, fbm, dm, s0, s1, mu, rho, pwr, eps = 1e-30f;
-    int i, ii, ij, j, afl, fbl, nqm, rsz, rhd;
+    float fbe, fbs, mum, dif, fbm, dm, s0, s1, mu, rho, pwr, ipwr, eps = 1e-30f;
+    int i, ii, ij, j, afl, fbl, nqm, rsz, rhd, mask;
 
     mu  = (float) CHA_DVAR[_mu];
     rho = (float) CHA_DVAR[_rho];
@@ -28,6 +28,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
     merr = (float *) cp[_merr];
+    mask = rsz - 1;
     // subtract estimated feedback signal
     for (i = 0; i < cs; i++) {
         s0 = x[i];
@@ -35,37 +36,24 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // simulate feedback
         fbs = 0;
         for (j = 0; j < fbl; j++) {
-            ij = ii - j;
-            if (ij >= rsz) {
-                ij -= rsz;
-            } else if (ij < 0) {
-                ij += rsz;
-            }
+            ij = (ii - j + rsz) & mask;
             fbs += ring[ij] * sfbp[j];
         }
         // estimate feedback
         fbe = 0;
         for (j = 0; j < afl; j++) {
-            ij = ii - j;
-            if (ij >= rsz) {
-                ij -= rsz;
-            } else if (ij < 0) {
-                ij += rsz;
-            }
+            ij = (ii - j + rsz) & mask;
             fbe += ring[ij] * efbp[j];
         }
         // apply feedback to input signal
         s1 = s0 + fbs - fbe;
+        // calculate instantaneous power
+        ipwr = s0 * s0 + s1 * s1;
         // update adaptive feedback coefficients
-        pwr = rho * pwr + s0 * s0 + s1 * s1;
+        pwr = rho * pwr + ipwr;
         mum = mu / (eps + pwr);  // modified mu
         for (j = 0; j < afl; j++) {
-            ij = ii - j;
-            if (ij >= rsz) {
-                ij -= rsz;
-            } else if (ij < 0) {
-                ij += rsz;
-            }
+            ij = (ii - j + rsz) & mask;
             efbp[j] += mum * ring[ij] * s1;
         }
         // save quality metrics
@@ -88,19 +76,17 @@ FUNC(void)
 cha_afc_output(CHA_PTR cp, float *x, int cs)
 {
     float *ring;
-    int i, j, rsz, rhd, rtl;
+    int i, j, rsz, rhd, rtl, mask;
 
     rsz = CHA_IVAR[_rsz];
     rhd = CHA_IVAR[_rhd];
     rtl = CHA_IVAR[_rtl];
     ring = (float *) cp[_ring];
+    mask = rsz - 1;
     rhd = rtl;
     // copy chunk to ring buffer
     for (i = 0; i < cs; i++) {
-        j = rhd + i;
-        if (j >= rsz) {
-            j -= rsz;
-        }
+        j = (rhd + i) & mask;
         ring[j] = x[i];
     }
     rtl = (rhd + cs) % rsz;
