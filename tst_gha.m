@@ -1,6 +1,6 @@
-% tst_gha - CHAPRO demonstration of GHA processing
+% tst_gha - derive AFC filters
 function tst_gha
-pfn='test/tst_gha.mat'; % AFC results produced by tst_gha
+pfn='test/tst_gha.mat';
 load(pfn)
 play_audio=1;
 gn=0.317858; % audioread scale factor 
@@ -22,10 +22,14 @@ xylim=[min(min(x),min(y)) max(max(x),max(y))]*1.05;
 axis([tlim xylim])
 legend('output','input')
 title('CHAPRO demonstration of AFC processing')
-if (exist('sfbp'))
+if (exist('sfbp','var'))
+    ny=length(sfbp);
+    if (exist('ffrp','var'))
+        y=conv(efbp,ffrp);
+        efbp=y(1:ny);
+    end
     % plot feedback path
     figure(2);clf
-    ny=length(sfbp);
     ty=linspace(0,(ny - 1) / rate, ny)*1000;
     my=(max(ty)-min(ty))/20;
     tlim=[min(ty)-my max(ty)+my];

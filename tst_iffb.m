@@ -1,13 +1,13 @@
-% tst_gha - CHAPRO demonstration of GHA processing
-function tst_gha
-pfn='test/tst_gha.mat'; % AFC results produced by tst_gha
-load(pfn)
-play_audio=1;
+% tst_iffb - CHAPRO demonstration of GHA processing
+function tst_iffb
+pfn='test/tst_iffb.mat'; % AFC results produced by tst_iffb
+play_audio=0;
 gn=0.317858; % audioread scale factor 
+load(pfn)
 x=audioread(ifn)*gn;
 y=wave;
 gn=sqrt(mean(y.^2))/sqrt(mean(x.^2));
-fprintf('tst_gha: ifn=%s; gn=%.1f\n',ifn, gn);
+fprintf('tst_iffb: ifn=%s; gn=%.1f\n',ifn, gn);
 % plot input/output
 figure(1); clf
 nx=length(x);
@@ -22,7 +22,7 @@ xylim=[min(min(x),min(y)) max(max(x),max(y))]*1.05;
 axis([tlim xylim])
 legend('output','input')
 title('CHAPRO demonstration of AFC processing')
-if (exist('sfbp'))
+if (exist('sfbp','var'))
     % plot feedback path
     figure(2);clf
     ny=length(sfbp);

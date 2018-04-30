@@ -1,4 +1,4 @@
-// gha_demo.c - demonstrate GHA processing
+// gha_demo.c - demonstrate GHA processing (FIR+AGC)
 
 #include <stdio.h>
 #include <stdlib.h>

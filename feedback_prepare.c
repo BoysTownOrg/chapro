@@ -11,42 +11,66 @@
 // ITE feedback path from Kosgen (2006)
 
 static double ite_fbp[100] = {
-     0.000000,-0.001715, 0.000306, 0.007936,-0.014126, 0.001207, 0.001541, 0.040498, 0.077863, 0.069577,
-    -0.008025,-0.106044,-0.151131,-0.124264,-0.055777, 0.013607, 0.075156, 0.082472, 0.048781, 0.004444,
-    -0.033910,-0.033370,-0.013614, 0.011497, 0.031987, 0.040751, 0.031424, 0.014976,-0.001471,-0.006256,
-    -0.008080,-0.003218,-0.000933, 0.001967,-0.000208,-0.003719,-0.009216,-0.012280,-0.014076,-0.013594,
-    -0.013487,-0.010067,-0.007326,-0.004848,-0.003921,-0.003026,-0.002302,-0.001824,-0.001345,-0.000225,
-     0.001573, 0.003371, 0.003689, 0.003543, 0.002901, 0.002056, 0.001375, 0.000886, 0.000398,-0.000091,
-    -0.000580,-0.001069,-0.001569,-0.002153,-0.002737,-0.003321,-0.003905,-0.004489,-0.005073,-0.004653,
-    -0.004184,-0.003715,-0.003246,-0.002778,-0.002309,-0.001965,-0.001722,-0.001479,-0.001236,-0.000993,
-    -0.000750,-0.000819,-0.000969,-0.001118,-0.001268,-0.001418,-0.001567,-0.001717,-0.001867,-0.002016,
-    -0.002166,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200,-0.002200};
+     0.001764, 0.000049, 0.002070, 0.009700,-0.012362, 0.002971, 0.003305, 0.042262, 0.079627, 0.071341,
+    -0.006261,-0.104280,-0.149367,-0.122500,-0.054013, 0.015371, 0.076920, 0.084236, 0.050545, 0.006208,
+    -0.032146,-0.031606,-0.011850, 0.013261, 0.033751, 0.042515, 0.033188, 0.016740, 0.000293,-0.004492,
+    -0.006316,-0.001454, 0.000831, 0.003731, 0.001556,-0.001955,-0.007452,-0.010516,-0.012312,-0.011830,
+    -0.011723,-0.008303,-0.005562,-0.003084,-0.002157,-0.001262,-0.000538,-0.000060, 0.000419, 0.001539,
+     0.003337, 0.005135, 0.005453, 0.005307, 0.004665, 0.003820, 0.003139, 0.002650, 0.002162, 0.001673,
+     0.001184, 0.000695, 0.000195,-0.000389,-0.000973,-0.001557,-0.002141,-0.002725,-0.003309,-0.002889,
+    -0.002420,-0.001951,-0.001482,-0.001014,-0.000545,-0.000201, 0.000042, 0.000285, 0.000528, 0.000771,
+     0.001014, 0.000945, 0.000795, 0.000646, 0.000496, 0.000346, 0.000197, 0.000047,-0.000103,-0.000252,
+    -0.000402,-0.000436,-0.000436,-0.000436,-0.000436,-0.000436,-0.000436,-0.000436,-0.000436,-0.000436};
 
 /***********************************************************/
 
 FUNC(int)
-cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
+cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl, 
+                double *wfr, int wfl, double *ffr, int ffl,
+                double fbg, int sqm)
 {
     double fbm = 0;
-    float *sfbp, *efbp, *merr;
+    float *sfbp, *wfrp, *ffrp;
     int i, cs, fbl = 0, nqm = 0, rsz = 32;
 
     cha_prepare(cp);
-    // allocate ring buffer
+    // allocate HA-output ring buffer
     while (rsz < afl) rsz *= 2;
-    cha_allocate(cp, rsz, sizeof(float), _ring);
+    while (rsz < wfl) rsz *= 2;
+    while (rsz < ffl) rsz *= 2;
+    cha_allocate(cp, rsz, sizeof(float), _rng0);
     CHA_IVAR[_rsz] = rsz;
     CHA_IVAR[_rhd] = 0;
     CHA_IVAR[_rtl] = 0;
-    // allocate afc-filter buffers
+    // allocate AFC-filter buffer
     if (afl > 0) {
         cha_allocate(cp, afl, sizeof(float), _efbp);
-        efbp = (float *) cp[_efbp];
-        fzero(efbp, afl);
     }
     CHA_DVAR[_mu]  = mu;
     CHA_DVAR[_rho] = rho;
+    CHA_DVAR[_eps] = eps;
     CHA_IVAR[_afl] = afl;
+    // initialize signal-whitening filter
+    if (wfl > 0) {
+        cha_allocate(cp, wfl, sizeof(float), _wfrp);
+        wfrp = (float *) cp[_wfrp];
+        for (i = 0; i < wfl; i++) {
+            wfrp[i] = (float) wfr[i];
+        }
+        cha_allocate(cp, rsz, sizeof(float), _rng1);
+        cha_allocate(cp, rsz, sizeof(float), _rng2);
+    }
+    CHA_IVAR[_wfl] = wfl;
+    // initialize fixed-feedback filter
+    if (ffl > 0) {
+        cha_allocate(cp, ffl, sizeof(float), _ffrp);
+        ffrp = (float *) cp[_ffrp];
+        for (i = 0; i < ffl; i++) {
+            ffrp[i] = (float) ffr[i];
+        }
+        cha_allocate(cp, rsz, sizeof(float), _rng3);
+    }
+    CHA_IVAR[_ffl] = ffl;
     // initialize simulated feedback path
     if (fbg > 0) {
         fbl = 100;
@@ -65,8 +89,6 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, int afl, double fbg, int sqm)
         nqm = (fbl < afl) ? fbl : afl;
         cs = CHA_IVAR[_cs];
         cha_allocate(cp,  cs, sizeof(float), _merr);
-        merr = (float *) cp[_merr];
-        fzero(merr, cs);
     }
     CHA_IVAR[_nqm] = nqm;
     // initialize instantaneous-power estimate

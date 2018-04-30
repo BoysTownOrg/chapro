@@ -49,7 +49,8 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 
 // feedback module
 
-FUNC(int) cha_afc_prepare(CHA_PTR, double, double, int, double, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, 
+                          double *, int, double *, int, double, int);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
@@ -75,10 +76,15 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _xpk      _offset+12
 #define _ppk      _offset+13
 
-#define _ring     _offset+14
-#define _efbp     _offset+15
-#define _sfbp     _offset+16
-#define _merr     _offset+17
+#define _rng0     _offset+14
+#define _rng1     _offset+15
+#define _rng2     _offset+16
+#define _rng3     _offset+17
+#define _efbp     _offset+18
+#define _sfbp     _offset+19
+#define _merr     _offset+20
+#define _wfrp     _offset+21
+#define _ffrp     _offset+22
 
 // integer variable indices
 
@@ -93,6 +99,8 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _afl      7
 #define _fbl      8
 #define _nqm      9
+#define _wfl      10
+#define _ffl      11
 
 // double variable indices
 
@@ -109,7 +117,8 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 #define _mu       10
 #define _rho      11
-#define _pwr      12
-#define _fbm      13
+#define _eps      12
+#define _pwr      13
+#define _fbm      14
 
 #endif /* CHA_IF_H */

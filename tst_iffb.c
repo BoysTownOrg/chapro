@@ -25,8 +25,8 @@ typedef struct {
 
 /***********************************************************/
 
-static float *qm, *efbp, *sfbp;
-static int    iqm, nqm, fbl;
+static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
+static int    iqm, nqm, fbl, wfl, ffl;
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -40,8 +40,12 @@ save_qm(CHA_PTR cp, int cs)
     iqm += n;
     // copy filters
     fbl =     CHA_IVAR[_fbl];
+    wfl =     CHA_IVAR[_wfl];
+    ffl =     CHA_IVAR[_ffl];
     efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
+    wfrp = (float *) cp[_wfrp];
+    ffrp = (float *) cp[_ffrp];
 }
 
 static void
@@ -269,7 +273,7 @@ put_aud(I_O *io, CHA_PTR cp)
             fzero(io->owav, io->nsmp);
         }
         io->pseg++;
-    process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
+        process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
     }
 }
 
@@ -291,13 +295,15 @@ write_wave(I_O *io)
     n = io->nwav;
     w = io->owav;
     r[0] = (float) io->rate;
-    vl = sp_var_alloc(6);
+    vl = sp_var_alloc(8);
     sp_var_set(vl + 0, "rate",    r,   1, 1, "f4");
     sp_var_set(vl + 1, "wave",    w,   n, 1, "f4");
     sp_var_set(vl + 2, "merr",   qm, nqm, 1, "f4");
     sp_var_set(vl + 3, "sfbp", sfbp, fbl, 1, "f4");
     sp_var_set(vl + 4, "efbp", efbp, fbl, 1, "f4");
-    var_string(vl + 5, "ifn",  io->ifn);
+    sp_var_set(vl + 5, "wfrp", wfrp, wfl, 1, "f4");
+    sp_var_set(vl + 6, "ffrp", ffrp, ffl, 1, "f4");
+    var_string(vl + 7, "ifn",  io->ifn);
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
     } else {
@@ -407,12 +413,25 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // AFC parameters
     static double  mu = 1e-3;    // step size
     static double rho = 0.984;   // forgetting factor
+    static double eps = 0.01;    // power threshold
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
-    // simulation parameters
-    static double fbg = 1;       // simulated feedback gain
-    static int     ds = 200;     // simulated processing delay
-    static double  gs = 4;       // simulated processing gain
+    static int    wfl = 0;       // whitening-filter length
+    static int    ffl = 0;       // fixed-filter length
+    static double wfr[32] = {    // signal-whitening filter response
+     1.000000,-2.508303, 3.667469,-4.941864, 5.854187,-6.103098, 5.844899,-5.226431, 4.481951,-3.709580,
+     3.015417,-2.368258, 1.704324,-1.045964, 0.459665,-0.006694,-0.270424, 0.365290,-0.347292, 0.306486,
+    -0.274247, 0.265645,-0.218542, 0.119762, 0.014229,-0.144291, 0.228972,-0.249757, 0.211733,-0.137071,
+     0.052933,-0.004783};
+    static double ffr[40] = {    // fixed-feedback filter response
+     0.633036,-0.415229,-0.273691,-0.162085,-0.076860,-0.014513, 0.028379, 0.055112, 0.068810, 0.072379,
+     0.068461, 0.059403, 0.047227, 0.033621, 0.019938, 0.007205,-0.003855,-0.012794,-0.019399,-0.023658,
+    -0.025714,-0.025824,-0.024321,-0.021579,-0.017979,-0.013887,-0.009636,-0.005508,-0.001727, 0.001540,
+     0.004187, 0.006164, 0.007468, 0.008135, 0.008235, 0.007857, 0.007103, 0.006080, 0.004891, 0.003632};
+     // simulation parameters
+    static double fbg = 1;       // simulated-feedback gain
+    static int     ds = 200;     // simulated-processing delay
+    static double  gs = 4;       // simulated-processing gain
 
     parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
@@ -434,7 +453,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
-    cha_afc_prepare(cp, mu, rho, afl, fbg, sqm);
+    cha_afc_prepare(cp, mu, rho, eps, afl, wfr, wfl, ffr, ffl, fbg, sqm);
     // initialize quality metric
     nqm = io->nsmp;
     iqm = 0;

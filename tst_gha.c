@@ -25,8 +25,8 @@ typedef struct {
 
 /***********************************************************/
 
-static float *qm, *efbp, *sfbp;
-static int    iqm, nqm, fbl;
+static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
+static int    iqm, nqm, fbl, wfl, ffl;
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -40,8 +40,12 @@ save_qm(CHA_PTR cp, int cs)
     iqm += n;
     // copy filters
     fbl =     CHA_IVAR[_fbl];
+    wfl =     CHA_IVAR[_wfl];
+    ffl =     CHA_IVAR[_ffl];
     efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
+    wfrp = (float *) cp[_wfrp];
+    ffrp = (float *) cp[_ffrp];
 }
 
 static void
@@ -294,13 +298,15 @@ write_wave(I_O *io)
     n = io->nwav;
     w = io->owav;
     r[0] = (float) io->rate;
-    vl = sp_var_alloc(6);
+    vl = sp_var_alloc(8);
     sp_var_set(vl + 0, "rate",    r,   1, 1, "f4");
     sp_var_set(vl + 1, "wave",    w,   n, 1, "f4");
     sp_var_set(vl + 2, "merr",   qm, nqm, 1, "f4");
     sp_var_set(vl + 3, "sfbp", sfbp, fbl, 1, "f4");
     sp_var_set(vl + 4, "efbp", efbp, fbl, 1, "f4");
-    var_string(vl + 5, "ifn",  io->ifn);
+    sp_var_set(vl + 5, "wfrp", wfrp, wfl, 1, "f4");
+    sp_var_set(vl + 6, "ffrp", ffrp, ffl, 1, "f4");
+    var_string(vl + 7, "ifn",  io->ifn);
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
     } else {
@@ -390,17 +396,20 @@ load_iirfb(double *z, double *p, double *g, double *d, int *nc, int *nz)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double  z[64], p[64], g[8], d[8];
+    double  z[64], p[64], g[8], d[8], wfr[8], ffr[8];
     int     nc, nz;
     static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
     // AFC parameters
     static double  mu = 1e-3;    // step size
     static double rho = 0.984;   // forgetting factor
+    static double eps = 0.01;    // power threshold
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
+    static int    wfl = 0;       // whitening-filter length
+    static int    ffl = 0;       // fixed-filter length
     // simulation parameters
-    static double fbg = 1;       // simulated feedback gain
+    static double fbg = 1;       // simulated-feedback gain
     // DSL prescription
     static CHA_DSL dsl = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -429,7 +438,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
-    cha_afc_prepare(cp, mu, rho, afl, fbg, sqm);
+    cha_afc_prepare(cp, mu, rho, eps, afl, wfr, wfl, ffr, ffl, fbg, sqm);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
     // initialize quality metric
