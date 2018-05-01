@@ -401,9 +401,9 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
     // AFC parameters
-    static double  mu = 1e-3;    // step size
-    static double rho = 0.984;   // forgetting factor
-    static double eps = 0.01;    // power threshold
+    static double  mu = 0.001;   // step size
+    static double rho = 0.90;    // forgetting factor
+    static double eps = 0.008;   // power threshold
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
     static int    wfl = 0;       // whitening-filter length
@@ -472,6 +472,9 @@ process(I_O *io, CHA_PTR cp)
         t1 = sp_toc();
         t2 = io->nwav / io->rate;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
+        if (iqm > 0) {
+            fprintf(stdout, "final misalignment error = %.2f dB\n", 10 * log10(qm[iqm - 1]));
+        }
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);

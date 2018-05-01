@@ -48,6 +48,8 @@ if (exist('sfbp','var'))
     ylabel('dB')
     xlabel('time (s)')
     title('misalignment error')
+    mae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
+    fprintf('final misalignment error = %.2f\n',mae);
 end
 if play_audio
     fprintf('     Original signal: %s\n',ifn);

@@ -40,6 +40,8 @@ if (exist('sfbp','var'))
     legend('simulated','estimated')
     grid on
     drawnow
+    mae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
+    fprintf('final misalignment error = %.2f\n',mae);
     % plot quality metrics
     figure(3); clf
     merr=10*log10(merr);

@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.13, 30-Apr-18"
+#define VER     "CHAPro version 0.14, 1-May-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.14 - 1-May-18
+> Optimized AFC parameters (mu,rho,eps)
 0.13 - 30-Apr-18
 > Added whitening & fixed filters to AFC
 0.12 - 27-Apr-18
