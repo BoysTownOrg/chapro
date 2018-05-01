@@ -1,9 +1,9 @@
 % tst_iffb - CHAPRO demonstration of GHA processing
 function tst_iffb
 pfn='test/tst_iffb.mat'; % AFC results produced by tst_iffb
-load(pfn)
-play_audio=1;
+play_audio=0;
 gn=0.317858; % audioread scale factor 
+load(pfn)
 x=audioread(ifn)*gn;
 y=wave;
 gn=sqrt(mean(y.^2))/sqrt(mean(x.^2));
@@ -22,7 +22,7 @@ xylim=[min(min(x),min(y)) max(max(x),max(y))]*1.05;
 axis([tlim xylim])
 legend('output','input')
 title('CHAPRO demonstration of AFC processing')
-if (exist('sfbp'))
+if (exist('sfbp','var'))
     % plot feedback path
     figure(2);clf
     ny=length(sfbp);
@@ -48,6 +48,8 @@ if (exist('sfbp'))
     ylabel('dB')
     xlabel('time (s)')
     title('misalignment error')
+    mae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
+    fprintf('final misalignment error = %.2f\n',mae);
 end
 if play_audio
     fprintf('     Original signal: %s\n',ifn);
