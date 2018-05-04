@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.14, 1-May-18"
+#define VER     "CHAPro version 0.15, 4-May-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.15 - 4-May-18
+> Efficiency improments in feedback_prepare.c
 0.14 - 1-May-18
 > Optimized AFC parameters (mu,rho,eps)
 0.13 - 30-Apr-18

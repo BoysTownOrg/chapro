@@ -94,8 +94,8 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _ns       3
 
 #define _rsz      4
-#define _rhd      5
-#define _rtl      6
+//#define _rhd      5
+//#define _rtl      6
 #define _afl      7
 #define _fbl      8
 #define _nqm      9
@@ -118,7 +118,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _mu       10
 #define _rho      11
 #define _eps      12
-#define _pwr      13
+//#define _pwr      13
 #define _fbm      14
 
 #endif /* CHA_IF_H */

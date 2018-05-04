@@ -40,8 +40,6 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl,
     while (rsz < ffl) rsz *= 2;
     cha_allocate(cp, rsz, sizeof(float), _rng0);
     CHA_IVAR[_rsz] = rsz;
-    CHA_IVAR[_rhd] = 0;
-    CHA_IVAR[_rtl] = 0;
     // allocate AFC-filter buffer
     if (afl > 0) {
         cha_allocate(cp, afl, sizeof(float), _efbp);
@@ -91,7 +89,5 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl,
         cha_allocate(cp,  cs, sizeof(float), _merr);
     }
     CHA_IVAR[_nqm] = nqm;
-    // initialize instantaneous-power estimate
-    CHA_DVAR[_pwr] = 0;
     return (0);
 }
