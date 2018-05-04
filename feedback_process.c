@@ -16,7 +16,8 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     float ye, yy, mum, dif, dm, xx, ss, ee, uu, ef, uf;
     int i, ii, ij, j;
     static float *rng0, *rng1, *rng2, *rng3, *efbp, *sfbp, *wfrp, *ffrp, *merr;
-    static float mu, rho, eps, pwr, fbm;
+    static float mu, rho, eps, fbm;
+    static float pwr = 0;
     static int rsz, mask, afl, wfl, ffl, fbl, nqm; 
     static int first_time = 1;
 
@@ -42,7 +43,6 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         nqm = CHA_IVAR[_nqm];
         if (ffl <= 0) rng3 = rng0; // bypass rng3
         if (wfl <= 0) rng2 = rng3; // bypass rng2
-        pwr = 0;
         mask = rsz - 1;
         first_time = 0;
     }
@@ -116,18 +116,18 @@ cha_afc_output(CHA_PTR cp, float *x, int cs)
 {
     int i, j;
     static float *rng0;
-    static int rsz, rtl, mask;
+    static int rsz, mask;
+    static int rtl = 0;
     static int first_time = 1;
 
     if (first_time) {
         rng0 = (float *) cp[_rng0];
         rsz = CHA_IVAR[_rsz];
-        rtl = 0;
         mask = rsz - 1;
         first_time = 0;
     }
-    rhd = rtl;
     // copy chunk to ring buffer
+    rhd = rtl;
     for (i = 0; i < cs; i++) {
         j = (rhd + i) & mask;
         rng0[j] = x[i];
