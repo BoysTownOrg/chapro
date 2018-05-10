@@ -4,20 +4,6 @@
 #include "chapro.h"
 #include "cha_cf.h"
 
-// fft.c
-
-#include <stdlib.h>
-#include <math.h>
-#include "sigpro.h"
-
-/***********************************************************/
-
-// fft.c
-
-#include <stdlib.h>
-#include <math.h>
-#include "sigpro.h"
-
 //-----------------------------------------------------------
 
 static int
@@ -102,7 +88,7 @@ cfft2(float *x, int m, int d)
 
 /***********************************************************/
 
-// complex-to-complex inverse FFT
+// complex-to-complex FFT
 
 FUNC(void)
 cha_fft(float *x, int n)

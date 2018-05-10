@@ -1,443 +1,559 @@
-// iirfb.c - IIR-filterbank parameter computation
-
+// iirfb.c - IIR-filterbank design
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+void cha_fft_rc(float *, int);
 
 /***********************************************************/
 
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif
-#ifndef M_SQRT2
-#define M_SQRT2         1.41421356237309504880 
-#endif
-
-#define fmin(x,y)       ((x<y)?(x):(y))
-#define fmove(x,y,n)    memmove(x,y,(n)*sizeof(float))
-#define fcopy(x,y,n)    memcpy(x,y,(n)*sizeof(float))
-#define fzero(x,n)      memset(x,0,(n)*sizeof(float))
+#define round(x)        ((int)(floor(x+0.5)))
+#define dmove(x,y,n)    memmove(x,y,(n)*sizeof(double))
 #define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
-#define round(x)        ((int)floorf((x)+0.5))
-#define log2(x)         (logf(x)/M_LN2)
+#define dzero(x,n)      memset(x,0,(n)*sizeof(double))
 
 /***********************************************************/
 
-// p2ss - transform poles to state-space (assumes np is even)
+// transform double-precision array to float
 static void
-p2ss(float *p, int np, float *a, float *b, float *c, float *d)
+d2f(double *d, float *f, int n)
 {
-    int k, kd, kr, ki;
+    int j;
 
-    fzero(a, np*np);
-    fzero(b, np);
-    fzero(c, np);
-    for (k = 1; k < np; k++) {
-        a[k * (np + 1) - 1] = 1;
-    }
-    for (k = 0; k < (np / 2); k++) {
-        kr = k * 2;
-        ki = kr + 1;
-        kd = 2 * k * (np + 1); 
-        a[kd] = p[ki] * ((p[ki] < 0) ? 2 : -2);
-        a[kd + 1] = -1;
-    }
-    b[0] = 1;
-    c[np - 1] = 1;
-    d[0] = 0;
-}
-
-// mxinv - in-place matrix inversion
-static void
-mxinv(float *a, int n)
-{
-    float at, *b;
-    int i, j, jj, k;
-    
-    // create identity matrix
-    b = (float *) calloc(n * n, sizeof(float));
-    // work down from top
     for (j = 0; j < n; j++) {
-        k = j * (n + 1);  // index of diagonal element
-        at = 1 / a[k];     // assume diagonal element is not close to zero
-        for (jj = 0; jj < n; jj++) {
-            a[j * n + jj] *= at;
-        }
-        a[k] = at;
-        if (j < (n - 1)) {
-            for (i = (j + 1); i < n; i++) {
-                k = i * n + j;
-                at = -a[k];
-                a[k] = 0;
-                for (jj = 0; jj < n; jj++) {
-                    a[i * n + jj] += a[j * n + jj] * at;
-                }
-            }
-        }
+        f[j] = (float) d[j];
     }
-    // copy lower-triangle of a to b
-    fzero(b, n * n);
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < (i + 1); j++) {
-            k = i * n + j;
-            b[k] = a[k];
-        }
-    }
-    // copy work up from bottom
-    for (i = (n - 2); i >= 0; i--) {
-        for (jj = (i + 1); jj < n; jj++) {
-            for (j = 0; j < n; j++) {
-                b[i * n + j] -= a[i * n + jj] * b[jj * n + j];
-            }
-        }
-    }
-    // copy b to a
-    fcopy(a, b, n * n);
-    free(b);
 }
 
-// mxmul - matrix multiply
+// set double-precision array to one
 static void
-mxmul(float *a, float *b, float *c, int m, int o, int n, double d)
+ones(double *d, int n)
 {
-    float *e, s, t;
-    int i, j, k;
+    int j;
 
-    t = (float) d;
-    e = calloc(m * n, sizeof(float));
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            s = 0;
-            for (k = 0; k < o; k++) {
-                s += a[i * o + k] * b[k * n + j];
-            }
-            e[i * n + j] = s * t;
-        }
+    for (j = 0; j < n; j++) {
+        d[j] = 1;
     }
-    fcopy(c, e, m * n);
-    free(e);
-}
-
-// mxadd - matrix add
-static void
-mxadd(float *a, float *b, float *c, int m, int n)
-{
-    int i, j, k;
-
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-			k = i * n + j;
-            c[k] = a[k] + b[k];
-        }
-    }
-}
-
-// ssblt - state-space bilinear transformaion
-static void
-ssblt(float *a, float *b, float *c, float *d, int n)
-{
-    float *t1, *t2, *e, f[1];
-    int i, j, k;
-
-    e = (float *) calloc(n, sizeof(float));
-    fcopy(e, b, n);
-    fcopy(f, d, 1);
-    t1 = (float *) calloc(n * n, sizeof(float));
-    t2 = (float *) calloc(n * n, sizeof(float));
-    for (i = 0; i < n; i++) {
-        k = i * (n + 1);
-        t1[k] = 1;
-        t2[k] = 1;
-    }
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-            k = i * n + j;
-            t1[k] += a[k] / 4;
-            t2[k] -= a[k] / 4;
-        }
-    }
-    mxinv(t2, n);
-    mxmul(t2, t1, a, n, n, n, 1);
-    mxmul(t2,  b, b, n, n, 1, M_SQRT2 / 2);
-    mxmul( c, t2, c, 1, n, n, M_SQRT2 / 2);
-    mxmul( c,  e, d, 1, n, 1, M_SQRT2 / 4);
-    mxadd( d,  f, d, 1, 1);
-    free(e);
-    free(t1);
-    free(t2);
-}
-
-static float
-trace(float *a, int n)
-{
-	float s;
-	int   i;
-
-	s = 0;
-	for (i = 0; i < n; i++) {
-		s += a[i * (n + 1)];
-	}
-	return s;
-}
-
-static void
-poly(float *a, float *p, int n)
-{
-	int i, j;
-	float *b, *e;
-
-	b = (float *) calloc(n * n, sizeof(float));
-	e = (float *) calloc(n * n, sizeof(float));
-	fcopy(b, a, n * n);
-	fzero(e, n * n);
-	p[0] = 1;
-	for (i = 1; i <= n; i++) {
-		if (i > 1) {
-			for (j = 0; j < n; j++) {
-				e[j * (n + 1)] = p[i - 1];
-			}
-            mxadd(b, e, e, n, n);
-            mxmul(a, e, b, n, n, n, 1);
-		}
-		p[i] = -trace(b, n) / i;
-	}
-	free(b);
-	free(e);
-}
-
-// ss2ba - state-space to IIR
-static void
-ss2ba(float *a, float *b, float *c, float *d, int n, float *bb, float *aa)
-{
-	float *e, *f, *g;
-	int i;
-
-	e = calloc(n * n, sizeof(float));
-	f = calloc(n * n, sizeof(float));
-	g = calloc(n + 1, sizeof(float));
-	// denominator
-	poly(a, aa, n);
-	// numerator
-    mxmul(b, c, e, n, 1, n, -1);
-    mxadd(a, e, f, n, n);
-	poly(f, g, n);
-	for (i = 0; i <= n; i++) {
-		bb[i] = g[i] + (d[0] - 1) * aa[i];
-	}
-	free(e);
-	free(f);
-	free(g);
 }
 
 /***********************************************************/
 
-// ss2lp - convert normalized state-space to low-pass
+// p2zpk - transform analog pole to IIR pole and gain
 static void
-ss2lp(float *wn, int n, float *a, float *b, float *c, float *d)
+bilinear_pole(double *p, double *k, double *ap, double wp)
 {
-    int k;
+    double aa, bb, c1, c2, c3, p1, p2;
 
-    for (k = 0; k < (n * n); k++) {
-        a[k] *= wn[0];
+    aa = 2 * ap[0]; 
+    bb = ap[0] * ap[0] + ap[1] * ap[1]; 
+    c1 = 1 - aa + bb;
+    c2 = 2 * (bb - 1);
+    c3 = 1 + aa + bb;
+    p1 = -c2 / (2 * c1);
+    if (ap[1] == 0) {
+        p[0] = p1;
+        p[1] = 0;
+        k[0] = fabs(wp - p1) / 2;
+    } else {
+        p2 = sqrt(c3 / c1 - p1 * p1);
+        p[0] = p1;
+        p[1] = p2;
+        p[2] = p1;
+        p[3] = -p2;
+        k[0] = ((wp - p1) * (wp - p1) + p2 * p2) / 4;
     }
-    for (k = 0; k < n; k++) {
-        b[k] *= wn[0];
+}
+
+static double
+gain(double *z, double *p, int nz, double w)
+{
+    double f[2], x[2], y[2], xr, xi, yr, yi, xm, ym, temp;
+    int j, jr, ji;
+
+    f[0] = cos(M_PI * w);
+    f[1] = sin(M_PI * w);
+    x[0] = y[0] = 1;
+    x[1] = y[1] = 0;
+    for (j = 0; j < nz; j++) {
+        jr = j * 2;
+        ji = jr + 1;
+        xr = f[0] - z[jr];
+        xi = f[1] - z[ji];
+        yr = f[0] - p[jr];
+        yi = f[1] - p[ji];
+        temp = x[0] * xr - x[1] * xi;
+        x[1] = x[0] * xi + x[1] * xr;
+        x[0] = temp;
+        temp = y[0] * yr - y[1] * yi;
+        y[1] = y[0] * yi + y[1] * yr;
+        y[0] = temp;
     }
+    xm = sqrt(x[0] * x[0] + x[1] * x[1]);
+    ym = sqrt(y[0] * y[0] + y[1] * y[1]);
+    temp = ym / xm;
+    return (temp);
 }
 
-// ss2hp - convert normalized state-space to high-pass
+// p2zpk - transform analog pole to IIR zeros, poles, and gain
 static void
-ss2hp(float *wn, int n, float *a, float *b, float *c, float *d)
+p2zpk(double *z, double *p, double *k, double *ap, int np, double *wn, int ft)
 {
-	float *e, *f;
-    int k;
+    double bw, u0, u1, wc, wp, Q, M, A;
+    double p0[4], p1[4], p2[4], z1[4], k0[2], k1[2], k2[2], M1[2], M2[2], N[2];
+    int j, m = 4;
 
-	e = (float *) calloc(n * n, sizeof(float));
-	f = (float *) calloc(n, sizeof(float));
-	fcopy(e, a, n * n);
-	fcopy(f, b, n);
-	mxinv(e, n);
-    for (k = 0; k < (n * n); k++) {
-        a[k] = wn[0] * e[k];
-    }
-	mxmul(e, b, b, n, n, 1, -wn[0]);
-	mxmul(c, e, c, 1, n, n, 1);
-	mxmul(c, f, e, 1, n, 1, 1); 
-	d[0] -= e[0];
-	free(e);
-}
-
-// ss2bp - convert normalized state-space to band-pass
-static void
-ss2bp(float *wn, int np, float *a, float *b, float *c, float *d)
-{
-}
-
-// ss2bs - convert normalized state-space to band-stop
-static void
-ss2bs(float *wn, int np, float *a, float *b, float *c, float *d)
-{
-}
-
-// lp2ba - transform normalized all-pole low-pass to IIR
-static void
-lp2ba(float *p, int np, float *b, float *a, float *wn, int ft)
-{
-    float *ssa, *ssb, *ssc, ssd[1], u[2];
-
-    // transform poles to state-space
-    ssa = (float *) calloc(np * np, sizeof(float));
-    ssb = (float *) calloc(np, sizeof(float));
-    ssc = (float *) calloc(np, sizeof(float));
-    p2ss(p,np,ssa,ssb,ssc,ssd);
     if ((ft == 0) || (ft == 1)) {
-        u[0] = (float) (4 * tan(M_PI * wn[0] / 2));
-	} else if ((ft == -1) || (ft == 2)) {
-        u[0] = (float) (4 * tan(M_PI * wn[0] / 2));
-        u[1] = (float) (4 * tan(M_PI * wn[1] / 2));
-	} else {
-		fprintf(stderr, "*** Unknown filter type = %d.\n", ft);
-		exit(1);
-	}
-    if (ft < 0) {
-        ss2bs(u,np,ssa,ssb,ssc,ssd);
-	} else if (ft == 0) {
-        ss2lp(u,np,ssa,ssb,ssc,ssd);
-	} else if (ft == 1) {
-        ss2hp(u,np,ssa,ssb,ssc,ssd);
-	} else if (ft == 2) {
-        u[0] = (float) (4 * tan(M_PI * wn[0] / 2));
-        ss2bp(u,np,ssa,ssb,ssc,ssd);
+        u0 = tan(M_PI * wn[0] / 2);
+        p0[0] = ap[0] * u0;
+        p0[1] = ap[1] * u0;
+        wp = (ft == 0) ? 1 : -1;
+        z[0] = -wp;
+        z[1] = 0;
+        if (ap[1]) {
+            z[2] = z[0];
+            z[3] = z[1];
+        }
+        bilinear_pole(p, k, p0, wp);
+    } else {
+        u0 = tan(M_PI * wn[0] / 2);
+        u1 = tan(M_PI * wn[1] / 2);
+        bw = u1 - u0;        // bandwidth
+        wc = sqrt(u1 * u0);  // center frequency
+        if (ft == 2) {
+            wp=1;
+            z1[0] = 1;
+            z1[1] = 0;
+            z1[2] = -1;
+            z1[3] = 0;
+        } else {
+            wp=-1;
+            z1[0]=0;
+            z1[1]=wc;
+            bilinear_pole(z1, k0, z1, wp);
+        }
+        Q = wc / bw;
+        M1[0] = (ap[0] / Q) / 2;
+        M1[1] = (ap[1] / Q) / 2;
+        N[0] = M1[0] * M1[0] - M1[1] * M1[1] - 1;
+        N[1] = M1[0] * M1[1] + M1[1] * M1[0];
+        M = sqrt(sqrt(N[0] * N[0] + N[1] * N[1]));
+        A = atan2(N[1], N[0]) / 2;
+        M2[0] = M * cos(A);
+        M2[1] = M * sin(A);
+        u0 = tan(M_PI * wn[0] / 2);
+        p1[0] = (M1[0] + M2[0]) * wc;
+        p1[1] = (M1[1] + M2[1]) * wc;
+        p2[0] = (M1[0] - M2[0]) * wc;
+        p2[1] = (M1[1] - M2[1]) * wc;
+        bilinear_pole(p1, k1, p1, wp);
+        bilinear_pole(p2, k2, p2, wp);
+        if (ap[1] == 0) {
+            for (j = 0; j < m; j++) {
+                z[j]=z1[j];
+                p[j]=p1[j];
+            }
+        } else {
+            for (j = 0; j < m; j++) {
+                z[j] = z1[j];
+                p[j] = p1[j];
+                z[j + m] = z1[j];
+                p[j + m] = p2[j];
+            }
+        }
+        wc = (ft == 2) ? sqrt(wn[0] * wn[1]) : 0;
+        k[0] = gain(z, p, m, wc);
     }
-    ssblt(ssa,ssb,ssc,ssd, np);
-    ss2ba(ssa,ssb,ssc,ssd, np, b, a);
-    free(ssa);
-    free(ssb);
-    free(ssc);
+}
+
+// ap2zpk - transform analog prototype to IIR zeros, poles, and gain
+static void
+ap2zpk(double *z, double *p, double *k, double *ap, int np, double *wn, int ft)
+{
+    double kk;
+    int j, jm, m;
+
+    m = ((ft == 0) || (ft == 1)) ? 1 : 2;
+    kk = 1;
+    for (j = 0; j < np; j += 2) {
+        jm = j * m * 2;
+        p2zpk(z + jm, p + jm, k, ap + j * 2, np, wn, ft);
+        kk *= k[0];
+    }
+    *k = kk;
 }
 
 /**********************************************************/
 
-// butterp - normalized low-pass Butterworth filter
+// analog prototype Butterworth filter
 static void
-butterp(float *p, int n)
+butter_ap(double *ap, int np)
 {
     double aa;
-    int i, ir, ii, m;
+    int j, jr, ji;
 
-    if (n < 1) {
+    if (np < 1) {
         return;
     }
-    m = n / 2;
-    for (i = 0; i < m; i++) {
-        ir = 2 * i;
-        ii = ir + 1;
-        aa = ii * M_PI / (2 * n);
-        p[ir] = (float) (-sin(aa));
-        p[ii] = (float) (cos(aa));
+    for (j = 0; j < (np - 1); j += 2) {
+        jr = 2 * j;
+        ji = jr + 1;
+        aa = (j + 1) * M_PI / (2 * np);
+        ap[jr] = -sin(aa);
+        ap[ji] = cos(aa);
+        ap[jr + 2] = ap[jr];
+        ap[ji + 2] = -ap[ji];
     }
-    if (n % 2) {
-        p[n - 1] = -1;
+    if (np % 2) {
+        jr = 2 * (np - 1);
+        ji = jr + 1;
+        ap[jr] = -1;
+        ap[ji] = 0;
     }
 }
 
 static void
-butter(	            // Butterworth filter design
-    float *b, 		// input coeffcients
-    float *a, 		// output coeffcients
+butter_zpk(	        // Butterworth filter design
+    double *z, 		// zeros
+    double *p, 		// poles
+    double *k, 		// gain
     int n,		    // filter order
-    float *wn,		// cutoff frequency
-    double fs,		// sampling frequency
-    int ft		    // filter type 
+    double *wn,		// cutoff frequency
+    int ft		    // filter type: 0=LP, 1=HP, 2=BP 
 )
 {
-    float *p;
+    double *ap;
+    int m;
 
-    p = (float *) calloc(n, sizeof(float));
-    butterp(p, n);
-    lp2ba(p, n, b, a, wn, ft);
-    free(p);
+    m = ((ft == 0) || (ft == 1)) ? 1 : 2;
+    ap = (double *) calloc(n * m * 2, sizeof(double));
+    butter_ap(ap, n);
+    ap2zpk(z, p, k, ap, n, wn, ft);
+    free(ap);
 }
 
 /***********************************************************/
 
-// compute IIR-filterbank coefficients
-void
-iirfb(double *b, double *a, double *g, double *d, int *nc, int *op)
+// transform polynomial roots to coefficients
+static void
+root2poly(double *r, double *p, int n)
 {
-	double *s, cos=9;
-	float *bb, *aa, *gg, *dd, *wn, *bk, *ak;
-	int i, k, mxd;
-    static double _b[8*5] = {
-    2.39658456e-06, 9.58633825e-06, 1.43795074e-05, 9.58633825e-06, 2.39658456e-06,
-    4.68723083e-04, 0.00000000e+00,-9.37446165e-04, 0.00000000e+00, 4.68723083e-04,
-    1.24747171e-03, 0.00000000e+00,-2.49494342e-03, 0.00000000e+00, 1.24747171e-03,
-    3.19250430e-03, 0.00000000e+00,-6.38500859e-03, 0.00000000e+00, 3.19250430e-03,
-    7.88234386e-03, 0.00000000e+00,-1.57646877e-02, 0.00000000e+00, 7.88234386e-03,
-    1.87984229e-02, 0.00000000e+00,-3.75968459e-02, 0.00000000e+00, 1.87984229e-02,
-    4.31011542e-02, 0.00000000e+00,-8.62023084e-02, 0.00000000e+00, 4.31011542e-02,
-	1.49131039e-01,-5.96524156e-01, 8.94786233e-01,-5.96524156e-01, 1.49131039e-01};
-	static double _a[8*5] = {
-    1.00000000e+00,-3.78901370e+00, 5.38901420e+00,-3.40967042e+00, 8.09708267e-01,
-    1.00000000e+00,-3.91609799e+00, 5.77268885e+00,-3.79618186e+00, 9.39709137e-01,
-    1.00000000e+00,-3.84380066e+00, 5.59364362e+00,-3.65174519e+00, 9.02627286e-01,
-    1.00000000e+00,-3.70143260e+00, 5.26455707e+00,-3.40542867e+00, 8.46700113e-01,
-    1.00000000e+00,-3.41182853e+00, 4.65527387e+00,-2.98260118e+00, 7.65145005e-01,
-    1.00000000e+00,-2.81545747e+00, 3.57693518e+00,-2.26695910e+00, 6.51625525e-01,
-    1.00000000e+00,-1.62765417e+00, 2.00985702e+00,-1.14453709e+00, 5.05359476e-01,
-	1.00000000e+00,-6.16229925e-01, 6.06292132e-01,-1.38330252e-01, 2.52443143e-02};
-    static double _g[8] = {1,0.51286,0.73348,0.77050,0.67926,0.78124,0.87297,-1};
-    static double _d[8] = {23,1,22,36,44,50,53,58};
-	static int m=8, n=5, no=2;
-    static double fs = 24000;
-    static double cf[7] = {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
+    double *pp, *qq;
+    int i, ir, ii, j, jr, ji;
 
-	// copy precomputed coefficients
-	dcopy(b,_b,m*n);
-	dcopy(a,_a,m*n);
-	dcopy(g,_g,m);
-	dcopy(d,_d,m);
-	*nc = m;
-	*op = n;
-	// allocate arrays
-	bb = (float *) calloc(m * n, sizeof(float));
-	aa = (float *) calloc(m * n, sizeof(float));
-	gg = (float *) calloc(m, sizeof(float));
-	dd = (float *) calloc(m, sizeof(float));
-	// copy in
-	for (i = 0; i < (m * n); i++) {
-		bb[i] = (float) b[i];
-		aa[i] = (float) a[i];
-	}
-	// fetch Butterworth coefficients
-	s = (double *) calloc(m, sizeof(double));
-	wn = (float *) calloc(m, sizeof(float));
-	for (i = 0; i < m; i++) {
-		s[i] = 1 + cos / cf[i];
-	}
-	// low-pass filter
-	bk = bb;
-	ak = aa;
-	wn[0] = (float) ((cf[0] / s[0]) * (2 / fs));
-	butter(bk, ak, 2 * no, wn, fs, 0);
-	// band-pass filters
-	for (k = 1; k < (m - 1); k++) {
-        bk = bb + k * n;
-        ak = aa + k * n;
-        wn[0] = (float) ((cf[k-1] * s[k-1]) * (2 / fs));
-        wn[1] = (float) ((cf[k] / s[k]) * (2 / fs));
-        //butter(bk, ak, no, wn, fs, 2);
-	}
-	// high-pass filter
-    k = m - 1;
-    bk = bb + k * n;
-    ak = aa + k * n;
-    wn[0] = (float) ((cf[k-1] * s[k-1]) * (2 / fs));
-    //butter(bk, ak, 2 * no, wn, fs, 1);
-	// copy out
-	for (i = 0; i < (m * n); i++) {
-		b[i] = bb[i];
-		a[i] = aa[i];
-	}
+    pp = (double *) calloc((n + 1) * 2, sizeof(double));
+    qq = (double *) calloc((n + 1) * 2, sizeof(double));
+    dzero(pp, (n + 1) * 2);
+    dzero(qq, (n + 1) * 2);
+    pp[0] = qq[0] = 1;
+    for (i = 0; i < n; i++) {
+        ir = i * 2;
+        ii = i * 2 + 1;
+        qq[2] = pp[2] - r[ir];
+        qq[3] = pp[3] - r[ii];
+        for (j = 0; j < i; j++) {
+            jr = j * 2;
+            ji = j * 2 + 1;
+            qq[jr + 4] = pp[jr + 4] - (pp[jr + 2] * r[ir] - pp[ji + 2] * r[ii]);
+            qq[ji + 4] = pp[ji + 4] - (pp[ji + 2] * r[ir] + pp[jr + 2] * r[ii]);
+        }
+        dcopy(pp, qq, (n + 1) * 2);
+    }
+    // return real part of product-polynomial coefficients
+    for (i = 0; i < (n + 1); i++) {
+        p[i] = pp[i * 2];
+    }
+    free(pp);
+    free(qq);
+}
+
+// transform filterbank poles and zeros to IIR coefficients
+static void
+zp2ba(double *z, double *p, int nz, int nb, double *b, double *a)
+{
+    double *zk, *pk, *bk, *ak;
+    int k;
+
+    if ((nz > 0) && (nb > 0)) {
+        for (k = 0; k < nb; k++) {
+            zk = z + k * nz * 2;
+            pk = p + k * nz * 2;
+            bk = b + k * (nz + 1);
+            ak = a + k * (nz + 1);
+            root2poly(zk, bk, nz);
+            root2poly(pk, ak, nz);
+        }
+    }
+}
+
+// IIR filter with history
+static double
+filterz(
+    double *b, int nb, 
+    double *a, int na,
+    double *x, double *y, int n, 
+    double *z
+) {
+    double   yyyy;
+    int     i, j, k, nz;
+
+    // normalize coefficients
+    if ((na > 0) && (a[0] != 1)) {
+    for (i = 1; i < na; i++)
+        a[i] /= a[0];
+    for (i = 0; i < nb; i++)
+        b[i] /= a[0];
+        a[0] = 1;
+    }
+    nz = ((na > nb) ? na : nb) - 1;
+    for (i = 0; i < n; i++) {
+        // delay output
+        yyyy = b[0] * x[i] + z[0];
+        for (j = 0; j < nz; j++) {
+            k = j + 1;
+            if (k < nz)
+                z[j] = z[k];
+            else
+                z[j] = 0;
+            if (k < nb)
+                z[j] += b[k] * x[i];
+            if (k < na)
+                z[j] -= a[k] * yyyy;
+        }
+        y[i] = yyyy;
+    }
+
+    return (0);
+}
+
+// compute filterbank response
+static void
+filterbank(double *y, double *x, int n, double *z, double *p, double *k, int nb, int nz)
+{
+    double *b, *a, *bb, *aa, *yy, *zz;
+    int i, j, m, nc;
+
+    m = (nz + 1) * nb * 2;
+    b = (double *) calloc(m, sizeof(double));
+    a = (double *) calloc(m, sizeof(double));
+    nc = nz + 1;
+    zz = (double *) calloc(nc, sizeof(double));
+    // transform poles & zeros to IIR coeficients
+    zp2ba(z, p, nz, nb, b, a);
+    // loop over frequency bands
+    for (j = 0; j < nb; j++) {
+        bb = b + j * nc; // band IIR numerator
+        aa = a + j * nc; // band IIR denominator
+        yy = y + j * n;  // band response pointer
+        dzero(zz, nc);   // clear filter history
+        filterz(bb, nc, aa, nc, x, yy, n, zz); 
+        for (i = 0; i < n; i ++) {
+            yy[i] *= k[j];
+        }
+    }
+    free(b);
+    free(a);
+    free(zz);
+}
+
+// perform peak alignment and apply gain
+static void
+peak_align(double *y, double *d, int nb, int nt)
+{
+    double *yy;
+    int j, i;
+
+    // loop over frequency bands
+    for (j = 0; j < nb; j++) {
+        yy = y + j * nt;  // band response pointer
+        // delay shift
+        i = (int) d[j];
+        dmove(yy + i, yy, nt - i);
+        dzero(yy, i);
+    }
+}
+
+// filterbank sum across bands
+static void
+combine(float *x, float *y, double *g, int nb, int nt)
+{
+    double sum;
+    float *xx;
+    int j, i;
+
+    // loop over time
+    for (i = 0; i < nt; i++) {
+        sum = 0;
+        // loop over frequency bands
+        for (j = 0; j < nb; j++) {
+            xx = x + j * nt;  // band response pointer
+            sum += xx[i] * g[j];
+        }
+        y[i] = (float) sum;
+    }
+}
+
+static void
+fb_fft(double *y, float *x, int nb, int nt)
+{
+    double *yy;
+    float *xx;
+    int j;
+
+    for (j = 0; j < nb; j++) {
+        xx = x + j * (nt + 2);
+        yy = y + j * nt;
+        d2f(yy, xx, nt);        // double-to-float
+        cha_fft_rc(xx, nt);     // real-to-complex FFT
+    }
+}
+
+/***********************************************************/
+
+// compute IIR-filterbank zeros, poles, & gains
+void
+iirfb_zpk(double *z, double *p, double *k, double *cf, double fs, int nb, int nz)
+{
+    double fn, wn[2], *sp, *zj, *pj, *kj;
+    int j, no;
+    static double cos = 9; // cross-over spread
+
+    sp = (double *) calloc(nb - 1, sizeof(double));
+    no = nz / 2;    // basic filter order
+    fn = fs / 2;    // Nyquist frequency
+    // compute cross-over-spread factors
+    for (j = 0; j < (nb - 1); j++) {
+        sp[j] = 1 + cos / cf[j];
+    }
+	// low-pass zpk
+    wn[0] = (cf[0] / sp[0]) / fn;
+    butter_zpk(z, p, k, nz, wn, 0); // LP
+	// band-pass zpk
+    for (j = 1; j < (nb - 1); j++) {
+        zj = z + j * nz * 2;
+        pj = p + j * nz * 2;
+        kj = k + j;
+        wn[0] = cf[j - 1] * sp[j - 1] / fn;
+        wn[1] = cf[j] / sp[j] / fn;
+        butter_zpk(zj, pj, kj, no, wn, 2); // BP
+    }
+	// high-pass zpk
+    zj = z + (nb - 1) * nz * 2;
+    pj = p + (nb - 1) * nz * 2;
+    kj = k + (nb - 1);
+    wn[0] = (cf[nb - 2] * sp[nb - 2]) / fn;
+    butter_zpk(zj, pj, kj, nz, wn, 1); // HP
+    free(sp);
+}
+
+// align peaks of filterbank impulse responses
+void
+align_peak(double *z, double *p, double *k, double *d, double td, double fs, int nb, int nz)
+{
+    double ymn, ymx, *x, *y, *yy;
+    int i, j, imx, itd, nt;
+
+    itd = round(td * fs / 1000);
+    nt = itd + 1;
+    x = (double *) calloc(nt, sizeof(double));
+    y = (double *) calloc(nt * nb, sizeof(double));
+    // compute initial impulse responses
+    x[0] = 1; // impulse
+    filterbank(y, x, nt, z, p, k, nb, nz);
+    // flip bands with abs(min) > max
+    for (j = 0; j < nb; j++) {
+        yy = y + j * nt; // band response pointer
+        ymn = ymx = 0;
+        for (i = 0; i < nt; i++) {
+            if (ymn > yy[i]) {
+                ymn = yy[i];
+            }
+            if (ymx < yy[i]) {
+                ymx = yy[i];
+            }
+        }
+        if (fabs(ymn) > ymx) {
+            k[j] = -k[j];
+        }
+    }
+    filterbank(y, x, nt, z, p, k, nb, nz);
+    // find delay for each band that shifts peak to target delay
+    for (j = 0; j < nb; j++) {
+        yy = y + j * nt; // band response pointer
+        imx = 0;
+        for (i = 1; i < nt; i++) {
+            if (yy[imx] < yy[i]) {
+                imx = i;
+            }
+        }
+        d[j] = (itd > imx) ? (itd - imx) : 0;
+    }
+    free(x);
+    free(y);
+}
+
+// adjust filterbank gains for combined unity gain
+void
+adjust_gain(double *z, double *p, double *k, double *d, double *cf, double fs, int nb, int nz)
+{
+    double *x, *y, *g, e, f, mag, sum, avg;
+    float *h, *H;
+    int i, j, jj, mr, mi, m, nt, ni = 4, nf = 5;
+
+    nt = 1024;
+    while (nt < fs) nt *= 2;
+    H = (float *) calloc((nt + 2) * nb, sizeof(float));
+    h = (float *) calloc((nt + 2) * nb, sizeof(float));
+    g = (double *) calloc(nb, sizeof(double));
+    x = (double *) calloc(nt, sizeof(double));
+    y = (double *) calloc(nt * nb, sizeof(double));
+    x[0] = 1;
+    ones(g, nb);
+    // iteration loop
+    filterbank(y, x, nt, z, p, k, nb, nz);
+    peak_align(y, d, nb, nt);
+    fb_fft(y, H, nb, nt);
+    for (i = 0; i < ni; i++) {
+        combine(H, h, g, nb, nt + 2); // sum across bands
+        // loop over frequency bands
+        for (j = 0; j < (nb - 2); j++) {
+            sum = 0;
+            for (jj = 0; jj < nf; jj++) {
+                e = jj / (nf - 1.0);
+                f = pow(cf[j], e) * pow(cf[j + 1], 1 - e);
+                m = round(f * (nt / fs));
+                mr = m * 2;
+                mi = mr + 1;
+                mag = sqrt(h[mr] * h[mr] + h[mi] * h[mi]);
+                sum += log(mag);
+            }
+            avg = exp(sum / nf);
+            g[j + 1] /= avg;
+        }
+    }
+    // loop over frequency bands
+    for (j = 0; j < nb - 1; j++) {
+        k[j] *= g[j];
+    }
+    free(H);
+    free(h);
+    free(g);
+    free(x);
+    free(y);
+}
+
+/***********************************************************/
+
+// design IIR-filterbank
+void
+iirfb(double *z, double *p, double *k, double *d,  double *cf, 
+      int nc, int nz, double fs, double td)
+{
+    // filter design
+    iirfb_zpk(z, p, k, cf, fs, nc, nz);
+    align_peak(z, p, k, d, td, fs, nc, nz);
+    adjust_gain(z, p, k, d, cf, fs, nc, nz);
 }

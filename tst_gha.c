@@ -14,6 +14,9 @@
 #include "cha_if.h"
 #include "cha_gha_data.h"
 
+void iirfb(double *, double *, double *, double *,  double *, 
+      int, int, double, double);
+
 typedef struct {
     char *ifn, *ofn, mat;
     double rate;
@@ -22,6 +25,8 @@ typedef struct {
     long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
+
+void iirfb(double *, double *, double *, double *, int *, int *);
 
 /***********************************************************/
 
@@ -340,55 +345,6 @@ stop_wav(I_O *io)
     fprintf(stdout, "\n");
 }
 
-static void
-load_iirfb(double *z, double *p, double *g, double *d, int *nc, int *nz)
-{
-    double *b = NULL, *a = NULL, *h = NULL;
-    int i, m, n, nb, no;
-    static VAR *vl;
-    static char *ifn = "iirfb.mat";
-
-    vl = sp_mat_load(ifn);
-    if (vl == NULL) {
-        fprintf(stderr, "*** Can't load %s.\n", ifn);
-        exit(1);
-    }
-    for (i = 0; i < 99; i++) {
-        n = vl[i].rows;
-        m = vl[i].cols;
-        if (strcmp(vl[i].name, "b") == 0) {
-            b = (double *) calloc(m * n * 2, sizeof(double));
-            dcopy(b, vl[i].data, m * n);
-        } else if (strcmp(vl[i].name, "a") == 0) {
-            a = (double *) calloc(m * n * 2, sizeof(double));
-            dcopy(a, vl[i].data, m * n);
-        } else if (strcmp(vl[i].name, "g") == 0) {
-            dcopy(g, vl[i].data, m * n);
-        } else if (strcmp(vl[i].name, "d") == 0) {
-            dcopy(d, vl[i].data, m * n);
-        } else if (strcmp(vl[i].name, "z") == 0) {
-            nb = m;
-            no = n;
-            dcopy(z, vl[i].data, m * n * 2);
-        } else if (strcmp(vl[i].name, "p") == 0) {
-            dcopy(p, vl[i].data, m * n * 2);
-        } else if (strcmp(vl[i].name, "h") == 0) {
-            h = (double *) calloc(m * n, sizeof(double));
-            dcopy(h, vl[i].data, m * n);
-        }
-        if (vl[i].last) {
-            break;
-        }
-    }
-    sp_var_clear(vl);
-    for (i = 0; i < nb; i++) g[i] *= h[i];
-    if (b) free(b);
-    if (a) free(a);
-    if (h) free(h);
-    *nc = nb; // number of filter bands
-    *nz = no; // number of zeros & poles
-}
-
 /***********************************************************/
 
 // prepare io
@@ -397,9 +353,13 @@ static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
     double  z[64], p[64], g[8], d[8], wfr[8], ffr[8];
-    int     nc, nz;
     static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
+    // filterbank parameters
+    static int nc = 8;
+    static int nz = 4;
+    static double td = 2.5;
+    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
     // AFC parameters
     static double  mu = 0.001;   // step size
     static double rho = 0.90;    // forgetting factor
@@ -432,7 +392,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         init_aud(io);
     }
     // prepare IIRFB
-    load_iirfb(z, p, g, d, &nc, &nz);
+    iirfb(z, p, g, d, &nc, &nz);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB+AFC+AGC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffer

@@ -7,21 +7,34 @@ cf=[317.2,503.0,797.6,1265,2006,3181,5045]; % crossover frequencies
 nt=sr;
 % filter design
 [b,a]=iir_fbco(sr,cf,no);
-[g,d]=peak_align_par(b,a,sr,td);
+[g,d]=align_peak(b,a,sr,td);
 g=adjust_gain(b,a,g,d,cf,sr);
 % filter example
 x=[1;zeros(nt-1,1)];
 y=filterbank(x,b,a);
-y=peak_align(y,g,d);
+y=peak_align(y,d,g);
 z=sum(y,2);
 %
 plot_filt(y,sr,td,'IIR filterbank',1)
 plot_filt(z,sr,td,'IIR filter-sum',3)
 filter_print(b,a,g,d);
+% find roots & unity-passband scale
+nc=size(b,1);
+nz=2*no;
+z = zeros(nc,nz);
+p = zeros(nc,nz);
+h = zeros(nc,1);
+for k=1:nc
+    z(k,:) = roots(b(k,:));
+    p(k,:) = roots(a(k,:));
+    h(k) = mean(abs(b(k,:))) / mean(abs(poly(z(k,:))));
+end
 % save 
 b = transpose(b);
 a = transpose(a);
-save iirfb b a g d cf sr -v4
+z = transpose(z);
+p = transpose(p);
+save iirfb b a g d cf sr z p h -v4
 return
 
 function [b,a]=iir_fbco(sr,cf,no)
@@ -42,6 +55,7 @@ wn=(cf(1)/s(1))/fn;
 for k=2:(nb-1)
     wn=[cf(k-1)*s(k-1) cf(k)/s(k)]/fn;
     [b(k,:),a(k,:)] = butter(no,wn);       % band-pass
+    [z,p,h] = butter(no,wn);
 end
 wn=(cf(nb-1)*s(nb-1))/fn;
 [b(nb,:),a(nb,:)] = butter(n2,wn,'high');  % high-pass
@@ -57,7 +71,7 @@ for k=1:nb
 end
 return
 
-function [g,d]=peak_align_par(b,a,sr,td)
+function [g,d]=align_peak(b,a,sr,td)
 nt=1+round(sr*td);
 x=[1;zeros(nt-1,1)];
 y=filterbank(x,b,a);
@@ -70,33 +84,40 @@ g(kk)=-g(kk);
 y(:,kk)=-y(:,kk);
 [~,kp]=max(y);
 dd=td*sr/1000;
-d=max(0,round(dd-kp));
+d=max(0,round(dd-kp+1));
 return
 
 function g=adjust_gain(b,a,g,d,cf,sr)
 nb=size(b,1);
-nt=sr;
+nt=1024;
+for k=1:9
+    if (nt < sr) 
+        nt = nt * 2;
+    end
+end
 x=[1;zeros(nt-1,1)];
-for iter=1:8
-    y=filterbank(x,b,a);
-    y=peak_align(y,g,d);
-    z=sum(y,2);
-    H=ffa(z);
+y=filterbank(x,b,a);
+y=peak_align(y,d);
+H=ffa(y);
+for iter=1:4
+    G=H*g(:);
     for k=1:(nb-2)
         e=(0:4)/4;
         f=(cf(k).^e).*(cf(k+1).^(1-e));
         m=1+round(f*(nt/sr));
-        g(k+1)=g(k+1)/exp(mean(log(abs(H(m)))));
+        avg = exp(mean(log(abs(G(m)))));
+        g(k+1)=g(k+1)/avg;
     end
 end
 return
 
-function y=peak_align(y,p,d)
+function y=peak_align(y,d,g)
 [nt,nc]=size(y);
 for k=1:nc
     zz=zeros(d(k),1);
     yy=y(1:(nt-d(k)),k);
-    y(:,k)=[zz;yy]*p(k);
+    y(:,k)=[zz;yy];
+    if (nargin>2) y(:,k)=y(:,k)*g(k); end
 end
 return
 

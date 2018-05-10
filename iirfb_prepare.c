@@ -37,6 +37,8 @@ root2poly(double *r, double *p, int n)
     for (i = 0; i < (n + 1); i++) {
         p[i] = pp[i * 2];
     }
+    free(pp);
+    free(qq);
 }
 
 static void
