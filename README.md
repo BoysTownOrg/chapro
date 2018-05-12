@@ -39,9 +39,9 @@ The following test programs are included.
     tst_ffsc - test FIR filterbank (analysis & synthesis) and AGC processing
     tst_ifa  - test IIR filterbank analysis
     tst_ifio - test IIR filterbank analysis & synthesis
-    tst_ifsc - test FIR filterbank (analysis & synthesis) and AGC processing
-    tst_iffb - test FIR filterbank (analysis & synthesis) and AFC processing
-    tst_gha  - test FIR filterbank (analysis & synthesis) and AFC+AGC processing
+    tst_ifsc - test IIR filterbank (analysis & synthesis) and AGC processing
+    tst_iffb - test IIR filterbank (analysis & synthesis) and AFC processing
+    tst_gha  - test IIR filterbank (analysis & synthesis) and AFC+AGC processing
 
 Contributors
 
