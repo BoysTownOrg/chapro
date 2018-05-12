@@ -6,15 +6,17 @@ CHAPRO is a library of functions that may be used to implement simulations of co
 
 Code Example
 
-The following sequence of function calls implement signal processing for a generic hearing aid:
+The following sequence of function calls implement signal processing for a generic hearing aid with wideband dynamic-range compression (AGC) and adaptive feedback cancelation (AFC):
 
+    cha_afc_input(cp, x, x, cs);
     cha_agc_input(cp, x, x, cs);
-    cha_firfb_analyze(cp, x, zz, cs);
+    cha_iirfb_analyze(cp, x, zz, cs);
     cha_agc_channel(cp, zz, zz, cs);
-    cha_firfb_synthesize(cp, zz, y, cs);
+    cha_iirfb_synthesize(cp, zz, y, cs);
     cha_agc_output(cp, y, y, cs);
+    cha_afc_output(cp, y, cs);
 
-In these function calls, cp is a pointer to a data structure, x is a pointer to the input stream, y is a pointer to the output stream, and zz is an intermediate buffer. The three "agc" functions perform compression. The two "firfb" perfrom frequency analysis and synthesis.
+In these function calls, cp is a pointer to a data structure, x is a pointer to the input stream, y is a pointer to the output stream, and zz is a muti-channel intermediate buffer. The two "afc" functions perform feedback management. The three "agc" functions perform compression. The two "iirfb" perform frequency analysis and synthesis.
 
 Motivation
 
@@ -35,6 +37,11 @@ The following test programs are included.
     tst_ffa  - test FIR filterbank analysis
     tst_ffio - test FIR filterbank analysis & synthesis
     tst_ffsc - test FIR filterbank (analysis & synthesis) and AGC processing
+    tst_ifa  - test IIR filterbank analysis
+    tst_ifio - test IIR filterbank analysis & synthesis
+    tst_ifsc - test FIR filterbank (analysis & synthesis) and AGC processing
+    tst_iffb - test FIR filterbank (analysis & synthesis) and AFC processing
+    tst_gha  - test FIR filterbank (analysis & synthesis) and AFC+AGC processing
 
 Contributors
 
