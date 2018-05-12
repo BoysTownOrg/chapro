@@ -414,7 +414,7 @@ fb_fft(double *y, float *x, int nb, int nt)
 /***********************************************************/
 
 // compute IIR-filterbank zeros, poles, & gains
-void
+static void
 iirfb_zpk(double *z, double *p, double *k, double *cf, double fs, int nb, int nz)
 {
     double fn, wn[2], *sp, *zj, *pj, *kj;
@@ -450,7 +450,7 @@ iirfb_zpk(double *z, double *p, double *k, double *cf, double fs, int nb, int nz
 }
 
 // align peaks of filterbank impulse responses
-void
+static void
 align_peak(double *z, double *p, double *k, double *d, double td, double fs, int nb, int nz)
 {
     double ymn, ymx, *x, *y, *yy;
@@ -496,12 +496,12 @@ align_peak(double *z, double *p, double *k, double *d, double td, double fs, int
 }
 
 // adjust filterbank gains for combined unity gain
-void
+static void
 adjust_gain(double *z, double *p, double *k, double *d, double *cf, double fs, int nb, int nz)
 {
     double *x, *y, *g, e, f, mag, sum, avg;
     float *h, *H;
-    int i, j, jj, mr, mi, m, nt, ni = 4, nf = 5;
+    int i, j, jj, mr, mi, m, nt, ni = 8, nf = 5;
 
     nt = 1024;
     while (nt < fs) nt *= 2;
