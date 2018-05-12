@@ -42,9 +42,9 @@ ones(double *d, int n)
 
 /***********************************************************/
 
-// p2zpk - transform analog pole to IIR pole and gain
+// p2zpk - transform analog pole to IIR pole
 static void
-bilinear_pole(double *p, double *k, double *ap, double wp)
+bilinear_pole(double *p, double *ap, double wp)
 {
     double aa, bb, c1, c2, c3, p1, p2;
 
@@ -57,14 +57,12 @@ bilinear_pole(double *p, double *k, double *ap, double wp)
     if (ap[1] == 0) {
         p[0] = p1;
         p[1] = 0;
-        k[0] = fabs(wp - p1) / 2;
     } else {
         p2 = sqrt(c3 / c1 - p1 * p1);
         p[0] = p1;
         p[1] = p2;
         p[2] = p1;
         p[3] = -p2;
-        k[0] = ((wp - p1) * (wp - p1) + p2 * p2) / 4;
     }
 }
 
@@ -103,7 +101,7 @@ static void
 p2zpk(double *z, double *p, double *k, double *ap, int np, double *wn, int ft)
 {
     double bw, u0, u1, wc, wp, Q, M, A;
-    double p0[4], p1[4], p2[4], z1[4], k0[2], k1[2], k2[2], M1[2], M2[2], N[2];
+    double p0[4], p1[4], p2[4], z1[4], M1[2], M2[2], N[2];
     int j, m = 4;
 
     if ((ft == 0) || (ft == 1)) {
@@ -111,13 +109,16 @@ p2zpk(double *z, double *p, double *k, double *ap, int np, double *wn, int ft)
         p0[0] = ap[0] * u0;
         p0[1] = ap[1] * u0;
         wp = (ft == 0) ? 1 : -1;
+        bilinear_pole(p, p0, wp);
         z[0] = -wp;
         z[1] = 0;
-        if (ap[1]) {
+        if (ap[1] == 0) {
+            k[0] = fabs(wp - p[0]) / 2;
+        } else {
             z[2] = z[0];
             z[3] = z[1];
+            k[0] = ((wp - p[0]) * (wp - p[0]) + p[1] * p[1]) / 4;
         }
-        bilinear_pole(p, k, p0, wp);
     } else {
         u0 = tan(M_PI * wn[0] / 2);
         u1 = tan(M_PI * wn[1] / 2);
@@ -133,7 +134,7 @@ p2zpk(double *z, double *p, double *k, double *ap, int np, double *wn, int ft)
             wp=-1;
             z1[0]=0;
             z1[1]=wc;
-            bilinear_pole(z1, k0, z1, wp);
+            bilinear_pole(z1, z1, wp);
         }
         Q = wc / bw;
         M1[0] = (ap[0] / Q) / 2;
@@ -149,8 +150,8 @@ p2zpk(double *z, double *p, double *k, double *ap, int np, double *wn, int ft)
         p1[1] = (M1[1] + M2[1]) * wc;
         p2[0] = (M1[0] - M2[0]) * wc;
         p2[1] = (M1[1] - M2[1]) * wc;
-        bilinear_pole(p1, k1, p1, wp);
-        bilinear_pole(p2, k2, p2, wp);
+        bilinear_pole(p1, p1, wp);
+        bilinear_pole(p2, p2, wp);
         if (ap[1] == 0) {
             for (j = 0; j < m; j++) {
                 z[j]=z1[j];
