@@ -392,7 +392,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         init_aud(io);
     }
     // prepare IIRFB
-    iirfb(z, p, g, d, &nc, &nz);
+    iirfb(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB+AFC+AGC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffer
