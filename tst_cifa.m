@@ -1,28 +1,23 @@
-% test IIR filterbank analysis
-function tst_ifa
-load('test/tst_ifa','rate','x','y')
-td=2.5;
+% test gammatone filterbank analysis
+function tst_cifa
+td=4;
+load('test/gfa_impulse')
 y=real(y);
 t=1000*(0:(length(y)-1))/rate;
-% plot filterbank impulse responses
 figure(1);clf
 reset_color(1);
 plot(t,y)
-title('IIR filterbank impulse responses')
-ymn=min(min(y));
-ymx=max(max(y));
-ymg=(ymx-ymn)/20;
-y_lim=[ymn-ymg ymx+ymg];
-t_lim=[-0.5 12.5];
+title('complex IIR filterbank impulse response')
+y_lim=[min(min(y)) max(max(y))]* 1.05;
+t_lim=[-0.5 15.5];
 axis([t_lim y_lim])
 xlabel('time (ms)')
-% plot filterbank transfer functions
 figure(2);clf
 H=ffa(y);
 f=linspace(0,rate/2000,length(H))';
 d=td*ones(size(f));
 fm=max(max(f));
-m_lim=[0.05 fm -35 5];
+m_lim=[0.05 fm -50 10];
 d_lim=[0.05 fm   0  8];
 M=db(H);
 D=gd(H,f);
@@ -32,8 +27,9 @@ reset_color(1);
 semilogx(f,M)
 axis(m_lim)
 ylabel('magnitude (dB)')
-title('IIR filterbank transfer functions')
+title('complex IIR filterbank transfer functions')
 subplot(2,1,2)
+reset_color(1);
 semilogx(f,D,f,d,':k')
 axis(d_lim)
 xlabel('frequency (kHz)')
@@ -54,7 +50,7 @@ reset_color(1);
 semilogx(f,M)
 axis(m_lim)
 ylabel('magnitude (dB)')
-title('IIR filterbank combined transfer function')
+title('complex IIR filterbank combined transfer function')
 subplot(2,1,2)
 semilogx(f,D,f,d,':k')
 axis(d_lim)
@@ -89,14 +85,3 @@ dx(1)=x(2)-x(1);
 dx(2:(n-1))=(x(3:n)-x(1:(n-2)))/2;
 dx(n)=x(n)-x(n-1);
 return
-
-% fast Fourier analyze real signal
-function H=ffa(h)
-H=fft(real(h));
-n=length(H);
-m=1+n/2;            % assume n is even
-H(1,:)=real(H(1,:));
-H(m,:)=real(H(m,:));
-H((m+1):n,:)=[];    % remove upper frequencies
-return
-

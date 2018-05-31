@@ -12,9 +12,6 @@
 #include "cha_if.h"
 #include "cha_if_data.h"
 
-void iirfb(double *, double *, double *, double *,  double *, 
-      int, int, double, double);
-
 typedef struct {
     char *ifn, *ofn, mat;
     double rate;
@@ -133,7 +130,8 @@ write_wave(I_O *io)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double  z[64], p[64], g[8], d[8];
+    float   z[64], p[64], g[8];
+    int     d[8];
     static double sr = 24000;   // sampling rate (Hz)
     static int    cs = 32;      // chunk size
     // filterbank parameters
@@ -147,7 +145,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // initialize waveform
     init_wav(io);
     // prepare IIRFB
-    iirfb(z, p, g, d, cf, nc, nz, sr, td);
+    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
     // prepare chunk buffer

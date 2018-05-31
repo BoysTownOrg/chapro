@@ -1,4 +1,4 @@
-// tst_ifa.c - test IIR-filterbank analysis
+// tst_gfa.c - test gammatone-filterbank analysis
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if.h"
+#include "cha_gf.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -19,6 +19,8 @@ typedef struct {
     long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
+
+static double target_delay = 4;
 
 /***********************************************************/
 
@@ -30,8 +32,8 @@ init_wav(I_O *io)
     /* impulse input */
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
-    fprintf(stdout, "IIR filterbank impulse response: \n");
-    io->ofn = "test/tst_ifa.mat";
+    fprintf(stdout, "impulse response: \n");
+    io->ofn = "test/gfa_impulse.mat";
     io->iwav[0] = 1;
     io->nsmp = io->nwav;
     io->mseg = 1;
@@ -42,7 +44,7 @@ static void
 write_waves(I_O *io, CHA_PTR cp, int c)
 {
     char *ft;
-    float r[1], *x, *y;
+    float r[1], d[1], *x, *y;
     int   n;
     static VAR *vl;
 
@@ -53,12 +55,42 @@ write_waves(I_O *io, CHA_PTR cp, int c)
     x = io->iwav;
     y = io->owav;
     r[0] = (float) io->rate;
-    vl = sp_var_alloc(3);
+    d[0] = (float) target_delay;
+    vl = sp_var_alloc(4);
     sp_var_set(vl + 0, "rate", r, 1, 1, "f4");
     sp_var_set(vl + 1,    "x", x, n, 1, "f4");
-    sp_var_set(vl + 2,    "y", y, n, c, "f4");
+    sp_var_set(vl + 2,    "y", y, n, c, "f4c");
+    sp_var_set(vl + 3,   "td", d, 1, 1, "f4");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
+}
+
+/***********************************************************/
+
+// specify filterbank center frequecies and bandwidths
+
+static double
+cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
+{
+    float lfbw, fmid = 1000;
+    int i, nh, nc;
+
+    lfbw = fmid / nm;
+    nh = (int) floor(log2(sr / 2000) * cpo);
+    nc = nh + nm;
+    cls->nc = nc;
+    for (i = 0; i < (nm - 1); i++) {
+        cls->fc[i] = lfbw * (i + 1);
+        cls->bw[i] = lfbw;
+    }
+    cls->fc[nm - 1] = fmid;
+    cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
+    for (i = nm; i < nc; i++) {
+        cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
+        cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo) - pow(2.0, (i - nm + 0.5) / cpo));
+    }
+
+    return (400 / lfbw);
 }
 
 /***********************************************************/
@@ -68,30 +100,34 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    float  z[64], p[64], g[8];
-    int     ns, d[8];
-    static int    cs = 32;      // chunk size
+    float z[256], p[256], g[64]; 
+    double gd, *fc, *bw;
+    int nc, ns, d[32];
+    CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
-    // filterbank parameters
-    static int nc = 8;
-    static int nz = 4;
-    static double td = 2.5;
-    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
+    static int    cs = 32;      // chunk size
+    static int    nm = 10;      // number of frequency bands below 1 kHz
+    static int   cpo =  6;      // number of frequency bands per octave above 1 kHz
+    static int    no =  4;      // gammatone filter order
 
     io->rate = sr;
     io->mat = 0;
-    fprintf(stdout, "CHA iirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
+    gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
+    fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", sr / 1000);
+    fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
     // initialize waveform
     init_wav(io);
     ns = io->nsmp;
-    // prepare IIRFB
-    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
-    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
+    // prepare filterbank
+    nc = cls.nc;
+    fc = cls.fc;
+    bw = cls.bw;
+    cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
+    cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
     // prepare chunk buffer
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // output buffer
-    io->owav = (float *) calloc(nc * ns, sizeof(float));
+    io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
 }
 
 // unscramble channel outputs
@@ -119,12 +155,12 @@ process(I_O *io, CHA_PTR cp)
     z = (float *) cp[_cc];
     ns = io->nsmp;
     nc = CHA_IVAR[_nc];
-    // process IIR filterbank
+    // process gammatone filterbank
     cs = CHA_IVAR[_cs]; // chunk size
     nk = ns / cs;       // number of chunks
     for (j = 0; j < nk; j++) {
-        cha_iirfb_analyze(cp, x + j * cs, z, cs);
-        unscramble_out(y, z, nc, ns, cs, j);
+        cha_ciirfb_analyze(cp, x + j * cs, z, cs);
+        unscramble_out(y, z, nc, ns * 2, cs * 2, j);
     }
 }
 

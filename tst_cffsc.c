@@ -36,7 +36,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     z = (float *) cp[_cc];
     // process filterbank+compressor
     cha_cfirfb_analyze(cp, x, z, cs);
-    cha_compressor_process(cp, z, z, cs);
+    cha_icmp_process(cp, z, z, cs);
     cha_cfirfb_synthesize(cp, z, y, cs);
 }
 
@@ -387,7 +387,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
     compressor_init(&cls, gn, nc);
-    cha_compressor_prepare(cp, &cls, lr, ds);
+    cha_icmp_prepare(cp, &cls, lr, ds);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
 }

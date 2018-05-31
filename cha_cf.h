@@ -34,8 +34,8 @@ FUNC(void) cha_cfirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // compressor module
 
-FUNC(int) cha_compressor_prepare(CHA_PTR, CHA_CLS *, double, int);
-FUNC(void) cha_compressor_process(CHA_PTR, float *, float *, int);
+FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, int);
+FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
@@ -51,7 +51,7 @@ FUNC(void) cha_compressor_process(CHA_PTR, float *, float *, int);
 
 #define _dsm      _offset+7
 #define _dso      _offset+8
-#define _bkr      _offset+9
+//#define _bkr      _offset+9
 #define _c1       _offset+10
 #define _c2       _offset+11
 #define _fc       _offset+12

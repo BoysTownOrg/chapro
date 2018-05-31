@@ -1,4 +1,4 @@
-// tst_gha.c - test IIR-filterbank + AFC + AGC
+// tst_gfsc.c - test gammatone-filterbank & instantaneous-compression
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -11,8 +11,8 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if.h"
-#include "cha_gha_data.h"
+#include "cha_gf.h"
+#include "cha_gf_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -25,29 +25,6 @@ typedef struct {
 
 /***********************************************************/
 
-static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
-static int    iqm, nqm, fbl, wfl, ffl;
-
-static void
-save_qm(CHA_PTR cp, int cs)
-{
-    int n;
-    float *merr;
-
-    merr = (float *) cp[_merr];
-    n = ((iqm + cs) < nqm) ? cs : (nqm - iqm);
-    if (merr) fcopy(qm + iqm, merr, n);
-    iqm += n;
-    // copy filters
-    fbl =     CHA_IVAR[_fbl];
-    wfl =     CHA_IVAR[_wfl];
-    ffl =     CHA_IVAR[_ffl];
-    efbp = (float *) cp[_efbp];
-    sfbp = (float *) cp[_sfbp];
-    wfrp = (float *) cp[_wfrp];
-    ffrp = (float *) cp[_ffrp];
-}
-
 static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
@@ -57,16 +34,10 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIRFB+AFC+AGC
-    cha_afc_input(cp, x, x, cs);
-    cha_agc_input(cp, x, x, cs);
-    cha_iirfb_analyze(cp, x, z, cs);
-    cha_agc_channel(cp, z, z, cs);
-    cha_iirfb_synthesize(cp, z, y, cs);
-    cha_agc_output(cp, y, y, cs);
-    cha_afc_output(cp, y, cs);
-    // save quality metric
-    save_qm(cp, cs);
+    // process filterbank+compressor
+    cha_ciirfb_analyze(cp, x, z, cs);
+    cha_icmp_process(cp, z, z, cs);
+    cha_ciirfb_synthesize(cp, z, y, cs);
 }
 
 /***********************************************************/
@@ -76,28 +47,15 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_gha [-options] [input_file] [output_file]\n");
+    fprintf(stdout, "usage: tst_gfsc [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
+    fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
+    fprintf(stdout, "-d N  set downsample factor to N [24]\n");
     fprintf(stdout, "-h    print help\n");
+    fprintf(stdout, "-k N  compression kneepoint=N (dB) [0]\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
-}
-
-static void
-var_string(VAR *vl, char *name, char *s)
-{
-    int i, n;
-    float *data;
-
-    n = strlen(s);
-    data = (float *) calloc(n, sizeof(float));
-    for (i = 0; i < n; i++) {
-        data[i] = s[i];
-    }
-    sp_var_set(vl, "ifn", data, 1, n, "f4");
-    vl[0].text = 1;
-    free(data);
 }
 
 static void
@@ -127,16 +85,30 @@ mat_file(char *fn)
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate)
+parse_args(I_O *io, int ac, char *av[], double rate, int *ds, 
+    double *gn)
 {
     io->rate = rate;
+    io->ifn = "test/cat.wav";
     io->mat = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'h') {
+            if (av[1][1] == 'c') {
+                *gn = atof(av[2]);
+                ac--;
+                av++;
+            } else if (av[1][1] == 'd') {
+                *ds = atoi(av[2]);
+                ac--;
+                av++;
+            } else if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
                 io->mat = 1;
+            } else if (av[1][1] == 's') {
+                *gn = atof(av[2]);
+                ac--;
+                av++;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -146,8 +118,8 @@ parse_args(I_O *io, int ac, char *av[], double rate)
             break;
         }
     }
-    io->ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
-    io->ofn = (ac > 2) ? _strdup(av[2]) : NULL;
+    //io->ifn = (ac > 1) ? av[1] : NULL;
+    io->ofn = (ac > 2) ? av[2] : NULL;
     if (mat_file(io->ofn)) {
         io->mat = 1;
     }
@@ -177,8 +149,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/tst_gha.wav";
-    static char *mfn = "test/tst_gha.mat";
+    static char *wfn = "test/tst_gfsc.wav";
+    static char *mfn = "test/tst_gfsc.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -198,9 +170,9 @@ init_wav(I_O *io)
         fprintf(stdout, "WAV input: %s...\n", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
-        set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
+	set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
     } else {    /* 8-second impulse input */
-        fprintf(stdout, "impulse response...\n");
+        fprintf(stdout, "impulse response: ");
         io->nwav = round(io->rate * 8);
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
@@ -208,8 +180,8 @@ init_wav(I_O *io)
     io->ofn = io->mat ? mfn : wfn; 
     if (io->ofn) {
         io->nsmp = io->nwav;
-        io->nseg = 1;
         io->mseg = 1;
+        io->nseg = 1;
         io->owav = (float *) calloc(io->nsmp, sizeof(float));
     } else {    /* DAC output */
         io->nsmp = round(io->rate / 10);
@@ -276,7 +248,7 @@ put_aud(I_O *io, CHA_PTR cp)
             fzero(io->owav, io->nsmp);
         }
         io->pseg++;
-    process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
+	process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
     }
 }
 
@@ -298,15 +270,9 @@ write_wave(I_O *io)
     n = io->nwav;
     w = io->owav;
     r[0] = (float) io->rate;
-    vl = sp_var_alloc(8);
-    sp_var_set(vl + 0, "rate",    r,   1, 1, "f4");
-    sp_var_set(vl + 1, "wave",    w,   n, 1, "f4");
-    sp_var_set(vl + 2, "merr",   qm, nqm, 1, "f4");
-    sp_var_set(vl + 3, "sfbp", sfbp, fbl, 1, "f4");
-    sp_var_set(vl + 4, "efbp", efbp, fbl, 1, "f4");
-    sp_var_set(vl + 5, "wfrp", wfrp, wfl, 1, "f4");
-    sp_var_set(vl + 6, "ffrp", ffrp, ffl, 1, "f4");
-    var_string(vl + 7, "ifn",  io->ifn);
+    vl = sp_var_alloc(2);
+    sp_var_set(vl + 0, "rate", r, 1, 1, "f4");
+    sp_var_set(vl + 1, "wave", w, n, 1, "f4");
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
     } else {
@@ -342,42 +308,80 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// specify filterbank center frequecies and bandwidths
+
+static double
+cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
+{
+    float lfbw, fmid = 1000;
+    int i, nh, nc;
+
+    lfbw = fmid / nm;
+    nh = (int) floor(log2(sr / 2000) * cpo);
+    nc = nh + nm;
+    cls->nc = nc;
+    for (i = 0; i < (nm - 1); i++) {
+        cls->fc[i] = lfbw * (i + 1);
+        cls->bw[i] = lfbw;
+    }
+    cls->fc[nm - 1] = fmid;
+    cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
+    for (i = nm; i < nc; i++) {
+        cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
+        cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo) - pow(2.0, (i - nm + 0.5) / cpo));
+    }
+
+    return (400 / lfbw);
+}
+
+// CSL prescription
+
+static void
+compressor_init(CHA_CLS *cls, double gn, int nc)
+{
+    int k;
+
+    // set compression mode
+    cls->cm = 1;
+    // loop over filterbank channel
+    cls->nc = nc;
+    for (k = 0; k < nc; k++) {
+        cls->Lcs[k] = 0;
+        cls->Lcm[k] = 50;
+        cls->Lce[k] = 100;
+        cls->Lmx[k] = 120;
+        cls->Gcs[k] = (float) gn;
+        cls->Gcm[k] = (float) gn / 2;
+        cls->Gce[k] = 0;
+        cls->Gmx[k] = 90;
+    }
+}
+
+/***********************************************************/
+
 // prepare io
 
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    float   z[64], p[64], g[8];
-    int     d[8];
-    static double  sr = 24000;   // sampling rate (Hz)
-    static int     cs = 32;      // chunk size
-    // filterbank parameters
-    static int nc = 8;
-    static int nz = 4;
-    static double td = 2.5;
-    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
-    // AFC parameters
-    static double  mu = 0.001;   // step size
-    static double rho = 0.90;    // forgetting factor
-    static double eps = 0.008;   // power threshold
-    static int    afl = 100;     // adaptive filter length
-    static int    sqm = 1;       // save quality metric ?
-    static int    wfl = 0;       // whitening-filter length
-    static int    ffl = 0;       // fixed-filter length
-    // simulation parameters
-    static double fbg = 1;       // simulated-feedback gain
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
-    static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
+    float z[256], p[256], g[64]; 
+    double gd, *fc, *bw;
+    int nc, d[32];
+    CHA_CLS cls;
+    static double sr = 24000;   // sampling rate (Hz)
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static double gn = 20;      // flat suppressor gain (dB)
+    static int    cs = 32;      // chunk size
+    static int    nm = 10;      // number of frequency bands below 1 kHz
+    static int   cpo =  6;      // number of frequency bands per octave above 1 kHz
+    static int    no =  4;      // gammatone filter order
+    static int    ds = 24;      // downsample factor
 
-    parse_args(io, ac, av, sr);
+    parse_args(io, ac, av, sr, &ds, &gn);
+    gd = cgtfb_init(&cls, sr, nm, cpo);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
+    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
+    fprintf(stdout, "compression gain=%.0f, ds=%d\n", gn, ds);
     // initialize waveform
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
@@ -387,22 +391,19 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         cs = io->nsmp;
         init_aud(io);
     }
-    // prepare IIRFB
-    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
-    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIRFB+AFC+AGC: nc=%d nz=%d\n", nc, nz);
-    // allocate chunk buffer
+    // prepare gammatone filterbank
+    nc = cls.nc;
+    fc = cls.fc;
+    bw = cls.bw;
+    cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
+    cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
+    // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
-    // prepare AFC
-    cha_afc_prepare(cp, mu, rho, eps, afl, wfl, ffl, fbg, sqm);
-    // prepare AGC
-    cha_agc_prepare(cp, &dsl, &gha);
-    // initialize quality metric
-    nqm = io->nsmp;
-    iqm = 0;
-    qm = (float *) calloc(nqm, sizeof(float));
+    // prepare compressor
+    compressor_init(&cls, gn, nc);
+    cha_icmp_prepare(cp, &cls, lr, ds);
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_gha_data.h");
+    cha_data_gen(cp, "cha_gf_data.h");
 }
 
 // process io
@@ -428,9 +429,6 @@ process(I_O *io, CHA_PTR cp)
         t1 = sp_toc();
         t2 = io->nwav / io->rate;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
-        if (iqm > 0) {
-            fprintf(stdout, "final misalignment error = %.2f dB\n", 10 * log10(qm[iqm - 1]));
-        }
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);
@@ -448,7 +446,6 @@ cleanup(I_O *io, CHA_PTR cp)
     }
     stop_wav(io);
     cha_cleanup(cp);
-    free(qm);
 }
 
 /***********************************************************/

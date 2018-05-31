@@ -36,7 +36,8 @@ typedef struct {
 
 // iirfb module
 
-FUNC(int) cha_iirfb_prepare(CHA_PTR, double *, double *, double *, double *, int, int, double, int);
+FUNC(int) cha_iirfb_design(float *, float *, float *, int *, double *, int, int, double, double);
+FUNC(int) cha_iirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
 FUNC(void) cha_iirfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_iirfb_synthesize(CHA_PTR, float *, float *, int);
 
@@ -49,8 +50,7 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 
 // feedback module
 
-FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, 
-                          double *, int, double *, int, double, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, int, int, double, int);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
@@ -65,7 +65,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _aa       _offset+2
 #define _zz       _offset+3
 #define _yd       _offset+4
-#define _gg       _offset+5
 #define _dd       _offset+6
 
 #define _gctk     _offset+7

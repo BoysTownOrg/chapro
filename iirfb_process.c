@@ -9,43 +9,57 @@
 
 /***********************************************************/
 
+static __inline void
+filter_tf(float *x, float *y, int cs, float *coef, float *hist, int op)
+{
+    float  *b, *a, *xx, *yy, y0;
+    int i, j;
+
+    b = coef;
+    a = b + op;
+    xx = hist;
+    yy = xx + op;
+    /* loop over time */
+    for (i = 0; i < cs; i++) {
+        y0 = b[0] * x[i];
+        for (j = 1; j < op; j++) {
+            y0 += b[j] * xx[j - 1] - a[j] * yy[j - 1];
+        }
+        fmove(xx + 1, xx, op - 2);
+        fmove(yy + 1, yy, op - 2);
+        xx[0] = x[i];
+        yy[0] = y[i] = y0;
+    }
+}
+
+/***********************************************************/
+
 // IIR-filterbank analysis
 FUNC(void)
 cha_iirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
 {
-    int     dk, i, j, k, m, nc, ns, op;
-    float   xx, yy, *bb, *aa, *zz, *gg, *dd, *bk, *ak, *zk, *yd;
+    int     dk, i, k, kk, m, nc, ns, op, *dd;
+    float   *bb, *zz, *yk, *yd;
 
     bb = (float *) cp[_bb];
-    aa = (float *) cp[_aa];
-    gg = (float *) cp[_gg];
-    dd = (float *) cp[_dd];
+    dd = (int *) cp[_dd];
     zz = (float *) cp[_zz];
     yd = (float *) cp[_yd];
     nc = CHA_IVAR[_nc];
     op = CHA_IVAR[_op];
     ns = CHA_IVAR[_ns];
-    for (i = 0; i < cs; i++) {
-        /* initialize i/o */
-        xx = x[i];
-        /* loop over filterbank channel */
-        #pragma omp parallel for
-        for (k = 0; k < nc; k++) {
-            bk = bb + k * op;
-            ak = aa + k * op;
-            zk = zz + k * op;
-            yy = (bk[0] * xx) + zk[0];
-            for (j = 1; j < op; j++) {
-                zk[j - 1] = (bk[j] * xx) - (ak[j] * yy) + zk[j];
-            }
-            /* peak-shift delay */
-            m = k * ns;
-            dk = (int) dd[k];
+    /* loop over filterbank channel */
+    for (k = 0; k < nc; k++) {
+        kk = k * op * 2;
+        yk = y + k * cs;
+        filter_tf(x, yk, cs, bb + kk, zz + kk, op);
+       /* delay */
+        m = k * ns;
+        dk = dd[k];
+        for (i = 0; i < cs; i++) {
             fmove(yd + m + 1, yd + m, dk);
-            yd[m] = yy;
-            yy = yd[m + dk];
-            /* channel out */
-            y[i + k * cs] = yy * gg[k];
+            yd[m] = yk[i];
+            yk[i] = yd[m + dk];
         }
     }
 }

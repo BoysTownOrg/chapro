@@ -1,10 +1,16 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.16, 12-May-18"
+#define VER     "CHApro version 0.18, 31-May-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.18 - 31-May-18
+> Cleaned up API
+> Added IIR design functions
+0.17 - 30-May-18
+> Converted complex IIR to zero-pole design
+> Converted IIR delay to int
 0.16 - 12-May-18
 > Added C code for IIR filterbank design
 0.15 - 4-May-18

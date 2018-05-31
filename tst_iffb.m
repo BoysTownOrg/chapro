@@ -1,7 +1,7 @@
 % tst_iffb - CHAPRO demonstration of GHA processing
 function tst_iffb
 pfn='test/tst_iffb.mat'; % AFC results produced by tst_iffb
-play_audio=0;
+play_audio=1;
 gn=0.317858; % audioread scale factor 
 load(pfn)
 x=audioread(ifn)*gn;

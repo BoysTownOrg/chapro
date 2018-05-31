@@ -25,17 +25,17 @@ typedef struct {
 
 /*****************************************************/
 
-// cgtfb module
+// ciirfb module
 
-FUNC(int) cha_cgtfb_prepare(CHA_PTR, double *, double *, double, double, double, 
-                            int, int);
-FUNC(void) cha_cgtfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void) cha_cgtfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_ciirfb_design(float *, float *, float *, int *, int, double *, double *, double, double);
+FUNC(int) cha_ciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
+FUNC(void) cha_ciirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_ciirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // compressor module
 
-FUNC(int) cha_compressor_prepare(CHA_PTR, CHA_CLS *, double, int);
-FUNC(void) cha_compressor_process(CHA_PTR, float *, float *, int);
+FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, int);
+FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 

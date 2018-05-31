@@ -10,7 +10,7 @@
 
 
 static void
-root2poly(double *r, double *p, int n)
+root2poly(float *r, double *p, int n)
 {
     double *pp, *qq;
     int i, ir, ii, j, jr, ji;
@@ -42,88 +42,82 @@ root2poly(double *r, double *p, int n)
 }
 
 static void
-zp2ba(double *z, double *p, int nz, int nb, double *b, double *a)
+zp2tf(float *z, float *p, int nz, int nb, double *b, double *a)
 {
-    double *zk, *pk, *bk, *ak;
+    double *bk, *ak;
+    float  *zk, *pk;
     int k;
 
-    if ((nz > 0) && (nb > 0)) {
-        for (k = 0; k < nb; k++) {
-            zk = z + k * nz * 2;
-            pk = p + k * nz * 2;
-            bk = b + k * (nz + 1);
-            ak = a + k * (nz + 1);
-            root2poly(zk, bk, nz);
-            root2poly(pk, ak, nz);
-        }
+    for (k = 0; k < nb; k++) {
+        zk = z + k * nz * 2;
+        pk = p + k * nz * 2;
+        bk = b + k * (nz + 1);
+        ak = a + k * (nz + 1);
+        root2poly(zk, bk, nz);
+        root2poly(pk, ak, nz);
     }
 }
 
 /***********************************************************/
 
 // compute IIR-filterbank coefficients
-static __inline void
-iir_filterbank(CHA_PTR cp, double *b, double *a, double *g, double *d, int nc, int op, double fs)
+static __inline int
+iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int op, double fs)
 {
-    float *bb, *aa, *gg, *dd;
-    int i, mxd;
+    double *b, *a;
+    float *bb, *aa;
+    int i, j, mxd, *dd;
 
+    // convert zeros & poles to IIR coefficients
+    b = (double *) calloc(nc * op, sizeof(double));
+    a = (double *) calloc(nc * op, sizeof(double));
+    zp2tf(z, p, op - 1, nc, b, a);
     // copy IIR coefficients
     bb = (float *) cp[_bb];
-    aa = (float *) cp[_aa];
-    gg = (float *) cp[_gg];
-    dd = (float *) cp[_dd];
-    for (i = 0; i < (nc * op); i++) {
-        bb[i] = (float) b[i];
-        aa[i] = (float) a[i];
-    }
-    for (i = 0; i < nc; i++) {
-        gg[i] = (float) g[i];
-        dd[i] = (float) d[i];
-    }
-    // find maximum delay
+    dd = (int *) cp[_dd];
+    aa = bb + op;
     mxd = 0;
     for (i = 0; i < nc; i++) {
-        if (mxd < (int) dd[i]) {
-            mxd = (int) dd[i];
+        // copy coefficients
+        for (j = 0; j < op; j++) {
+            bb[i * op * 2 + j] = (float) b[i * op + j] * g[i];
+            aa[i * op * 2 + j] = (float) a[i * op + j];
+        }
+        // copy delay & save maximum
+        dd[i] = d[i];
+        if (mxd < d[i]) {
+            mxd = d[i];
         }
     }
-    CHA_IVAR[_ns] = mxd + 1;
+    free(b);
+    free(a);
+    return (mxd + 1); // size of peak-delay buffer
 }
 
 /***********************************************************/
 
 FUNC(int)
-cha_iirfb_prepare(CHA_PTR cp, double *z, double *p, double *g, double *d, int nc, int nz, double fs, int cs)
+cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double fs, int cs)
 {
-    double *b, *a;
     int      ns, op;
 
     if (cs <= 0) {
         return (1);
     }
     cha_prepare(cp);
-    CHA_IVAR[_cs] = cs;
     CHA_DVAR[_fs] = fs;
-    // covert zeros & poles to IIR coefficients
-    op = nz + 1;
-    b = (double *) calloc(nc * op, sizeof(double));
-    a = (double *) calloc(nc * op, sizeof(double));
-    zp2ba(z, p, nz, nc, b, a);
+    CHA_IVAR[_cs] = cs;
     // allocate filter-coefficient buffers
+    op = nz + 1;
     CHA_IVAR[_nc] = nc;
     CHA_IVAR[_op] = op;
-    cha_allocate(cp, nc * op, sizeof(float), _bb);
-    cha_allocate(cp, nc * op, sizeof(float), _aa);
-    cha_allocate(cp, nc, sizeof(float), _gg);
-    cha_allocate(cp, nc, sizeof(float), _dd);
+    cha_allocate(cp, nc * op * 2, sizeof(float), _bb);
+    cha_allocate(cp, nc, sizeof(int), _dd);
     // save IIR-filterbank coefficients
-    iir_filterbank(cp, b, a, g, d, nc, op, fs);
-    ns = CHA_IVAR[_ns];
-    cha_allocate(cp, nc * op, sizeof(float), _zz);
+    ns = iir_filterbank(cp, z, p, g, d, nc, op, fs);
+    CHA_IVAR[_ns] = ns;
+    cha_allocate(cp, nc * op * 2, sizeof(float), _zz);
     cha_allocate(cp, nc * ns, sizeof(float), _yd);
-    free(b);
-    free(a);
 
     return (0);
 }

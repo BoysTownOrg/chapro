@@ -14,9 +14,6 @@
 #include "cha_if.h"
 #include "cha_iffb_data.h"
 
-void iirfb(double *, double *, double *, double *,  double *, 
-      int, int, double, double);
-
 typedef struct {
     char *ifn, *ofn, mat;
     double rate;
@@ -341,7 +338,7 @@ stop_wav(I_O *io)
 }
 
 static void
-simulate_processing(double *g, double *d, int nc, int ds, double gs)
+simulate_processing(float *g, int *d, int nc, int ds, double gs)
 {
     int i;
 
@@ -360,7 +357,8 @@ simulate_processing(double *g, double *d, int nc, int ds, double gs)
 static void
 prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
-    double  z[64], p[64], g[8], d[8];
+    float   z[64], p[64], g[8];
+    int     d[8];
     static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
     // filterbank parameters
@@ -376,16 +374,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    sqm = 1;       // save quality metric ?
     static int    wfl = 0;       // whitening-filter length
     static int    ffl = 0;       // fixed-filter length
-    static double wfr[32] = {    // signal-whitening filter response
-     1.000000,-2.508303, 3.667469,-4.941864, 5.854187,-6.103098, 5.844899,-5.226431, 4.481951,-3.709580,
-     3.015417,-2.368258, 1.704324,-1.045964, 0.459665,-0.006694,-0.270424, 0.365290,-0.347292, 0.306486,
-    -0.274247, 0.265645,-0.218542, 0.119762, 0.014229,-0.144291, 0.228972,-0.249757, 0.211733,-0.137071,
-     0.052933,-0.004783};
-    static double ffr[40] = {    // fixed-feedback filter response
-     0.633036,-0.415229,-0.273691,-0.162085,-0.076860,-0.014513, 0.028379, 0.055112, 0.068810, 0.072379,
-     0.068461, 0.059403, 0.047227, 0.033621, 0.019938, 0.007205,-0.003855,-0.012794,-0.019399,-0.023658,
-    -0.025714,-0.025824,-0.024321,-0.021579,-0.017979,-0.013887,-0.009636,-0.005508,-0.001727, 0.001540,
-     0.004187, 0.006164, 0.007468, 0.008135, 0.008235, 0.007857, 0.007103, 0.006080, 0.004891, 0.003632};
      // simulation parameters
     static double fbg = 1;       // simulated-feedback gain
     static int     ds = 200;     // simulated-processing delay
@@ -403,7 +391,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         init_aud(io);
     }
     // prepare IIRFB
-    iirfb(z, p, g, d, cf, nc, nz, sr, td);
+    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     ds -= cs; // subtract chunk size from simulated processing delay
     simulate_processing(g, d, nc, ds, gs); // adjust IIR gain & delay to simulate processing
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
@@ -411,7 +399,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
-    cha_afc_prepare(cp, mu, rho, eps, afl, wfr, wfl, ffr, ffl, fbg, sqm);
+    cha_afc_prepare(cp, mu, rho, eps, afl, wfl, ffl, fbg, sqm);
     // initialize quality metric
     nqm = io->nsmp;
     iqm = 0;

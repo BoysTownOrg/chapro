@@ -50,8 +50,7 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 
 // feedback module
 
-FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, 
-                          double *, int, double *, int, double, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, int, int, double, int);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
