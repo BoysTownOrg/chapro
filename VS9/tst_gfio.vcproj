@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="tst_gfio"
+	Name="tst_cifio"
 	ProjectGUID="{0467F95C-9E0A-42D4-878D-BB102AE58D4D}"
 	RootNamespace="tst_gfio"
 	Keyword="Win32Proj"
@@ -179,7 +179,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\tst_gfio.c"
+				RelativePath="..\tst_cifio.c"
 				>
 			</File>
 		</Filter>

@@ -49,6 +49,7 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
+				FloatingPointModel="2"
 				PrecompiledHeaderFile=".\Release/chapro_lib.pch"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -174,6 +175,14 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath="..\afc_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\afc_process.c"
+				>
+			</File>
+			<File
 				RelativePath="..\agc_prepare.c"
 				>
 			</File>
@@ -190,14 +199,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\cgtfb_prepare.c"
-				>
-			</File>
-			<File
-				RelativePath="..\cgtfb_process.c"
-				>
-			</File>
-			<File
 				RelativePath="..\cha_core.c"
 				>
 			</File>
@@ -206,19 +207,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\compressor_prepare.c"
+				RelativePath="..\ciirfb_design.c"
 				>
 			</File>
 			<File
-				RelativePath="..\compressor_process.c"
+				RelativePath="..\ciirfb_prepare.c"
 				>
 			</File>
 			<File
-				RelativePath="..\feedback_prepare.c"
-				>
-			</File>
-			<File
-				RelativePath="..\feedback_process.c"
+				RelativePath="..\ciirfb_process.c"
 				>
 			</File>
 			<File
@@ -231,6 +228,18 @@
 			</File>
 			<File
 				RelativePath="..\firfb_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\icmp_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\icmp_process.c"
+				>
+			</File>
+			<File
+				RelativePath="..\iirfb_design.c"
 				>
 			</File>
 			<File
@@ -256,10 +265,6 @@
 			</File>
 			<File
 				RelativePath="..\cha_ff.h"
-				>
-			</File>
-			<File
-				RelativePath="..\cha_fm.h"
 				>
 			</File>
 			<File

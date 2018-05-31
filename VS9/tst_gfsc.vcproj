@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="tst_gfsc"
+	Name="tst_cifsc"
 	ProjectGUID="{59D55AFB-F428-472D-99CE-1FA2A96DB049}"
 	RootNamespace="tst_gfsc"
 	Keyword="Win32Proj"
@@ -191,7 +191,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\tst_gfsc.c"
+				RelativePath="..\tst_cifsc.c"
 				>
 			</File>
 		</Filter>
