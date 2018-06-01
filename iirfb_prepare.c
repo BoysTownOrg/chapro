@@ -6,11 +6,12 @@
 #include "chapro.h"
 #include "cha_if.h"
 
+#define SOS
+
 /***********************************************************/
 
-
 static void
-root2poly(float *r, double *p, int n)
+root2poly(float *r, float *p, int n)
 {
     double *pp, *qq;
     int i, ir, ii, j, jr, ji;
@@ -35,62 +36,77 @@ root2poly(float *r, double *p, int n)
     }
     // return real part of product-polynomial coefficients
     for (i = 0; i < (n + 1); i++) {
-        p[i] = pp[i * 2];
+        p[i] = (float) pp[i * 2];
     }
     free(pp);
     free(qq);
 }
 
+#ifdef SOS
 static void
-zp2tf(float *z, float *p, int nz, int nb, double *b, double *a)
+zp2sos(float *z, float *p, float g, int nsos, float *c)
 {
-    double *bk, *ak;
-    float  *zk, *pk;
-    int k;
+    float b[3], a[3], *cc = c;
+    int j;
 
-    for (k = 0; k < nb; k++) {
-        zk = z + k * nz * 2;
-        pk = p + k * nz * 2;
-        bk = b + k * (nz + 1);
-        ak = a + k * (nz + 1);
-        root2poly(zk, bk, nz);
-        root2poly(pk, ak, nz);
+    for (j = 0; j < nsos; j++) {
+        root2poly(z + j * 4, b, 2);
+        root2poly(p + j * 4, a, 2);
+        *cc++ = b[0];
+        *cc++ = b[1];
+        *cc++ = b[2];
+        *cc++ = -a[1];
+        *cc++ = -a[2];
+    }
+    for (j = 0; j < 3; j++) {
+        c[j] *= g;
     }
 }
+#else // SOS
+static void
+zp2tf(float *z, float *p, float g, int nz, float *c)
+{
+    float *b, *a;
+    int j;
+
+    b = c;
+    a = c + nz + 1;
+    root2poly(z, b, nz);
+    root2poly(p, a, nz);
+    for (j = 0; j <= nz; j++) {
+        b[j] *= g;
+    }
+}
+#endif // SOS
 
 /***********************************************************/
 
 // compute IIR-filterbank coefficients
 static __inline int
-iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int op, double fs)
+iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double fs)
 {
-    double *b, *a;
-    float *bb, *aa;
-    int i, j, mxd, *dd;
+    float *bb, *cc, *zz, *pp;
+    int i, op, mxd, *dd;
 
-    // convert zeros & poles to IIR coefficients
-    b = (double *) calloc(nc * op, sizeof(double));
-    a = (double *) calloc(nc * op, sizeof(double));
-    zp2tf(z, p, op - 1, nc, b, a);
     // copy IIR coefficients
     bb = (float *) cp[_bb];
     dd = (int *) cp[_dd];
-    aa = bb + op;
+    op = nz + 1;
     mxd = 0;
     for (i = 0; i < nc; i++) {
-        // copy coefficients
-        for (j = 0; j < op; j++) {
-            bb[i * op * 2 + j] = (float) b[i * op + j] * g[i];
-            aa[i * op * 2 + j] = (float) a[i * op + j];
-        }
-        // copy delay & save maximum
+        zz = z + i * nz * 2;
+        pp = p + i * nz * 2;
+        cc = bb + i * op * 2;
+#ifdef SOS
+        zp2sos(zz, pp, g[i], nz / 2, cc);
+#else
+        zp2tf(zz, pp, g[i], nz, cc);
+#endif
         dd[i] = d[i];
         if (mxd < d[i]) {
             mxd = d[i];
         }
     }
-    free(b);
-    free(a);
     return (mxd + 1); // size of peak-delay buffer
 }
 
@@ -99,7 +115,7 @@ iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int op,
 FUNC(int)
 cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double fs, int cs)
 {
-    int      ns, op;
+    int ns, op, ncoef, nhist;
 
     if (cs <= 0) {
         return (1);
@@ -111,12 +127,18 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
     op = nz + 1;
     CHA_IVAR[_nc] = nc;
     CHA_IVAR[_op] = op;
-    cha_allocate(cp, nc * op * 2, sizeof(float), _bb);
+    nhist = 2 * nz;
+#ifdef SOS
+    ncoef = 5 * (nz / 2);
+#else
+    ncoef = 2 * op;
+#endif
+    cha_allocate(cp, nc * ncoef, sizeof(float), _bb);
+    cha_allocate(cp, nc * nhist, sizeof(float), _zz);
     cha_allocate(cp, nc, sizeof(int), _dd);
     // save IIR-filterbank coefficients
-    ns = iir_filterbank(cp, z, p, g, d, nc, op, fs);
+    ns = iir_filterbank(cp, z, p, g, d, nc, nz, fs);
     CHA_IVAR[_ns] = ns;
-    cha_allocate(cp, nc * op * 2, sizeof(float), _zz);
     cha_allocate(cp, nc * ns, sizeof(float), _yd);
 
     return (0);
