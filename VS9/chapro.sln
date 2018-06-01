@@ -8,12 +8,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_ffa", "tst_ffa.vcproj",
 		{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18} = {B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_gfa", "tst_gfa.vcproj", "{24BA487F-B11F-4DEA-9A82-F5056FB2F706}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_cifa", "tst_cifa.vcproj", "{24BA487F-B11F-4DEA-9A82-F5056FB2F706}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18} = {B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_gfio", "tst_gfio.vcproj", "{0467F95C-9E0A-42D4-878D-BB102AE58D4D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_cifio", "tst_cifio.vcproj", "{0467F95C-9E0A-42D4-878D-BB102AE58D4D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18} = {B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}
 	EndProjectSection
@@ -23,7 +23,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_ffio", "tst_ffio.vcproj
 		{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18} = {B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_gfsc", "tst_gfsc.vcproj", "{59D55AFB-F428-472D-99CE-1FA2A96DB049}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_cifsc", "tst_cifsc.vcproj", "{59D55AFB-F428-472D-99CE-1FA2A96DB049}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18} = {B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}
 	EndProjectSection
