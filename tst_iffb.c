@@ -337,15 +337,15 @@ stop_wav(I_O *io)
     fprintf(stdout, "\n");
 }
 
+// adjust IIR gain & delay to simulate processing
 static void
 simulate_processing(float *g, int *d, int nc, int ds, double gs)
 {
     int i;
 
     ds -= (int) d[nc - 1];
-     // adjust IIR gain & delay to simulate processing
     for (i = 0; i < nc; i++) {
-        g[i] *= gs;
+        g[i] *= (float) gs;
         if (ds > 0) d[i] += ds;
     }
 }

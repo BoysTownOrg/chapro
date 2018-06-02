@@ -106,10 +106,11 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
     static int    cs = 32;      // chunk size
-    static int    nm = 10;      // number of frequency bands below 1 kHz
-    static int   cpo =  6;      // number of frequency bands per octave above 1 kHz
+    static int    nm =  5;      // number of frequency bands below 1 kHz
+    static int   cpo =  3;      // number of frequency bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
 
+    //nm=5; cpo=3; // fewer frequency bands
     io->rate = sr;
     io->mat = 0;
     gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);

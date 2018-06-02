@@ -1,4 +1,4 @@
-// ciirfb_prepare.c - complex filterbank preparation functions
+// dciirfb_prepare.c - complex-double filterbank preparation functions
 
 #include <stdlib.h>
 #include <string.h>
@@ -10,16 +10,16 @@
 
 static void
 root2poly(
-    float *yr, float *yi,
+    double *yr, double *yi,
     float  *x,
     float  *g,
     int n
 ) {
-    float yyr, yyi;
+    double yyr, yyi;
     int i, j, jr, ji;
 
-    fzero(yr, n + 1);
-    fzero(yi, n + 1);
+    dzero(yr, n + 1);
+    dzero(yi, n + 1);
     yr[0] = 1;
     for (j = 0; j < n; j++) {
         jr = j * 2;
@@ -41,11 +41,11 @@ root2poly(
 
 static void
 zp2tf(
-    float *coef,
+    double *coef,
     float *z, float *p, float *g,
     int no, int nc
 ) {
-    float *br, *bi, *ar, *ai;
+    double *br, *bi, *ar, *ai;
     float  *zz, *pp, *gg;
     int     j, op;
 
@@ -69,14 +69,13 @@ static void
 filterbank_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, 
                    int nc, int no, double sr, int cs)
 {
-    float  *br;
-    double  fs;
+    double  fs, *br;
     int     k, mxd, ns, op, *dn;
 
     op = no + 1;
-    br = (float *) cha_allocate(cp, nc * op * 4, sizeof(float), _br);
+    br = (double *) cha_allocate(cp, nc * op * 4, sizeof(double), _br);
     zp2tf(br, z, p, g, no, nc);
-    cha_allocate(cp, nc * op * 4, sizeof(float), _zr);
+    cha_allocate(cp, nc * op * 4, sizeof(double), _zr);
     //-----------------------------
     dn = (int *) cha_allocate(cp, nc, sizeof(int), _dn);
     mxd = 0;
@@ -100,7 +99,7 @@ filterbank_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d,
 /***********************************************************/
 
 FUNC(int)
-cha_ciirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, 
+cha_dciirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, 
                    int nc, int no, double sr, int cs)
 {
     cha_prepare(cp);

@@ -206,8 +206,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double lr = 2e-5;    // signal-level reference (Pa)
     static double gn = 0;       // flat suppressor gain (dB)
     static int    cs = 32;      // chunk size
-    static int    nm = 10;      // number of frequency bands below 1 kHz
-    static int   cpo =  6;      // number of frequency bands per octave above 1 kHz
+    static int    nm =  5;      // number of frequency bands below 1 kHz
+    static int   cpo =  3;      // number of frequency bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
     static int    ds = 24;      // downsample factor
 

@@ -27,6 +27,9 @@ cha_ciirfb_design
 cha_ciirfb_prepare
 cha_ciirfb_analyze
 cha_ciirfb_synthesize
+cha_dciirfb_prepare
+cha_dciirfb_analyze
+cha_dciirfb_synthesize
 cha_firfb_prepare
 cha_firfb_analyze
 cha_firfb_synthesize

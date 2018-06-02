@@ -13,12 +13,13 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
 	cfirfb_prepare.o cfirfb_process.o \
 	firfb_prepare.o firfb_process.o \
-	iirfb_prepare.o iirfb_process.o \
-	cgtfb_prepare.o cgtfb_process.o \
-	feedback_prepare.o feedback_process.o \
-	compressor_prepare.o compressor_process.o
+	iirfb_design.o iirfb_prepare.o iirfb_process.o \
+	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
+	dciirfb_prepare.o dciirfb_process.o \
+	afc_prepare.o afc_process.o \
+	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
-     tst_gfa tst_gfio tst_gfsc tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha
+     tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha
 
 all: $(PGMS)
 
@@ -49,13 +50,13 @@ tst_ffio : tst_ffio.o  libchapro.a
 tst_ffsc : tst_ffsc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
-tst_gfa : tst_gfa.o  libchapro.a
+tst_cifa : tst_cifa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_gfio : tst_gfio.o  libchapro.a
+tst_cifio : tst_cifio.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_gfsc : tst_gfsc.o  libchapro.a
+tst_cifsc : tst_cifsc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 tst_ifa : tst_ifa.o  libchapro.a
@@ -97,10 +98,10 @@ clean:
 
 # dependencies
 cha_core.o : chapro.h version.h
-compressor_prepare.o : chapro.h cha_gf.h
-compressor_process.o : chapro.h cha_gf.h
-cgtfb_process.o : chapro.h cha_gf.h
-cgtfb_prepare.o : chapro.h cha_gf.h
+icmp_prepare.o : chapro.h cha_gf.h
+icmp_process.o : chapro.h cha_gf.h
+ciirfb_process.o : chapro.h cha_gf.h
+ciirfb_prepare.o : chapro.h cha_gf.h
 firb_prepare.o : chapro.h cha_gf.h
 firb_process.o : chapro.h cha_gf.h
 tst_gf.o : chapro.h cha_gf.h

@@ -31,6 +31,9 @@ FUNC(int) cha_ciirfb_design(float *, float *, float *, int *, int, double *, dou
 FUNC(int) cha_ciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
 FUNC(void) cha_ciirfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_ciirfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_dciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
+FUNC(void) cha_dciirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_dciirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // compressor module
 

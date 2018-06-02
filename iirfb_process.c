@@ -7,11 +7,8 @@
 #include "chapro.h"
 #include "cha_if.h"
 
-#define SOS
-
 /***********************************************************/
 
-#ifdef SOS
 static __inline void
 filter_sos(float *x, float *y, int cs, float *coef, float *hist, int nsos)
 {
@@ -48,30 +45,6 @@ filter_sos(float *x, float *y, int cs, float *coef, float *hist, int nsos)
     }
 #endif // __arm__
 }
-#else // SOS
-static __inline void
-filter_tf(float *x, float *y, int cs, float *coef, float *hist, int nz)
-{
-    float  *b, *a, *xx, *yy, y0;
-    int i, j;
-
-    b = coef;
-    a = b + nz + 1;
-    xx = hist;
-    yy = xx + nz;
-    /* loop over time */
-    for (i = 0; i < cs; i++) {
-        y0 = b[0] * x[i];
-        for (j = 1; j <= nz; j++) {
-            y0 += b[j] * xx[j - 1] - a[j] * yy[j - 1];
-        }
-        fmove(xx + 1, xx, nz - 1);
-        fmove(yy + 1, yy, nz - 1);
-        xx[0] = x[i];
-        yy[0] = y[i] = y0;
-    }
-}
-#endif // SOS
 
 /***********************************************************/
 
@@ -91,21 +64,13 @@ cha_iirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
     ns = CHA_IVAR[_ns];
     nz = op - 1;
     nhist = 2 * nz;
-#ifdef SOS
     ncoef = 5 * (nz / 2);
-#else
-    ncoef = 2 * op;
-#endif
     /* loop over filterbank channel */
     for (k = 0; k < nc; k++) {
         yk = y + k * cs;
         bk = bb + k * ncoef;
         zk = zz + k * nhist;
-#ifdef SOS
         filter_sos(x, yk, cs, bk, zk, nz / 2);
-#else
-        filter_tf(x, yk, cs, bk, zk, nz);
-#endif
         /* delay */
         m = k * ns;
         dk = dd[k];

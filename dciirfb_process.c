@@ -1,4 +1,4 @@
-// ciirfb_process.c - complex filterbank processing functions
+// dciirfb_process.c - complex-double filterbank processing functions
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,9 +12,9 @@
 /***********************************************************/
 
 static __inline void
-filter_tf(float *x, float *y, int cs, float *coef, float *hist, int op)
+filter_tf(float *x, float *y, int cs, double *coef, double *hist, int op)
 {
-    float xx, yyr, yyi, *zr, *zi, *br, *bi, *ar, *ai;
+    double xx, yyr, yyi, *zr, *zi, *br, *bi, *ar, *ai;
     int i, ir, ii, j, no;
 
     no = op - 1;
@@ -38,17 +38,17 @@ filter_tf(float *x, float *y, int cs, float *coef, float *hist, int op)
         /* channel out */
         ir = i * 2;
         ii = ir + 1;
-        y[ir] = yyr;
-        y[ii] = yyi;
+        y[ir] = (float) yyr;
+        y[ii] = (float) yyi;
     }
 }
 
 /***********************************************************/
 
 FUNC(void)
-cha_ciirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
+cha_dciirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float   *br, *zr, *bkr, *zkr;
+    double  *br, *zr, *bkr, *zkr;
     float   *ydr, *ydi, *yk;
     int      i, ir, ii, d, m, k, n, nc, ns, op, no = GTFO, *dn;
 
@@ -58,8 +58,8 @@ cha_ciirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
     ydr = (float *) cp[_ydr];
     ydi = ydr + ns * nc;
     op = no + 1;
-    br = (float *) cp[_br];
-    zr = (float *) cp[_zr];
+    br = (double *) cp[_br];
+    zr = (double *) cp[_zr];
     /* loop over filterbank channel */
     #pragma omp parallel for
     for (k = 0; k < nc; k++) {
@@ -87,7 +87,7 @@ cha_ciirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
 }
 
 FUNC(void)
-cha_ciirfb_synthesize(CHA_PTR cp, float *x, float *y, int cs)
+cha_dciirfb_synthesize(CHA_PTR cp, float *x, float *y, int cs)
 {
     float sm;
     int i, k, kr, nc;

@@ -6,8 +6,6 @@
 #include "chapro.h"
 #include "cha_if.h"
 
-#define SOS
-
 /***********************************************************/
 
 static void
@@ -42,7 +40,6 @@ root2poly(float *r, float *p, int n)
     free(qq);
 }
 
-#ifdef SOS
 static void
 zp2sos(float *z, float *p, float g, int nsos, float *c)
 {
@@ -62,22 +59,6 @@ zp2sos(float *z, float *p, float g, int nsos, float *c)
         c[j] *= g;
     }
 }
-#else // SOS
-static void
-zp2tf(float *z, float *p, float g, int nz, float *c)
-{
-    float *b, *a;
-    int j;
-
-    b = c;
-    a = c + nz + 1;
-    root2poly(z, b, nz);
-    root2poly(p, a, nz);
-    for (j = 0; j <= nz; j++) {
-        b[j] *= g;
-    }
-}
-#endif // SOS
 
 /***********************************************************/
 
@@ -97,11 +78,7 @@ iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz,
         zz = z + i * nz * 2;
         pp = p + i * nz * 2;
         cc = bb + i * op * 2;
-#ifdef SOS
         zp2sos(zz, pp, g[i], nz / 2, cc);
-#else
-        zp2tf(zz, pp, g[i], nz, cc);
-#endif
         dd[i] = d[i];
         if (mxd < d[i]) {
             mxd = d[i];
@@ -128,11 +105,7 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
     CHA_IVAR[_nc] = nc;
     CHA_IVAR[_op] = op;
     nhist = 2 * nz;
-#ifdef SOS
     ncoef = 5 * (nz / 2);
-#else
-    ncoef = 2 * op;
-#endif
     cha_allocate(cp, nc * ncoef, sizeof(float), _bb);
     cha_allocate(cp, nc * nhist, sizeof(float), _zz);
     cha_allocate(cp, nc, sizeof(int), _dd);
