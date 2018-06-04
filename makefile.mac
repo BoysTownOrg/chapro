@@ -1,7 +1,5 @@
 # makefile for CHAPRO under MacOS
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -DSHA
-LFLAGS=-L$(LIBDIR)
 LIBS=-lsigpro -lm -lz
 SCLIB=-larsc $(LIBS)
 CC=gcc -arch i386
@@ -9,39 +7,32 @@ AR=ar
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
+
+CFLAGS = -O2 -Wall -DALSA -DANSI_C -fpack-struct -fPIC -I$(INCDIR) -DSHA
+LFLAGS= -framework CoreServices  -framework CoreAudio \
+        -framework AudioUnit -framework AudioToolbox -L$(LIBDIR)
+
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
 	cfirfb_prepare.o cfirfb_process.o \
 	firfb_prepare.o firfb_process.o \
-	cgtfb_prepare.o cgtfb_process.o \
-	feedback_prepare.o feedback_process.o \
-	compressor_prepare.o compressor_process.o
+	iirfb_design.o iirfb_prepare.o iirfb_process.o \
+	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
+	afc_prepare.o afc_process.o \
+	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
-     tst_gfa tst_gfio tst_gfsc
+     tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha
 
 all: $(PGMS)
 
-tst: tstgf tstff tstsc
+tst: tstif
 
-tstcf: tst_cfa tst_cfio 
-	./tst_cffa
-	./tst_cffio
-	./tst_cffio -t
-
-tstff: tst_ffa tst_ffio 
-	./tst_ffa
-	./tst_ffio
-	./tst_ffio -t
-
-tstgf: tst_gfa tst_gfio 
-	./tst_gfa
-	./tst_gfio
-	./tst_gfio -t
-
-tstsc: tst_cffsc tst_ffsc tst_gfsc
-	./tst_cffsc
-	./tst_ffsc
-	./tst_gfsc
+tstif: tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha
+	./tst_ifa
+	./tst_ifio
+	./tst_ifio -t
+	./tst_ifsc
+	./tst_iffb
 
 tst_cffa : tst_cffa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
@@ -61,13 +52,28 @@ tst_ffio : tst_ffio.o  libchapro.a
 tst_ffsc : tst_ffsc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
-tst_gfa : tst_gfa.o  libchapro.a
+tst_cifa : tst_cifa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_gfio : tst_gfio.o  libchapro.a
+tst_cifio : tst_cifio.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_gfsc : tst_gfsc.o  libchapro.a
+tst_cifsc : tst_cifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifa : tst_ifa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifio : tst_ifio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifsc : tst_ifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_iffb : tst_iffb.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_gha : tst_gha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 libchapro.a: $(CHAPRO)
@@ -79,7 +85,7 @@ install: libchapro.a
 
 zipsrc:
 	zip chaprosc *.mgw *.lnx *.mac
-	zip chaprosc *.h *.c *.plt *.std *.m *.def
+	zip chaprosc *.h *.c *.m *.def
 	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
 	zip chaprosc configure configure.bat 
 	zip chaprosc compress.bat suppress.bat shacmp.bat
@@ -90,16 +96,16 @@ dist: zipsrc
 
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
-	rm -f *.mat *.wav *.cfg *~ test/[fg]*.*
+	rm -f out*.mat out*.wav *.cfg *~
 
 # dependencies
 cha_core.o : chapro.h version.h
-cha_gf_prepare.o : chapro.h cha_gf.h
-cha_gf_process.o : chapro.h cha_gf.h
-compressor_prepare.o : chapro.h cha_gf.h
-compressor_process.o : chapro.h cha_gf.h
-filterbank_process.o : chapro.h cha_gf.h
-filterbank_prepare.o : chapro.h cha_gf.h
-tst_gfa.o : chapro.h cha_gf.h
+icmp_prepare.o : chapro.h cha_gf.h
+icmp_process.o : chapro.h cha_gf.h
+ciirfb_process.o : chapro.h cha_gf.h
+ciirfb_prepare.o : chapro.h cha_gf.h
+firb_prepare.o : chapro.h cha_gf.h
+firb_process.o : chapro.h cha_gf.h
+tst_gf.o : chapro.h cha_gf.h
 tst_gfio.o : chapro.h cha_gf.h
 tst_gfsc.o : chapro.h cha_gf.h
