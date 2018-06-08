@@ -423,7 +423,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     iqm = 0;
     qm = (float *) calloc(nqm, sizeof(float));
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_iffb_data.h");
+    //cha_data_gen(cp, "cha_iffb_data.h");
 }
 
 // process io
@@ -432,8 +432,8 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
-    int i, n, cs, nk;
-    double t1, t2;
+    int i, i1, n, cs, nk;
+    double t1, t2, sum, amae, fmae;
 
     if (io->ofn) {
         // initialize i/o pointers
@@ -450,7 +450,15 @@ process(I_O *io, CHA_PTR cp)
         t2 = io->nwav / io->rate;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
         if (iqm > 0) {
-            fprintf(stdout, "AFC misalignment error = %.2f dB\n", 10 * log10(qm[iqm - 1]));
+            i1 =  round(io->rate);
+            sum = 0;
+            for (i =i1; i < iqm; i++) {
+                sum += qm[i];
+            }
+            amae = 10 * log10(sum / (iqm - i1));
+            fmae = 10 * log10(qm[iqm - 1]);
+            fprintf(stdout, "average misalignment error = %.2f dB\n", amae);
+            fprintf(stdout, "  final misalignment error = %.2f dB\n", fmae);
         }
     } else {
         while (get_aud(io)) {

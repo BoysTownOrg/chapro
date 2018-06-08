@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHApro version 0.20, 2-Jun-18"
+#define VER     "CHApro version 0.21, 8-Jun-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.21 - 8-Jun-18
+> Added command-line input of AFC parameters to tst_iffb
 0.20 - 2-Jun-18
 > Separate float & double implementations of complex IIR filters
 0.19 - 1-Jun-18
