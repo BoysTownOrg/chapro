@@ -1,7 +1,7 @@
 % tst_iffb - CHAPRO demonstration of GHA processing
 function tst_iffb
 pfn='test/tst_iffb.mat'; % AFC results produced by tst_iffb
-play_audio=0;
+play_audio=1;
 gn=0.317858; % audioread scale factor 
 load(pfn)
 x=audioread(ifn)*gn;
@@ -38,18 +38,20 @@ if (exist('sfbp','var'))
     drawnow
     % plot quality metrics
     figure(3); clf
-    merr=10*log10(merr);
     ny=length(merr);
     ty=linspace(0,(ny - 1) / rate, ny);
     my=(max(ty)-min(ty))/20;
     tlim=[min(ty)-my max(ty)+my];
-    plot(ty,merr); 
+    lmerr=10*log10(merr);
+    plot(ty,lmerr); 
     axis([tlim -25 5])
     ylabel('dB')
     xlabel('time (s)')
     title('misalignment error')
-    mae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
-    fprintf('final misalignment error = %.2f\n',mae);
+    amae=10*log10(mean(merr(rate:ny))); % skip first second
+    fmae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
+    fprintf('average misalignment error = %.2f\n',amae);
+    fprintf('  final misalignment error = %.2f\n',fmae);
 end
 if play_audio
     fprintf('     Original signal: %s\n',ifn);
