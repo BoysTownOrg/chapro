@@ -12,7 +12,7 @@
 #include <sigpro.h>
 #include "chapro.h"
 #include "cha_if.h"
-#include "cha_iffb_data.h"
+//#include "cha_iffb_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -27,6 +27,11 @@ typedef struct {
 
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
 static int    iqm, nqm, fbl, wfl, ffl;
+static double  sr = 24000;   // sampling rate (Hz)
+// AFC parameters
+static double  mu = 0.0004;  // step size
+static double rho = 0.9;     // forgetting factor
+static double eps = 0.00001; // power threshold
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -54,7 +59,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process IIRFB+AFC
@@ -142,6 +147,22 @@ parse_args(I_O *io, int ac, char *av[], double rate)
         } else {
             break;
         }
+    }
+    while ((ac > 1) && strchr(av[1], '=')) {
+        if (strncmp(av[1], "eps", 3) == 0) {
+            eps = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "mu", 2) == 0) {
+            mu = atof(av[1] + 3);
+        }
+        if (strncmp(av[1], "rho", 3) == 0) {
+            rho = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "sr", 2) == 0) {
+            sr = atof(av[1] + 3);
+        }
+        ac--;
+        av++;
     }
     io->ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
     io->ofn = (ac > 2) ? _strdup(av[2]) : NULL;
@@ -359,7 +380,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
     float   z[64], p[64], g[8];
     int     d[8];
-    static double  sr = 24000;   // sampling rate (Hz)
     static int     cs = 32;      // chunk size
     // filterbank parameters
     static int nc = 8;
@@ -367,9 +387,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
     // AFC parameters
-    static double  mu = 0.001;   // step size
-    static double rho = 0.90;    // forgetting factor
-    static double eps = 0.008;   // power threshold
     static int    afl = 100;     // adaptive filter length
     static int    sqm = 1;       // save quality metric ?
     static int    wfl = 0;       // whitening-filter length
@@ -399,6 +416,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
+    fprintf(stdout, "AFC parameters: rho=%.2f eps=%.6f mu=%.5f\n", rho, eps, mu);
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, ffl, fbg, sqm);
     // initialize quality metric
     nqm = io->nsmp;
@@ -432,7 +450,7 @@ process(I_O *io, CHA_PTR cp)
         t2 = io->nwav / io->rate;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
         if (iqm > 0) {
-            fprintf(stdout, "final misalignment error = %.2f dB\n", 10 * log10(qm[iqm - 1]));
+            fprintf(stdout, "AFC misalignment error = %.2f dB\n", 10 * log10(qm[iqm - 1]));
         }
     } else {
         while (get_aud(io)) {

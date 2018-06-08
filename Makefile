@@ -1,7 +1,5 @@
 # makefile for CHAPRO using MinGW
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -DSHA
-LFLAGS=-L$(LIBDIR)
 LIBS=-lchapro -lsigpro -lm -lz
 SCLIB=-larsc -lwinmm -lkernel32 -luser32 -lgdi32
 CC=gcc
@@ -9,13 +7,15 @@ AR=ar
 LIBDIR=c:/usr/lib
 INCDIR=c:/usr/include
 BINDIR=c:/usr/bin
+
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -DSHA
+LFLAGS=-L$(LIBDIR)
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
 	cfirfb_prepare.o cfirfb_process.o \
 	firfb_prepare.o firfb_process.o \
 	iirfb_design.o iirfb_prepare.o iirfb_process.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
-	dciirfb_prepare.o dciirfb_process.o \
 	afc_prepare.o afc_process.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
