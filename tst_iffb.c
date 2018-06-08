@@ -29,9 +29,9 @@ static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
 static int    iqm, nqm, fbl, wfl, ffl;
 static double  sr = 24000;   // sampling rate (Hz)
 // AFC parameters
-static double  mu = 0.0004;  // step size
-static double rho = 0.9;     // forgetting factor
-static double eps = 0.00001; // power threshold
+static double rho = 0.92;    // forgetting factor
+static double eps = 1.2e-6;  // power threshold
+static double  mu = 3.0e-4;  // step size
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -416,7 +416,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
-    fprintf(stdout, "AFC parameters: rho=%.2f eps=%.6f mu=%.5f\n", rho, eps, mu);
+    fprintf(stdout, "AFC parameters: rho=%.2f eps=%.1e mu=%.1e\n", rho, eps, mu);
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, ffl, fbg, sqm);
     // initialize quality metric
     nqm = io->nsmp;
