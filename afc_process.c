@@ -72,8 +72,6 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
                 uu += ffrp[j] * rng0[ij];
             }
             rng1[ih] = uu;
-        } else {
-            uu = ss;
         }
         // estimate feedback
         ye = 0;
@@ -99,8 +97,8 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
             ef = ee;
         }
         // update adaptive feedback coefficients
-        uf = rng2[id & mask];
         if (afl > 0) {
+            uf = rng2[id & mask];
             pwr = rho * pwr + ef * ef + uf * uf;
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
