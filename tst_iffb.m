@@ -52,10 +52,16 @@ if (exist('sfbp','var'))
     fmae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
     fprintf('average misalignment error = %.2f\n',amae);
     fprintf('  final misalignment error = %.2f\n',fmae);
+    drawnow
 end
+[x,fs]=audioread(ifn);
+ii=(rate*2):ny;
+id=0*fs;
+amsc=mean(mscohere(x(ii),wave(ii-id)));
+fprintf('    mean-squared coherence = %.3f\n',amsc);
+pause(1)
 if play_audio
     fprintf('     Original signal: %s\n',ifn);
-    [x,fs]=audioread(ifn);
     p = audioplayer(x, fs);
     playblocking(p)
     fprintf('AFC-processed signal: %s\n',pfn);

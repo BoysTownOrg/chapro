@@ -50,7 +50,7 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 
 // feedback module
 
-FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, int, int, double, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, int, int, int, double, int);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
@@ -99,7 +99,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _fbl      8
 #define _nqm      9
 #define _wfl      10
-#define _ffl      11
+#define _pfl      11
 
 // double variable indices
 
@@ -117,7 +117,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _mu       10
 #define _rho      11
 #define _eps      12
-//#define _pwr      13
+#define _hdel     13
 #define _fbm      14
 
 #endif /* CHA_IF_H */

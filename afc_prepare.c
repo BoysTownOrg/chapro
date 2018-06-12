@@ -26,17 +26,17 @@ static double ite_fbp[100] = {
 
 FUNC(int)
 cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl, 
-                int wfl, int ffl, double fbg, int sqm)
+                int wfl, int pfl, int hdel, double fbg, int sqm)
 {
     double fbm = 0;
-    float *sfbp;
+    float *sfbp, *wfrp, *ffrp;
     int i, cs, fbl = 0, nqm = 0, rsz = 32;
 
     cha_prepare(cp);
     // allocate HA-output ring buffer
-    while (rsz < afl) rsz *= 2;
-    while (rsz < wfl) rsz *= 2;
-    while (rsz < ffl) rsz *= 2;
+    while (rsz < (afl + hdel))  rsz *= 2;
+    while (rsz < wfl)  rsz *= 2;
+    while (rsz < pfl)  rsz *= 2;
     cha_allocate(cp, rsz, sizeof(float), _rng0);
     CHA_IVAR[_rsz] = rsz;
     // allocate AFC-filter buffer
@@ -49,17 +49,19 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl,
     CHA_IVAR[_afl] = afl;
     // initialize signal-whitening filter
     if (wfl > 0) {
-        cha_allocate(cp, wfl, sizeof(float), _wfrp);
-        cha_allocate(cp, rsz, sizeof(float), _rng1);
-        cha_allocate(cp, rsz, sizeof(float), _rng2);
+        cha_allocate(cp, rsz, sizeof(float), _rng3); // ee -> rng3
+        cha_allocate(cp, rsz, sizeof(float), _rng2); // uf -> rng2
+        wfrp = cha_allocate(cp, wfl, sizeof(float), _wfrp);
+        wfrp[0] = 1;
     }
     CHA_IVAR[_wfl] = wfl;
-    // initialize fixed-feedback filter
-    if (ffl > 0) {
-        cha_allocate(cp, ffl, sizeof(float), _ffrp);
-        cha_allocate(cp, rsz, sizeof(float), _rng3);
+    // initialize persistent-feedback filter
+    if (pfl > 0) {
+        cha_allocate(cp, rsz, sizeof(float), _rng1); // uu -> rng1
+        ffrp = cha_allocate(cp, pfl, sizeof(float), _ffrp);
+        ffrp[0] = 1;
     }
-    CHA_IVAR[_ffl] = ffl;
+    CHA_IVAR[_pfl] = pfl;
     // initialize simulated feedback path
     if (fbg > 0) {
         fbl = 100;
@@ -80,5 +82,8 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl,
         cha_allocate(cp,  cs, sizeof(float), _merr);
     }
     CHA_IVAR[_nqm] = nqm;
+    // initialize hardware delay
+    CHA_IVAR[_hdel] = hdel; // should this be 38 ???
+
     return (0);
 }

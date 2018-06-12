@@ -26,12 +26,17 @@ typedef struct {
 /***********************************************************/
 
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
-static int    iqm, nqm, fbl, wfl, ffl;
-static double  sr = 24000;   // sampling rate (Hz)
+static int    iqm, nqm, fbl, wfl, pfl;
+static double  sr = 24000;     // sampling rate (Hz)
 // AFC parameters
-static double rho = 0.92;    // forgetting factor
-static double eps = 1.2e-6;  // power threshold
-static double  mu = 3.0e-4;  // step size
+static double rho  = 0.3000; // forgetting factor
+static double eps  = 0.0008; // power threshold
+static double mu   = 0.0002; // step size
+static int    afl  = 100;    // adaptive filter length
+static int    hdel = 0;      // output/input hardware delay
+static double fbg  = 1;      // simulated-feedback gain
+
+/***********************************************************/
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -46,7 +51,7 @@ save_qm(CHA_PTR cp, int cs)
     // copy filters
     fbl =     CHA_IVAR[_fbl];
     wfl =     CHA_IVAR[_wfl];
-    ffl =     CHA_IVAR[_ffl];
+    pfl =     CHA_IVAR[_pfl];
     efbp = (float *) cp[_efbp];
     sfbp = (float *) cp[_sfbp];
     wfrp = (float *) cp[_wfrp];
@@ -149,8 +154,17 @@ parse_args(I_O *io, int ac, char *av[], double rate)
         }
     }
     while ((ac > 1) && strchr(av[1], '=')) {
+        if (strncmp(av[1], "afl", 3) == 0) {
+            afl = atoi(av[1] + 4);
+        }
         if (strncmp(av[1], "eps", 3) == 0) {
             eps = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "fbg", 3) == 0) {
+            fbg = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "hdel", 4) == 0) {
+            hdel = atoi(av[1] + 5);
         }
         if (strncmp(av[1], "mu", 2) == 0) {
             mu = atof(av[1] + 3);
@@ -323,7 +337,7 @@ write_wave(I_O *io)
     sp_var_set(vl + 3, "sfbp", sfbp, fbl, 1, "f4");
     sp_var_set(vl + 4, "efbp", efbp, fbl, 1, "f4");
     sp_var_set(vl + 5, "wfrp", wfrp, wfl, 1, "f4");
-    sp_var_set(vl + 6, "ffrp", ffrp, ffl, 1, "f4");
+    sp_var_set(vl + 6, "ffrp", ffrp, pfl, 1, "f4");
     var_string(vl + 7, "ifn",  io->ifn);
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
@@ -387,12 +401,10 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
     // AFC parameters
-    static int    afl = 100;     // adaptive filter length
-    static int    sqm = 1;       // save quality metric ?
-    static int    wfl = 0;       // whitening-filter length
-    static int    ffl = 0;       // fixed-filter length
+    static int    sqm  = 1;      // save quality metric ?
+    static int    wfl  = 0;      // whitening-filter length
+    static int    pfl  = 0;      // persistent-filter length
      // simulation parameters
-    static double fbg = 1;       // simulated-feedback gain
     static int     ds = 200;     // simulated-processing delay
     static double  gs = 4;       // simulated-processing gain
 
@@ -416,8 +428,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
-    fprintf(stdout, "AFC parameters: rho=%.2f eps=%.1e mu=%.1e\n", rho, eps, mu);
-    cha_afc_prepare(cp, mu, rho, eps, afl, wfl, ffl, fbg, sqm);
+    fprintf(stdout, "AFC parameters: rho=%.4f eps=%.3e mu=%.3e\n", rho, eps, mu);
+    cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // initialize quality metric
     nqm = io->nsmp;
     iqm = 0;

@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHApro version 0.21, 8-Jun-18"
+#define VER     "CHApro version 0.22, 12-Jun-18"
 #define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.22 - 12-Jun-18
+> Added hardware-delay parameter (hdel) to AFC processing
 0.21 - 8-Jun-18
 > Added command-line input of AFC parameters to tst_iffb
 0.20 - 2-Jun-18
