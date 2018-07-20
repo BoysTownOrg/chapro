@@ -77,14 +77,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Release/chapro_lib.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>Install SIGPRO</Message>
-      <Command>Copy $(TargetPath) ..\..\lib
-Copy $(TargetPath) c:\usr\lib
-Copy ..\chapro.h ..\..\include
-Copy ..\chapro.h c:\usr\include
-</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
