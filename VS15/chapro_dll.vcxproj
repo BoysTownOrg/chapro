@@ -170,6 +170,8 @@
     <ClCompile Include="..\ciirfb_design.c" />
     <ClCompile Include="..\ciirfb_prepare.c" />
     <ClCompile Include="..\ciirfb_process.c" />
+    <ClCompile Include="..\dciirfb_prepare.c" />
+    <ClCompile Include="..\dciirfb_process.c" />
     <ClCompile Include="..\fft.c" />
     <ClCompile Include="..\firfb_prepare.c" />
     <ClCompile Include="..\firfb_process.c" />

@@ -78,6 +78,12 @@
     <ClCompile Include="..\rfft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\dciirfb_prepare.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dciirfb_process.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cha_ff.h">
