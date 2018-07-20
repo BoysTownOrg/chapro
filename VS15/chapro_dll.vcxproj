@@ -71,7 +71,6 @@
       <PreprocessorDefinitions>SHA;WIN32;NDEBUG;_WINDOWS;_USRDLL;CHAPRO_DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;ZLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>false</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderOutputFile />
@@ -122,7 +121,6 @@
       <PreprocessorDefinitions>SHA;WIN32;_DEBUG;_WINDOWS;_USRDLL;CHAPRO_DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderOutputFile />
       <AssemblerListingLocation />
@@ -170,6 +168,8 @@
     <ClCompile Include="..\ciirfb_design.c" />
     <ClCompile Include="..\ciirfb_prepare.c" />
     <ClCompile Include="..\ciirfb_process.c" />
+    <ClCompile Include="..\dciirfb_prepare.c" />
+    <ClCompile Include="..\dciirfb_process.c" />
     <ClCompile Include="..\fft.c" />
     <ClCompile Include="..\firfb_prepare.c" />
     <ClCompile Include="..\firfb_process.c" />
