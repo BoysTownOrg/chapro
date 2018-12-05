@@ -115,6 +115,8 @@ cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double fs,
     if (cs <= 0) {
         return (1);
     }
+	if (cs % 2 != 0 || nw % 2 != 0)
+		return 1;
     cha_prepare(cp);
     CHA_IVAR[_cs] = cs;
     CHA_DVAR[_fs] = fs;
