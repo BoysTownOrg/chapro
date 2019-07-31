@@ -1,4 +1,4 @@
-# makefile for CHAPRO under Linux
+# makefile for CHAPRO targetting ARM from Linux
 
 LIBS=-lsigpro -lm -lz
 SCLIB=-larsc -lasound $(LIBS)
