@@ -1,4 +1,0 @@
-echo "Configure CHAPRO for ARM.";
-rm -f Makefile
-cp -f makefile.arm-lnx Makefile
-echo "Type 'make', then 'sudo make install'."
