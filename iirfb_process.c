@@ -12,7 +12,7 @@
 static __inline void
 filter_sos(float *x, float *y, int cs, float *coef, float *hist, int nsos)
 {
-#if defined(__arm__) && 0
+#ifdef ARM_DSP
     struct {int nsos; float *hist; float *coef;} S = {nsos, hist, coef};
     arm_biquad_cascade_df1_f32(&S, x, y, cs);
 #else
@@ -43,7 +43,7 @@ filter_sos(float *x, float *y, int cs, float *coef, float *hist, int nsos)
         *hist++ = y1;
         *hist++ = y2;
     }
-#endif // __arm__
+#endif // ARM_DSP
 }
 
 /***********************************************************/

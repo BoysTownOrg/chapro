@@ -17,6 +17,8 @@
 #define CHA_IVAR   ((int *)cp[_ivar])
 #define CHA_DVAR   ((double *)cp[_dvar])
 
+#undef ARM_DSP // define this to support CMSIS DSP software library for ARM processors
+
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif

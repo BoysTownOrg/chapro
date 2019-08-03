@@ -8,7 +8,7 @@
 #include "cha_ff.h"
 
 /***********************************************************/
-#if defined(__arm__) && 0
+#ifdef ARM_DSP
 #define cmul(z,x,y,n)   arm_cmplx_mult_cmplx_f32(x,y,z,n)
 
 static int fft_initialized = 0;
