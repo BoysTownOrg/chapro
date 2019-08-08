@@ -17,8 +17,6 @@
 #define CHA_IVAR   ((int *)cp[_ivar])
 #define CHA_DVAR   ((double *)cp[_dvar])
 
-#undef ARM_DSP // define this to support CMSIS DSP software library for ARM processors
-
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif
@@ -44,7 +42,9 @@
 #define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
 #define dzero(x,n)      memset(x,0,(n)*sizeof(double))
 #define round(x)        ((int)floorf((x)+0.5))
+#ifndef log2
 #define log2(x)         (logf(x)/M_LN2)
+#endif
 
 #define db1(x)          (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
 #define db2(x)          (logf(x)*8.685889638065035f) //   db2(x)=(log(x)*20/log(10))
