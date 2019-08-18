@@ -2,9 +2,8 @@
 #ifndef CHAPRO_H
 #define CHAPRO_H
 
-#ifndef MATH_H
+#include <stdint.h>
 #include <math.h>
-#endif
 
 #ifdef DLL
 #define FUNC(type) __declspec(dllexport) type _stdcall
@@ -51,8 +50,7 @@
 #define undb1(x)        expf((x)*0.230258509299405f) // undb1(x)=exp((x)*log(10)/10)
 #define undb2(x)        expf((x)*0.115129254649702f) // undb2(x)=exp((x)*log(10)/20)
 
-typedef unsigned long CHA_DATA;
-typedef unsigned long *CHA_LPTR;
+typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
 
 /*****************************************************/

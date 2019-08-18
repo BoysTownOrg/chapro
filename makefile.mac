@@ -2,13 +2,13 @@
 
 LIBS=-lsigpro -lm -lz
 SCLIB=-larsc $(LIBS)
-CC=gcc -arch i386
+CC=gcc
 AR=ar
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
 
-CFLAGS = -O2 -Wall -DALSA -DANSI_C -fpack-struct -fPIC -I$(INCDIR) -DSHA
+CFLAGS = -O2 -Wall -DALSA -DANSI_C -fPIC -I$(INCDIR) -DSHA
 LFLAGS= -framework CoreServices  -framework CoreAudio \
         -framework AudioUnit -framework AudioToolbox -L$(LIBDIR)
 

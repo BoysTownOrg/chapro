@@ -55,7 +55,7 @@ FUNC(int)
 cha_data_gen(CHA_PTR cp, char *fn)
 {
     int ptsiz, arsiz, arlen, i, j, *cpsiz;
-    unsigned long *ulptr;
+    uint32_t *ulptr;
     FILE *fp;
     static char *head[] = {
         "#ifndef CHA_DATA_H",
@@ -108,9 +108,9 @@ cha_data_gen(CHA_PTR cp, char *fn)
     // initialize ptr arrays
     for (i = 0; i < ptsiz; i++) {
         if (i == _size) {
-            arlen = cpsiz[i] / sizeof(long);
+            arlen = cpsiz[i] / sizeof(int32_t);
             arsiz = 0;
-            ulptr = (unsigned long *) cp[i];
+            ulptr = (uint32_t *) cp[i];
             if (ulptr) {
                 for (j = 0; j < arlen; j++) {
                     if (ulptr[j]) arsiz = j + 1;
@@ -119,7 +119,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             fprintf(fp, "static CHA_DATA p%02d[%8d] = { // _size\n", i, arlen);
             for (j = 0; j < arsiz; j++) {
                 if ((j % arpl) == 0) fprintf(fp, "        ");
-                fprintf(fp, "%10lu", ulptr[j]);
+                fprintf(fp, "%10u", ulptr[j]);
                 if (j < (arsiz - 1)) fprintf(fp, ",");
                 if ((j % arpl) == (arpl - 1)) fprintf(fp, "\n");
             }
@@ -157,33 +157,33 @@ cha_data_gen(CHA_PTR cp, char *fn)
             fprintf(fp, "};\n");
         } else if (cpsiz[i] == 0) {
             fprintf(fp, "// empty array ->     p%02d\n", i);
-        } else if ((cpsiz[i] % sizeof(long)) == 0) {
-            arlen = cpsiz[i] / sizeof(long);
+        } else if ((cpsiz[i] % sizeof(int32_t)) == 0) {
+            arlen = cpsiz[i] / sizeof(int32_t);
             arsiz = 0;
-            ulptr = (unsigned long *) cp[i];
+            ulptr = (uint32_t *) cp[i];
             if (ulptr) {
                 for (j = 0; j < arlen; j++) {
                     if (ulptr[j]) arsiz = j + 1;
                 }
             }
             if (arsiz < 2) {
-                fprintf(fp, "static CHA_DATA p%02d[%8d] = {%10lu};\n",
+                fprintf(fp, "static CHA_DATA p%02d[%8d] = {%10u};\n",
                     i, arlen, ulptr[0]);
             } else {
                 fprintf(fp, "static CHA_DATA p%02d[%8d] = {\n", i, arlen);
                 for (j = 0; j < arsiz; j++) {
                     if ((j % arpl) == 0) fprintf(fp, "        ");
-                    fprintf(fp, "0x%08lX", ulptr[j]);
+                    fprintf(fp, "0x%08X", ulptr[j]);
                     if (j < (arsiz - 1)) fprintf(fp, ",");
                     if ((j % arpl) == (arpl - 1)) fprintf(fp, "\n");
                 }
                 if ((j % arpl) != 0) fprintf(fp, "\n");
                 fprintf(fp, "};\n");
             }
-        } else if ((cpsiz[i] % sizeof(short)) == 0) {
-            arlen = cpsiz[i] / sizeof(short);
+        } else if ((cpsiz[i] % sizeof(int16_t)) == 0) {
+            arlen = cpsiz[i] / sizeof(int16_t);
             fprintf(fp, "// NOTE: Only zero data implemented unless size%%4==0.\n");
-            fprintf(fp, "static unsigned short p%02d[%8d] = {0};\n", i, arlen);
+            fprintf(fp, "static uint16_t p%02d[%8d] = {0};\n", i, arlen);
         } else {
             arlen = cpsiz[i];
             fprintf(fp, "// NOTEL Only zero data implemented unless size%%4==0.\n");
