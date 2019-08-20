@@ -13,7 +13,7 @@ cha_icmp_process(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *Lcs, *Lcm, *Lce, *Lmx, *Gcs, *Gcm, *Gce, *Gmx;
     float *Gmn, *Lfb, *Gsup, *Gpre, *gsup, *ginc, *zdr, *zdi;
-    float Lsup, rnge, head;
+    float Lsup = 0, rnge, head;
     float agtf, lrpk;
     int *dsm, *dso;
     int i, k, kr, ki, nc, dsmx, id, kd, dsmo, dsi, im, cm, jm;

@@ -17,7 +17,7 @@ compr_ds_expand (
     double fs, *bw;
     int *dsm, *dso;
     int *mf, *gc, *sc;
-    int i, j, k, jk, nc, nf, ns, tc, jmx, jmn, scmx = 0, scmn = 0;
+    int i, j, k, jk, nc, nf, ns, tc, jmx = 0, jmn = 0, scmx = 0, scmn = 0;
     static int ms = 5; /* mimimun samples per envelope cycle */
 
     ns = ds;
