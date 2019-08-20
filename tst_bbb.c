@@ -14,7 +14,6 @@
 #include <sigpro.h>
 #include "chapro.h"
 #include "cha_if.h"
-#include "cha_gha_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -56,7 +55,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process IIRFB+AFC+AGC
@@ -78,7 +77,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_gha [-options] [input_file] [output_file]\n");
+    fprintf(stdout, "usage: tst_bbb [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
@@ -179,8 +178,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/tst_gha.wav";
-    static char *mfn = "test/tst_gha.mat";
+    static char *wfn = "test/tst_bbb.wav";
+    static char *mfn = "test/tst_bbb.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -412,8 +411,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     nqm = io->nsmp;
     iqm = 0;
     qm = (float *) calloc(nqm, sizeof(float));
-    // generate C code from prepared data
-    cha_data_gen(cp, "cha_gha_data.h");
 }
 
 // process io
