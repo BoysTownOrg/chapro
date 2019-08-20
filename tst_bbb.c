@@ -132,7 +132,7 @@ static void
 parse_args(I_O *io, int ac, char *av[], double rate)
 {
     io->rate = rate;
-    io->mat = 1;
+    io->mat = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
@@ -455,7 +455,7 @@ static void
 cleanup(I_O *io, CHA_PTR cp)
 {
     if (io->ofn) {
-//        write_wave(io);
+        write_wave(io);
     }
     stop_wav(io);
     cha_cleanup(cp);
