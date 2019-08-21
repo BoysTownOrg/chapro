@@ -27,8 +27,8 @@ libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)
 
 $(LIBDIR)/libchapro.a : libchapro.a
-	mkdir -p $(LIBDIR)
-	cp -f libchapro.a $(LIBDIR)
+	sudo mkdir -p $(LIBDIR)
+	sudo cp -f libchapro.a $(LIBDIR)
 
 install: $(LIBDIR)/libchapro.a $(PGMS)
 	scp $(PGMS) mha@192.168.7.2:/home/mha
