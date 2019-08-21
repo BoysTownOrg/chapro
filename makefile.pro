@@ -20,7 +20,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 PGMS=tst_bbb
 
 profile : $(PGMS)
-	# profile
+	# profiling...
 	./tst_bbb
 	gprof tst_bbb > gprof.txt
 	head gprof.txt
