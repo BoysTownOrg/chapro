@@ -8,7 +8,7 @@ LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -DSHA
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -O2
 LFLAGS=-L$(LIBDIR)
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
