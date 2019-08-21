@@ -413,7 +413,7 @@ process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
     int i, n, cs, nk;
-    double t1, t2;
+    double t1, t2, fme;
 
     if (io->ofn) {
         // initialize i/o pointers
@@ -430,7 +430,10 @@ process(I_O *io, CHA_PTR cp)
         t2 = io->nwav / io->rate;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
         if (iqm > 0) {
-            fprintf(stdout, "final misalignment error = %.2f dB\n", 10 * log10(qm[iqm - 1]));
+            if (qm[iqm - 1] > 0) {
+                fme = 10 * log10(qm[iqm - 1]);
+                fprintf(stdout, "final misalignment error = %.2f dB\n", fme);
+            }
         }
     } else {
         while (get_aud(io)) {
