@@ -448,7 +448,7 @@ cleanup(I_O *io, CHA_PTR cp)
         if (io->nsmp < 1234567) {
             write_wave(io);
         } else {
-            fprintf(stdout, "Too large to write: nsmp=%d\n", io->nsmp);
+            fprintf(stdout, "Too large to write: nsmp=%ld\n", io->nsmp);
         }
     }
     stop_wav(io);
