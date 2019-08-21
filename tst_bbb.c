@@ -282,7 +282,7 @@ put_aud(I_O *io, CHA_PTR cp)
             fzero(io->owav, io->nsmp);
         }
         io->pseg++;
-    process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
+        process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
     }
 #endif // ARSC_LIB
 }
