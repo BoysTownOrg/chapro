@@ -98,6 +98,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _nqm      9
 #define _wfl      10
 #define _pfl      11
+#define _mxl      12
 
 // double variable indices
 
