@@ -75,7 +75,7 @@ tst_gha : tst_gha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 libchapro.a: $(CHAPRO)
-	$(AR) rus libchapro.a $(CHAPRO)
+	$(AR) rs libchapro.a $(CHAPRO)
 
 install: libchapro.a
 	cp -f libchapro.a $(LIBDIR)
