@@ -26,7 +26,11 @@ tst_bbb : tst_bbb.o  libchapro.a
 libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)
 
-install: libchapro.a $(PGMS)
+$(LIBDIR)/libchapro.a : libchapro.a
+	mkdir -p $(LIBDIR)
+	cp -f libchapro.a $(LIBDIR)
+
+install: $(LIBDIR)/libchapro.a $(PGMS)
 	scp $(PGMS) mha@192.168.7.2:/home/mha
 
 zipsrc:
