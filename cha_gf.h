@@ -79,17 +79,13 @@ FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 // integer variable indices
 
-#define _cs       0 
-#define _nc       1
 #define _ns       2
-
 #define _cm       3
 #define _klo      4
 #define _khi      5
 
 // double variable indices
 
-#define _fs       0
 #define _lrpk     1
 
 #endif /* CHA_GF_H */

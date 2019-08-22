@@ -87,8 +87,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 // integer variable indices
 
-#define _cs       0 
-#define _nc       1
 #define _op       2
 #define _ns       3
 
@@ -104,9 +102,9 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 // double variable indices
 
-#define _alfa     0
-#define _beta     1
-#define _fs       2
+#define _fs       0
+#define _alfa     1
+#define _beta     2
 #define _mxdb     3
 #define _tkgn     4
 #define _tk       5

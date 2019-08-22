@@ -71,11 +71,20 @@ FUNC(char *) cha_version(void);
 
 /*****************************************************/
 
-// reserved pointer indices
+// global pointer indices
 
 #define _size     0
 #define _ivar     1
 #define _dvar     2
 #define _reserve  3
+
+// global integer variable indices
+
+#define _cs       0 
+#define _nc       1
+
+// global double variable indices
+
+#define _fs       0
 
 #endif /* CHAPRO_H */
