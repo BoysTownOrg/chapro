@@ -116,7 +116,7 @@ main(int ac, char *av[])
 {
     double t1, t2;
     float fs, *x, *y;
-    int n;
+    int n = 0;
     static char *ifn = "test/cat.wav";
     static char *ofn = "test/gha_demo.mat";
     static double spl_ref = 1.1219e-6;
