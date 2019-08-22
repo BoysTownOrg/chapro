@@ -21,13 +21,15 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	afc_prepare.o afc_process.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
-     tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha
+     tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
+     tst_iffb tst_gha gha_demo
+HDRS=chapro.h cha_cf.h cha_ff.h cha_gf.h cha_if.h
 
 all: $(PGMS)
 
 tst: tstif
 
-tstif: tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha
+tstif: tst_ifa tst_ifio tst_ifsc tst_iffb tst_gha gha_demo
 	./tst_ifa
 	./tst_ifio
 	./tst_ifio -t
@@ -76,12 +78,15 @@ tst_iffb : tst_iffb.o  libchapro.a
 tst_gha : tst_gha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
+gha_demo : gha_demo.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
 libchapro.a: $(CHAPRO)
 	$(AR) rus libchapro.a $(CHAPRO)
 
 install: libchapro.a
 	cp -f libchapro.a $(LIBDIR)
-	cp -f chapro.h $(INCDIR)
+	cp -f $(HDRS) $(INCDIR)
 
 zipsrc:
 	zip chaprosc *.mgw *.lnx *.mac
@@ -100,12 +105,3 @@ clean:
 
 # dependencies
 cha_core.o : chapro.h version.h
-icmp_prepare.o : chapro.h cha_gf.h
-icmp_process.o : chapro.h cha_gf.h
-ciirfb_process.o : chapro.h cha_gf.h
-ciirfb_prepare.o : chapro.h cha_gf.h
-firb_prepare.o : chapro.h cha_gf.h
-firb_process.o : chapro.h cha_gf.h
-tst_gf.o : chapro.h cha_gf.h
-tst_gfio.o : chapro.h cha_gf.h
-tst_gfsc.o : chapro.h cha_gf.h
