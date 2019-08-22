@@ -1,4 +1,4 @@
-// compressor_process.c - instantaneous-compression processing functions
+// icmp_process.c - instantaneous-compression processing functions
 
 #include <stdlib.h>
 #include <string.h>

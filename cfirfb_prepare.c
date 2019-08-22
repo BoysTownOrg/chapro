@@ -1,4 +1,4 @@
-// cfirfb_prepare.c - FIR-filterbank preparation functions
+// cfirfb_prepare.c - complex FIR-filterbank preparation functions
 
 #include <stdlib.h>
 #include <string.h>

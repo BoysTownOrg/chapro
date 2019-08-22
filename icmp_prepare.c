@@ -1,4 +1,4 @@
-// compressor_prepare.c - instantaneous-compression preparation functions
+// icmp_prepare.c - instantaneous-compression preparation functions
 
 #include <stdlib.h>
 #include <string.h>

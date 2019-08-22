@@ -1,4 +1,4 @@
-// feedback_process.c - feedback-management processing functions
+// afc_process.c - adaptive-feedback-cancelation processing functions
 
 #include <stdlib.h>
 #include <string.h>

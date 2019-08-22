@@ -1,4 +1,4 @@
-// agc_prepare.c - FIR-filterbank preparation functions
+// agc_prepare.c - automatic-gain-control preparation functions
 
 #include <stdlib.h>
 #include <string.h>

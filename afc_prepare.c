@@ -1,4 +1,4 @@
-// feedback_prepare.c - feedback-management preparation functions
+// afc_prepare.c - adaptive-feedback-cancelation preparation functions
 
 #include <stdio.h>
 #include <stdlib.h>
