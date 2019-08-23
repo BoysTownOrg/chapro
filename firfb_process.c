@@ -5,7 +5,6 @@
 #include <math.h>
 #include <assert.h>
 #include "chapro.h"
-#include "cha_ff.h"
 
 /***********************************************************/
 #ifdef ARM_DSP

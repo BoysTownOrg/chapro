@@ -5,7 +5,6 @@
 #include <math.h>
 #include <assert.h>
 #include "chapro.h"
-#include "cha_if.h"
 
 /***********************************************************/
 
@@ -53,7 +52,7 @@ FUNC(void)
 cha_iirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
 {
     float   *bb, *zz, *yk, *yd, *bk, *zk;
-    int     dk, i, k, m, nc, ns, nz, op, ncoef, nhist, *dd;
+    int     dk, i, k, m, nc, nn, nz, op, ncoef, nhist, *dd;
 
     bb = (float *) cp[_bb];
     dd = (int *) cp[_dd];
@@ -61,7 +60,7 @@ cha_iirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
     yd = (float *) cp[_yd];
     nc = CHA_IVAR[_nc];
     op = CHA_IVAR[_op];
-    ns = CHA_IVAR[_ns];
+    nn = CHA_IVAR[_nn];
     nz = op - 1;
     nhist = 2 * nz;
     ncoef = 5 * (nz / 2);
@@ -72,7 +71,7 @@ cha_iirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
         zk = zz + k * nhist;
         filter_sos(x, yk, cs, bk, zk, nz / 2);
         /* delay */
-        m = k * ns;
+        m = k * nn;
         dk = dd[k];
         for (i = 0; i < cs; i++) {
             fmove(yd + m + 1, yd + m, dk);

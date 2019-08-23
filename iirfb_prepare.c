@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include "chapro.h"
-#include "cha_if.h"
 
 /***********************************************************/
 
@@ -92,7 +91,7 @@ iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz,
 FUNC(int)
 cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double fs, int cs)
 {
-    int ns, op, ncoef, nhist;
+    int nn, op, ncoef, nhist;
 
     if (cs <= 0) {
         return (1);
@@ -110,9 +109,9 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
     cha_allocate(cp, nc * nhist, sizeof(float), _zz);
     cha_allocate(cp, nc, sizeof(int), _dd);
     // save IIR-filterbank coefficients
-    ns = iir_filterbank(cp, z, p, g, d, nc, nz, fs);
-    CHA_IVAR[_ns] = ns;
-    cha_allocate(cp, nc * ns, sizeof(float), _yd);
+    nn = iir_filterbank(cp, z, p, g, d, nc, nz, fs);
+    CHA_IVAR[_nn] = nn;
+    cha_allocate(cp, nc * nn, sizeof(float), _yd);
 
     return (0);
 }

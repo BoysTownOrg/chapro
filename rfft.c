@@ -2,7 +2,6 @@
 
 #include <math.h>
 #include "chapro.h"
-#include "cha_ff.h"
 
 /***********************************************************/
 // FFT functions adapted from G. D. Bergland, "Subroutines FAST and FSST," (1979).
