@@ -8,7 +8,7 @@ LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -O2
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O2
 LFLAGS=-L$(LIBDIR)
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
@@ -108,12 +108,12 @@ clean_test:
 
 # dependencies
 cha_core.o : chapro.h version.h
-icmp_prepare.o : chapro.h cha_gf.h
-icmp_process.o : chapro.h cha_gf.h
-ciirfb_process.o : chapro.h cha_gf.h
-ciirfb_prepare.o : chapro.h cha_gf.h
-firb_prepare.o : chapro.h cha_gf.h
-firb_process.o : chapro.h cha_gf.h
-tst_gf.o : chapro.h cha_gf.h
-tst_gfio.o : chapro.h cha_gf.h
-tst_gfsc.o : chapro.h cha_gf.h
+icmp_prepare.o : chapro.h 
+icmp_process.o : chapro.h 
+ciirfb_process.o : chapro.h 
+ciirfb_prepare.o : chapro.h 
+firb_prepare.o : chapro.h 
+firb_process.o : chapro.h 
+tst_gf.o : chapro.h 
+tst_gfio.o : chapro.h 
+tst_gfsc.o : chapro.h 

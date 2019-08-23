@@ -8,7 +8,7 @@ LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
 
-CFLAGS = -O2 -Wall -DALSA -DANSI_C -fPIC -I$(INCDIR) -DSHA
+CFLAGS = -Wall -DALSA -DANSI_C -fPIC -I$(INCDIR) -fPIC -O2
 LFLAGS= -framework CoreServices  -framework CoreAudio \
         -framework AudioUnit -framework AudioToolbox -L$(LIBDIR)
 
@@ -107,4 +107,45 @@ clean_test:
 	rm -f test/*.mat test/tst_*.wav
 
 # dependencies
-cha_core.o : chapro.h version.h
+afc_prepare.o: afc_prepare.c chapro.h ite_fb.h 
+afc_process.o: afc_process.c chapro.h 
+agc_prepare.o: agc_prepare.c chapro.h 
+agc_process.o: agc_process.c chapro.h
+cfirfb_prepare.o: cfirfb_prepare.c chapro.h 
+cfirfb_process.o: cfirfb_process.c chapro.h 
+cha_core.o: cha_core.c chapro.h
+cha_scale.o: cha_scale.c chapro.h
+chapro.o: chapro.c 
+ciirfb_design.o: ciirfb_design.c chapro.h 
+ciirfb_prepare.o: ciirfb_prepare.c chapro.h 
+ciirfb_process.o: ciirfb_process.c chapro.h 
+db.o: db.c chapro.h 
+dciirfb_prepare.o: dciirfb_prepare.c chapro.h 
+dciirfb_process.o: dciirfb_process.c chapro.h 
+fft.o: fft.c chapro.h 
+firfb_prepare.o: firfb_prepare.c chapro.h 
+firfb_process.o: firfb_process.c chapro.h 
+gha_demo.o: gha_demo.c chapro.h 
+icmp_prepare.o: icmp_prepare.c chapro.h 
+icmp_process.o: icmp_process.c chapro.h 
+iirfb.o: iirfb.c 
+iirfb_design.o: iirfb_design.c chapro.h 
+iirfb_prepare.o: iirfb_prepare.c chapro.h 
+iirfb_process.o: iirfb_process.c chapro.h 
+rfft.o: rfft.c chapro.h 
+tst_bbb.o: tst_bbb.c chapro.h 
+tst_cffa.o: tst_cffa.c chapro.h 
+tst_cffio.o: tst_cffio.c chapro.h 
+tst_cffsc.o: tst_cffsc.c chapro.h 
+tst_cifa.o: tst_cifa.c chapro.h 
+tst_cifio.o: tst_cifio.c chapro.h 
+tst_cifsc.o: tst_cifsc.c chapro.h 
+tst_ffa.o: tst_ffa.c chapro.h 
+tst_ffio.o: tst_ffio.c chapro.h 
+tst_ffsc.o: tst_ffsc.c chapro.h 
+tst_fm.o: tst_fm.c chapro.h 
+tst_gha.o: tst_gha.c chapro.h 
+tst_ifa.o: tst_ifa.c chapro.h 
+tst_iffb.o: tst_iffb.c chapro.h 
+tst_ifio.o: tst_ifio.c chapro.h 
+tst_ifsc.o: tst_ifsc.c chapro.h 
