@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include "chapro.h"
-#include "cha_ff.h"
 
 /***********************************************************/
 

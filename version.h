@@ -1,10 +1,13 @@
 /* version.h */
 
-#define VER     "CHApro version 0.22, 12-Jun-18"
-#define NOTICE	"Copyright 2016-2018 Boys Town National Research Hospital"
+#define VER     "CHApro version 0.23, 23-Aug-19"
+#define NOTICE	"Copyright 2016-2019 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.23 - 22-Aug-19
+> Merge module headers into chapro.h
+> Clean up code
 0.22 - 12-Jun-18
 > Added hardware-delay parameter (hdel) to AFC processing
 0.21 - 8-Jun-18

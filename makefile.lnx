@@ -21,7 +21,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
      tst_iffb tst_gha gha_demo
-HDRS=chapro.h cha_cf.h cha_ff.h cha_gf.h cha_if.h
+HDRS=chapro.h 
 
 all: $(PGMS)
 
@@ -102,6 +102,9 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~
+
+clean_test:
+	rm -f test/*.mat test/tst_*.wav
 
 # dependencies
 cha_core.o : chapro.h version.h

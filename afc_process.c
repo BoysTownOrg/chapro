@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include "chapro.h"
-#include "cha_ff.h"
 
 static int rhd = 0;
 
@@ -136,6 +135,7 @@ cha_afc_output(CHA_PTR cp, float *x, int cs)
         mask = rsz - 1;
         first_time = 0;
     }
+        rsz = CHA_IVAR[_rsz];
     // copy chunk to ring buffer
     rhd = rtl;
     for (i = 0; i < cs; i++) {

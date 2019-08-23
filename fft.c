@@ -2,7 +2,6 @@
 
 #include <math.h>
 #include "chapro.h"
-#include "cha_cf.h"
 
 //-----------------------------------------------------------
 

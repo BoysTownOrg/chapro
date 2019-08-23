@@ -1,11 +1,9 @@
 // afc_prepare.c - adaptive-feedback-cancelation preparation functions
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "chapro.h"
-#include "cha_ff.h"
 #include "ite_fb.h"
 
 /***********************************************************/
