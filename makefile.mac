@@ -102,6 +102,7 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~
+	rm -f tst_bbb gprof*.txt gmon.out
 
 clean_test:
 	rm -f test/*.mat test/tst_*.wav

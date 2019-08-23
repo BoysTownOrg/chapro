@@ -22,8 +22,14 @@ PGMS=tst_bbb
 profile : $(PGMS)
 	# profiling...
 	./tst_bbb
-	gprof tst_bbb > gprof.txt
-	head gprof.txt
+	gprof tst_bbb > gprof1.txt
+	head gprof1.txt
+
+fast : $(PGMS)
+	# profiling...
+	./tst_bbb -d
+	gprof tst_bbb > gprof2.txt
+	head gprof2.txt
 
 tst_bbb : tst_bbb.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
@@ -49,6 +55,7 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~
+	rm -f tst_bbb gprof*.txt gmon.out
 
 clean_test:
 	rm -f test/*.mat test/tst_*.wav
