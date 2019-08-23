@@ -27,6 +27,7 @@ typedef struct {
 
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
 static int iqm, nqm, fbl, wfl, pfl;
+static int simfb = 1;
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -76,6 +77,7 @@ usage()
 {
     fprintf(stdout, "usage: tst_bbb [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
+    fprintf(stdout, "-d    disable simulated feedback\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
@@ -132,7 +134,9 @@ parse_args(I_O *io, int ac, char *av[], double rate)
     io->mat = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'h') {
+            if (av[1][1] == 'd') {
+                simfb = 0;
+            } else if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
                 io->mat = 1;
@@ -204,7 +208,7 @@ init_wav(I_O *io)
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
     }
-    io->ofn = io->mat ? mfn : wfn; 
+    if (!io->ofn) io->ofn = io->mat ? mfn : wfn; 
     if (io->ofn) {
         io->nsmp = io->nwav;
         io->nseg = 1;
@@ -399,6 +403,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIR+AFC+AGC: nc=%d nz=%d\n", nc, nz);
+    if (!simfb) { fbg = sqm = 0; }
+    fprintf(stdout, "Feedback simulation %sabled.\n", simfb ? "en" : "dis");
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
