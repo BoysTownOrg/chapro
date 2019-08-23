@@ -9,7 +9,6 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
