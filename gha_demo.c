@@ -6,7 +6,6 @@
 #include <math.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_ff.h"
 
 /***********************************************************/
 
@@ -75,7 +74,7 @@ WDRC(CHA_PTR cp, float *x, float *y, int n, int nc)
     xx = (float *) calloc(n, sizeof(float));
     yy = (float *) calloc(n * nc * 2, sizeof(float));
     zz = (float *) calloc(n * nc * 2, sizeof(float));
-    // process FIRFB+AGC
+    // process FIR+AGC
     cs = CHA_IVAR[_cs]; // chunk size
     nk = n / cs;        // number of chunks
     for (i = 0; i < nk; i++) {

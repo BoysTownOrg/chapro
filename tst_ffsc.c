@@ -11,7 +11,6 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_ff.h"
 #include "cha_ff_data.h"
 
 typedef struct {
@@ -34,7 +33,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process FIRFB+AGC
+    // process FIR+AGC
     cha_afc_input(cp, x, x, cs);
     cha_agc_input(cp, x, x, cs);
     cha_firfb_analyze(cp, x, z, cs);
@@ -312,6 +311,18 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    nw = 128;     // window size
     static int    cs = 32;      // chunk size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
+    // AFC parameters
+    static double rho  = 0.3000; // forgetting factor
+    static double eps  = 0.0008; // power threshold
+    static double  mu  = 0.0002; // step size
+    static int    afl  = 100;    // adaptive filter length
+    static int    sqm  = 0;      // save quality metric ?
+    static int    wfl  = 0;      // whitening-filter length
+    static int    pfl  = 0;      // persistent-filter length
+    static int    hdel = 0;      // output/input hardware delay
+    // simulation parameters
+    static double fbg = 0;       // simulated-feedback gain
+    // DSL prescription
     // DSL prescription
     static CHA_DSL dsl = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -340,6 +351,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fprintf(stdout, "FIRFB+AGC: nc=%d op=%d\n", nc, nw);
     // prepare chunk buffers
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
+    // prepare AFC
+    cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
     // generate C code from prepared data
