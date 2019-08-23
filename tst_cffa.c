@@ -30,7 +30,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "impulse response: \n");
-    io->ofn = "test/tst_cffa.mat";
+    io->ofn = "test/cffa_impulse.mat";
     io->iwav[0] = 1;
     io->nsmp = io->nwav;
     io->mseg = 1;
@@ -62,7 +62,7 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 
 /***********************************************************/
 
-// specify filterbank crossover frequencies
+// specify filterbank center frequecies and bandwidths
 
 static int
 cross_freq(double *cf, double sr)
@@ -103,7 +103,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // initialize waveform
     init_wav(io);
     ns = io->nsmp;
-    // prepare complex-FIR filterbank
+    // prepare CFIRFB
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffer

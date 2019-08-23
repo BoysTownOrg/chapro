@@ -1,4 +1,4 @@
-// tst_cifa.c - test gammatone-filterbank analysis
+// tst_gfa.c - test gammatone-filterbank analysis
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +32,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "impulse response: \n");
-    io->ofn = "test/tst_cifa.mat";
+    io->ofn = "test/gfa_impulse.mat";
     io->iwav[0] = 1;
     io->nsmp = io->nwav;
     io->mseg = 1;
