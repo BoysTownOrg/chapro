@@ -348,7 +348,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
     cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    fprintf(stdout, "FIRFB+AGC: nc=%d op=%d\n", nc, nw);
+    fprintf(stdout, "FIR+AGC: nc=%d op=%d\n", nc, nw);
     // prepare chunk buffers
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
