@@ -1,42 +1,44 @@
-// cha_data.h - data size = 6760 bytes
+// cha_data.h - data size = 7272 bytes
 #ifndef CHA_DATA_H
 #define CHA_DATA_H
 
-static CHA_DATA cha_magic[4] = {0x55530,0x68131,24,6760};
+static CHA_DATA cha_magic[4] = {0x55530,0x68131,38,7272};
 static CHA_DATA p00[      64] = { // _size
                256,        64,       128,      2048,       320,         0,       256,      1920,
-                 0,        32,        32,        32,        32,        32,        32,       128,
-                 8,       512,         0,         0,         0,       400,       400,       128
+                32,         0,        32,        32,        32,        32,        32,       128,
+                 8,         0,         0,         0,         0,         0,         0,         0,
+                 0,         0,         0,         0,         0,         0,         0,      1024,
+                 0,         0,         0,       400,       400,       128
 };
 static CHA_DATA p01[      16] = { // _ivar
-                32,         8,         5,        60,       128,         0,         0,       100,
-               100,       100
+                32,         8,         5,        60,       256,         0,         0,       100,
+               100,       100,         0,         0,       100
 };
 static double   p02[      16] = { // _dvar
-            0.908230841,    0.998517215,          24000,            119,              0,
+                  24000,    0.908230841,    0.998517215,            119,              0,
                     105,             10,            105,    0.980191946,    0.998517215,
-                 0.0002,            0.3,         0.0008,              0,   0.0881657467
+                 0.0002,            0.3,         0.0008,              0,    0.088165747
 };
 static CHA_DATA p03[     512] = {         0};
 static CHA_DATA p04[      80] = {
         0x3620D4FC,0x36A0D4FC,0x3620D4FC,0x3FF78667,0xBF70AB22,0x3F800000,0x40000000,0x3F800000,
-        0x3FED7800,0xBF5C7D7E,0x397C0A6A,0x00000000,0xB97C0A6A,0x3FFB9DA4,0xBF794D6C,0x3F800000,
+        0x3FED7800,0xBF5C7D7E,0x397C0A66,0x00000000,0xB97C0A66,0x3FFB9DA4,0xBF794D6C,0x3F800000,
         0x00000000,0xBF800000,0x3FF9A50F,0xBF770745,0x3A6FE46A,0x00000000,0xBA6FE46A,0x3FF80632,
         0xBF75201F,0x3F800000,0x00000000,0xBF800000,0x3FF3FB77,0xBF7152DC,0x3B213A01,0x00000000,
         0xBB213A01,0x3FF1150E,0xBF6E9B93,0x3F800000,0x00000000,0xBF800000,0x3FE8B37D,0xBF688DFF,
         0x3BAF7384,0x00000000,0xBBAF7384,0x3FE31D23,0xBF6483AE,0x3F800000,0x00000000,0xBF800000,
         0x3FD199A9,0xBF5B6FE9,0x3C709A9D,0x00000000,0xBC709A9D,0x3FC64412,0xBF54E22B,0x3F800000,
-        0x00000000,0xBF800000,0x3FA21CD7,0xBF489A35,0x3D1A1F6C,0x00000000,0xBD1A1F6C,0x3F8B3C32,
+        0x00000000,0xBF800000,0x3FA21CD7,0xBF489A35,0x3D1A1F6B,0x00000000,0xBD1A1F6B,0x3F8B3C32,
         0xBF3C42EA,0x3F800000,0x00000000,0xBF800000,0x3F0A358E,0xBF2FEBEC,0xBE18B5CE,0x3E98B5CE,
         0xBE18B5CE,0x3EB717C1,0xBEEAE56F,0x3F800000,0xC0000000,0x3F800000,0x3E846ABC,0xBD61618D
 };
 // empty array ->     p05
 static CHA_DATA p06[      64] = {         0};
 static CHA_DATA p07[     480] = {         0};
-// empty array ->     p08
-static CHA_DATA p09[       8] = {
+static CHA_DATA p08[       8] = {
         0x00000018,0x00000002,0x00000017,0x00000025,0x0000002D,0x00000033,0x00000036,0x0000003B
 };
+// empty array ->     p09
 static CHA_DATA p10[       8] = {
         0x4200CCCD,0x41D40000,0x41D5999A,0x41D5999A,0x41EE6666,0x42066666,0x42093333,0x4202CCCD
 };
@@ -52,12 +54,26 @@ static CHA_DATA p13[       8] = {
 static CHA_DATA p14[       8] = {         0};
 static CHA_DATA p15[      32] = {         0};
 static CHA_DATA p16[       2] = {         0};
-static CHA_DATA p17[     128] = {         0};
+// empty array ->     p17
 // empty array ->     p18
 // empty array ->     p19
 // empty array ->     p20
-static CHA_DATA p21[     100] = {         0};
-static CHA_DATA p22[     100] = {
+// empty array ->     p21
+// empty array ->     p22
+// empty array ->     p23
+// empty array ->     p24
+// empty array ->     p25
+// empty array ->     p26
+// empty array ->     p27
+// empty array ->     p28
+// empty array ->     p29
+// empty array ->     p30
+static CHA_DATA p31[     256] = {         0};
+// empty array ->     p32
+// empty array ->     p33
+// empty array ->     p34
+static CHA_DATA p35[     100] = {         0};
+static CHA_DATA p36[     100] = {
         0x3AE73605,0x384D8559,0x3B07A8D6,0x3C1EECC0,0xBC4A89FC,0x3B42B51C,0x3B5898B3,0x3D2D1AEB,
         0x3DA3137B,0x3D921B3B,0xBBCD2913,0xBDD590C1,0xBE18F3AA,0xBDFAE148,0xBD5D3CBC,0x3C7BD6A6,
         0x3D9D883C,0x3DAC83ED,0x3D4F0846,0x3BCB6C7A,0xBD03AB86,0xBD01754B,0xBC422681,0x3C5944AA,
@@ -72,12 +88,13 @@ static CHA_DATA p22[     100] = {
         0xB8D801B4,0xB9841EDE,0xB9D2C387,0xB9E496EE,0xB9E496EE,0xB9E496EE,0xB9E496EE,0xB9E496EE,
         0xB9E496EE,0xB9E496EE,0xB9E496EE,0xB9E496EE
 };
-static CHA_DATA p23[      32] = {         0};
+static CHA_DATA p37[      32] = {         0};
 
 static CHA_DATA *cha_data[NPTR+1] = {
-    (CHA_DATA *)p00,(CHA_DATA *)p01,(CHA_DATA *)p02,
-    p03, p04,NULL, p06, p07,NULL, p09, p10, p11, p12, p13, p14, p15, p16, p17,NULL,
-   NULL,NULL, p21, p22, p23,
+    (CHA_DATA *)p00,(CHA_DATA *)p01,(CHA_DATA *)p02,(CHA_DATA *)p03,
+    p04,NULL, p06, p07, p08,NULL, p10, p11, p12, p13, p14, p15, p16,NULL,NULL,NULL,
+   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, p31,NULL,NULL,NULL, p35,
+    p36, p37,
     cha_magic
 };
 
