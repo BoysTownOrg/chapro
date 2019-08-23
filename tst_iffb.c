@@ -11,7 +11,7 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if_data.h"
+//#include "cha_if_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -21,8 +21,6 @@ typedef struct {
     long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
-
-static int scd = 0; // switch to compiled data ?
 
 /***********************************************************/
 
@@ -65,7 +63,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    if (scd) cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process IIR+AFC
@@ -89,7 +87,6 @@ usage()
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
-    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -148,8 +145,6 @@ parse_args(I_O *io, int ac, char *av[], double rate)
                 io->mat = 1;
             } else if (av[1][1] == 'v') {
                 version();
-            } else if (av[1][1] == 'z') {
-                scd = 1;
             }
             ac--;
             av++;
