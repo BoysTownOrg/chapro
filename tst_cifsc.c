@@ -1,4 +1,4 @@
-// tst_gfsc.c - test gammatone-filterbank & instantaneous-compression
+// tst_cifsc.c - test gammatone-filterbank & instantaneous-compression
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -11,7 +11,6 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_gf.h"
 #include "cha_gf_data.h"
 
 typedef struct {
@@ -23,6 +22,8 @@ typedef struct {
     void **out;
 } I_O;
 
+static int scd = 0; // switch to compiled data ?
+
 /***********************************************************/
 
 static void
@@ -31,7 +32,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    if (scd) cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process filterbank+compressor
@@ -47,7 +48,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_gfsc [-options] [input_file] [output_file]\n");
+    fprintf(stdout, "usage: tst_cifsc [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
     fprintf(stdout, "-d N  set downsample factor to N [24]\n");
@@ -55,6 +56,7 @@ usage()
     fprintf(stdout, "-k N  compression kneepoint=N (dB) [0]\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -111,6 +113,8 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *ds,
                 av++;
             } else if (av[1][1] == 'v') {
                 version();
+            } else if (av[1][1] == 'z') {
+                scd = 1;
             }
             ac--;
             av++;
@@ -149,8 +153,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/tst_gfsc.wav";
-    static char *mfn = "test/tst_gfsc.mat";
+    static char *wfn = "test/tst_cifsc.wav";
+    static char *mfn = "test/tst_cifsc.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -381,7 +385,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     gd = cgtfb_init(&cls, sr, nm, cpo);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
     fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
-    fprintf(stdout, "compression gain=%.0f, ds=%d\n", gn, ds);
+    fprintf(stdout, "inst. compression: gain=%.0f, ds=%d\n", gn, ds);
     // initialize waveform
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);

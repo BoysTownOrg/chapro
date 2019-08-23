@@ -13,7 +13,6 @@
 #endif // ARSC_LIB
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -27,7 +26,7 @@ typedef struct {
 /***********************************************************/
 
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
-static int    iqm, nqm, fbl, wfl, pfl;
+static int iqm, nqm, fbl, wfl, pfl;
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -54,11 +53,9 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
 
-    // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIRFB+AFC+AGC
+    // process IIR+AFC+AGC
     cha_afc_input(cp, x, x, cs);
     cha_agc_input(cp, x, x, cs);
     cha_iirfb_analyze(cp, x, z, cs);
@@ -82,6 +79,7 @@ usage()
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -96,7 +94,7 @@ var_string(VAR *vl, char *name, char *s)
     for (i = 0; i < n; i++) {
         data[i] = s[i];
     }
-    sp_var_set(vl, "ifn", data, 1, n, "f4");
+    sp_var_set(vl, name, data, 1, n, "f4");
     vl[0].text = 1;
     free(data);
 }
@@ -400,7 +398,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIRFB+AFC+AGC: nc=%d nz=%d\n", nc, nz);
+    fprintf(stdout, "IIR+AFC+AGC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC

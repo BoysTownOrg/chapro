@@ -9,7 +9,6 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_ff.h"
 #include "cha_ff_data.h"
 
 typedef struct {
@@ -22,6 +21,7 @@ typedef struct {
 } I_O;
 
 static int tone_io = 0;
+static int scd = 0; // switch to compiled data ?
 
 /***********************************************************/
 
@@ -38,6 +38,7 @@ usage()
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
     fprintf(stdout, "-w N  window size [128]\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -67,6 +68,8 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
                 *nw = atoi(av[2]);
                 ac--;
                 av++;
+            } else if (av[1][1] == 'z') {
+                scd = 1;
             }
             ac--;
             av++;
@@ -175,7 +178,7 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    if (scd) cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;

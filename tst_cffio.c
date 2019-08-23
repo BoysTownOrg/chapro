@@ -9,7 +9,6 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_cf.h"
 #include "cha_cf_data.h"
 
 typedef struct {
@@ -22,6 +21,7 @@ typedef struct {
 } I_O;
 
 static int tone_io = 0;
+static int scd = 0; // switch to compiled data ?
 
 /***********************************************************/
 
@@ -38,6 +38,7 @@ usage()
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
     fprintf(stdout, "-w N  window size [128]\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -67,6 +68,8 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
                 *nw = atoi(av[2]);
                 ac--;
                 av++;
+            } else if (av[1][1] == 'z') {
+                scd = 1;
             }
             ac--;
             av++;
@@ -130,7 +133,7 @@ write_wave(I_O *io)
 
 /***********************************************************/
 
-// specify filterbank center frequecies and bandwidths
+// specify filterbank crossover frequencies
 
 static int
 cross_freq(double *cf, double sr)
@@ -149,6 +152,34 @@ cross_freq(double *cf, double sr)
     return (nc);
 }
 
+// CSL prescription
+
+static void
+compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
+{
+    double f1, f2;
+    int k, n;
+
+    // set compression mode
+    cls->cm = 1;
+    // loop over filterbank channel
+    cls->nc = nc;
+    n = nc - 1;
+    for (k = 0; k < nc; k++) {
+        cls->Lcs[k] = 0;
+        cls->Lcm[k] = 50;
+        cls->Lce[k] = 100;
+        cls->Lmx[k] = 120;
+        cls->Gcs[k] = (float) gn;
+        cls->Gcm[k] = (float) gn / 2;
+        cls->Gce[k] = 0;
+        cls->Gmx[k] = 90;
+        f1 = (k > 0) ? cf[k - 1] : 0;
+        f2 = (k < n) ? cf[k] : sr / 2;
+        cls->bw[k] = f2 - f1;
+    }
+}
+
 /***********************************************************/
 
 // prepare io
@@ -158,21 +189,28 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
     double cf[32];
     int nc;
+    CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
     static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static double gn = 20;      // flat suppressor gain (dB)
+    static int    ds = 24;      // downsample factor
 
     parse_args(io, ac, av, sr, &nw);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
     fprintf(stdout, "CFIRFB: nw=%d\n", nw);
     // initialize waveform
     init_wav(io);
-    // prepare CFIRFB
+    // prepare complex-FIR filterbank
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
+    // prepare compressor
+    compressor_init(&cls, cf, sr, gn, nc);
+    cha_icmp_prepare(cp, &cls, lr, ds);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
 }
@@ -186,7 +224,7 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    if (scd) cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;

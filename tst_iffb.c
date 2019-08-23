@@ -11,8 +11,7 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if.h"
-//#include "cha_iffb_data.h"
+#include "cha_if_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -22,6 +21,8 @@ typedef struct {
     long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
+
+static int scd = 0; // switch to compiled data ?
 
 /***********************************************************/
 
@@ -64,10 +65,10 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    if (scd) cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIRFB+AFC
+    // process IIR+AFC
     cha_afc_input(cp, x, x, cs);
     cha_iirfb_analyze(cp, x, z, cs);
     cha_iirfb_synthesize(cp, z, y, cs);
@@ -88,6 +89,7 @@ usage()
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -102,7 +104,7 @@ var_string(VAR *vl, char *name, char *s)
     for (i = 0; i < n; i++) {
         data[i] = s[i];
     }
-    sp_var_set(vl, "ifn", data, 1, n, "f4");
+    sp_var_set(vl, name, data, 1, n, "f4");
     vl[0].text = 1;
     free(data);
 }
@@ -146,6 +148,8 @@ parse_args(I_O *io, int ac, char *av[], double rate)
                 io->mat = 1;
             } else if (av[1][1] == 'v') {
                 version();
+            } else if (av[1][1] == 'z') {
+                scd = 1;
             }
             ac--;
             av++;
@@ -424,7 +428,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     ds -= cs; // subtract chunk size from simulated processing delay
     simulate_processing(g, d, nc, ds, gs); // adjust IIR gain & delay to simulate processing
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIRFB+AFC: nc=%d nz=%d\n", nc, nz);
+    fprintf(stdout, "IIR+AFC: nc=%d nz=%d\n", nc, nz);
     // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
@@ -435,7 +439,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     iqm = 0;
     qm = (float *) calloc(nqm, sizeof(float));
     // generate C code from prepared data
-    //cha_data_gen(cp, "cha_iffb_data.h");
+    cha_data_gen(cp, "cha_if_data.h");
 }
 
 // process io

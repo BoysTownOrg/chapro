@@ -11,7 +11,6 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_if.h"
 #include "cha_if_data.h"
 
 typedef struct {
@@ -23,6 +22,8 @@ typedef struct {
     void **out;
 } I_O;
 
+static int scd = 0; // switch to compiled data ?
+
 /***********************************************************/
 
 static void
@@ -31,10 +32,10 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    if (scd) cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIRFB+AGC
+    // process IIR+AGC
     cha_agc_input(cp, x, x, cs);
     cha_iirfb_analyze(cp, x, z, cs);
     cha_agc_channel(cp, z, z, cs);
@@ -54,6 +55,7 @@ usage()
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -97,6 +99,8 @@ parse_args(I_O *io, int ac, char *av[], double rate)
                 io->mat = 1;
             } else if (av[1][1] == 'v') {
                 version();
+            } else if (av[1][1] == 'z') {
+                scd = 1;
             }
             ac--;
             av++;
@@ -332,7 +336,7 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIRFB+AGC: nc=%d nz=%d\n", nc, nz);
+    fprintf(stdout, "IIR+AGC: nc=%d nz=%d\n", nc, nz);
     // prepare chunk buffers
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AGC

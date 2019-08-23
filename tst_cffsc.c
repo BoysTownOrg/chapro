@@ -11,7 +11,6 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_cf.h"
 #include "cha_cf_data.h"
 
 typedef struct {
@@ -23,6 +22,8 @@ typedef struct {
     void **out;
 } I_O;
 
+static int scd = 0; // switch to compiled data ?
+
 /***********************************************************/
 
 static void
@@ -31,7 +32,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    if (scd) cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process filterbank+compressor
@@ -55,6 +56,7 @@ usage()
     fprintf(stdout, "-k N  compression kneepoint=N (dB) [0]\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
+    fprintf(stdout, "-z    switch to compiled data\n");
     exit(0);
 }
 
@@ -111,6 +113,8 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *ds,
                 av++;
             } else if (av[1][1] == 'v') {
                 version();
+            } else if (av[1][1] == 'z') {
+                scd = 1;
             }
             ac--;
             av++;
@@ -308,7 +312,7 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
-// specify filterbank center frequecies and bandwidths
+// specify filterbank crossover frequencies
 
 static int
 cross_freq(double *cf, double sr)
@@ -330,14 +334,16 @@ cross_freq(double *cf, double sr)
 // CSL prescription
 
 static void
-compressor_init(CHA_CLS *cls, double gn, int nc)
+compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
 {
-    int k;
+    double f1, f2;
+    int k, n;
 
     // set compression mode
     cls->cm = 1;
     // loop over filterbank channel
     cls->nc = nc;
+    n = nc - 1;
     for (k = 0; k < nc; k++) {
         cls->Lcs[k] = 0;
         cls->Lcm[k] = 50;
@@ -347,6 +353,9 @@ compressor_init(CHA_CLS *cls, double gn, int nc)
         cls->Gcm[k] = (float) gn / 2;
         cls->Gce[k] = 0;
         cls->Gmx[k] = 90;
+        f1 = (k > 0) ? cf[k - 1] : 0;
+        f2 = (k < n) ? cf[k] : sr / 2;
+        cls->bw[k] = f2 - f1;
     }
 }
 
@@ -361,8 +370,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     int nc;
     CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
-    static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
+    static int    nw = 256;     // window size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
     static double lr = 2e-5;    // signal-level reference (Pa)
     static double gn = 20;      // flat suppressor gain (dB)
@@ -380,13 +389,13 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         cs = io->nsmp;
         init_aud(io);
     }
-    // prepare CFIRFB
+    // prepare complex-FIR filterbank
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
-    compressor_init(&cls, gn, nc);
+    compressor_init(&cls, cf, sr, gn, nc);
     cha_icmp_prepare(cp, &cls, lr, ds);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
