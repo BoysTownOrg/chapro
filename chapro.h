@@ -147,23 +147,26 @@ FUNC(int) cha_ciirfb_design(float *, float *, float *, int *, int, double *, dou
 FUNC(int) cha_ciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
 FUNC(void) cha_ciirfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_ciirfb_synthesize(CHA_PTR, float *, float *, int);
+
+// double ciirfb module
+
 FUNC(int) cha_dciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
 FUNC(void) cha_dciirfb_analyze(CHA_PTR, float *, float *, int);
 FUNC(void) cha_dciirfb_synthesize(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
-// icmp compressor module
-
-FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, int);
-FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
-
-// agc compressor module
+// AGC compressor module
 
 FUNC(int) cha_agc_prepare(CHA_PTR, CHA_DSL *, CHA_WDRC *);
 FUNC(void) cha_agc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_agc_channel(CHA_PTR, float *, float *, int);
 FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
+
+// instantanous compressor module
+
+FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, int);
+FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
@@ -180,92 +183,91 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _size     0
 #define _ivar     1
 #define _dvar     2
-#define _cc       3
-#define _reserve  4
+#define _reserve  3
 
-#define _offset0   _reserve // global-pointer offset
-
-/*****************************************************/
+#define _offset   _reserve
 
 // fir & cfir pointer indices
 
-#define _ffhh     _offset0+0
-#define _ffxx     _offset0+1
-#define _ffyy     _offset0+2
-#define _ffzz     _offset0+3
+#define _cc       _offset+0
+#define _ffhh     _offset+1
+#define _ffxx     _offset+2
+#define _ffyy     _offset+3
+#define _ffzz     _offset+4
+
+// fir & cfir pointer indices
+
+#define _cc       _offset+0
+#define _ffhh     _offset+1
+#define _ffxx     _offset+2
+#define _ffyy     _offset+3
+#define _ffzz     _offset+4
 
 // iir pointer indices
 
-#define _bb       _offset0+0
-#define _aa       _offset0+1
-#define _zz       _offset0+2
-#define _yd       _offset0+3
-#define _dd       _offset0+4
+#define _cc       _offset+0
+#define _bb       _offset+1
+#define _aa       _offset+2
+#define _zz       _offset+3
+#define _yd       _offset+4
+#define _dd       _offset+6
 
 // ciir pointer indices
 
-#define _dn       _offset0+0
-#define _ydr      _offset0+1
-#define _br       _offset0+2
-#define _ar       _offset0+3
-#define _zr       _offset0+4
-#define _zg       _offset0+5
-
-#define _offset1   _offset0+6 // filterbank-pointer offset
-
-//--------------------------------------
+#define _cc       _offset+0
+#define _dn       _offset+1
+#define _ydr      _offset+2
+#define _br       _offset+3
+#define _ar       _offset+4
+#define _zr       _offset+5
+#define _zg       _offset+6
 
 // agc pointer indices
 
-#define _gctk     _offset1+0
-#define _gccr     _offset1+1
-#define _gctkgn   _offset1+2
-#define _gcbolt   _offset1+3
-#define _gcppk    _offset1+4
-#define _xpk      _offset1+5
-#define _ppk      _offset1+6
+#define _gctk     _offset+7
+#define _gccr     _offset+8
+#define _gctkgn   _offset+9
+#define _gcbolt   _offset+10
+#define _gcppk    _offset+11
+#define _xpk      _offset+12
+#define _ppk      _offset+13
 
 // icmp pointer indices
 
-#define _dsm      _offset1+0
-#define _dso      _offset1+1
-#define _c1       _offset1+2
-#define _c2       _offset1+3
-#define _fc       _offset1+4
-#define _bw       _offset1+5
-#define _Lcs      _offset1+6
-#define _Lcm      _offset1+7
-#define _Lce      _offset1+8
-#define _Lmx      _offset1+9
-#define _Gcs      _offset1+10
-#define _Gcm      _offset1+11
-#define _Gce      _offset1+12
-#define _Gmx      _offset1+13
-#define _Gmn      _offset1+14
-#define _Lfb      _offset1+15
-#define _Gsup     _offset1+16
-#define _Gpre     _offset1+17
-#define _gsup     _offset1+18
-#define _ginc     _offset1+19
-#define _zdr      _offset1+20
-
-#define _offset2   _offset1+21 // compression-pointer offset
-
-//--------------------------------------
+#define _dsm      _offset+7
+#define _dso      _offset+8
+//#define _bkr      _offset+9
+#define _c1       _offset+10
+#define _c2       _offset+11
+#define _fc       _offset+12
+#define _bw       _offset+13
+#define _Lcs      _offset+14
+#define _Lcm      _offset+15
+#define _Lce      _offset+16
+#define _Lmx      _offset+17
+#define _Gcs      _offset+18
+#define _Gcm      _offset+19
+#define _Gce      _offset+20
+#define _Gmx      _offset+21
+#define _Gmn      _offset+22
+#define _Lfb      _offset+23
+#define _Gsup     _offset+24
+#define _Gpre     _offset+25
+#define _gsup     _offset+26
+#define _ginc     _offset+27
+#define _zdr      _offset+28
 
 // afc pointer indices
 
-#define _rng0     _offset2+0
-#define _rng1     _offset2+1
-#define _rng2     _offset2+2
-#define _rng3     _offset2+3
-#define _efbp     _offset2+4
-#define _sfbp     _offset2+5
-#define _merr     _offset2+6
-#define _wfrp     _offset2+7
-#define _ffrp     _offset2+8
-
-#define _offset3   _offset2+9 // feedback-pointer offset
+#define _rng0     _offset+14
+#define _rng1     _offset+15
+#define _rng2     _offset+16
+#define _rng3     _offset+17
+#define _efbp     _offset+18
+#define _sfbp     _offset+19
+#define _merr     _offset+20
+#define _wfrp     _offset+21
+#define _ffrp     _offset+22
 
 /*****************************************************/
 
@@ -273,8 +275,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 #define _cs       0 
 #define _nc       1
-
-//--------------------------------------
 
 // fir & cfir integer variable indices
 
@@ -288,14 +288,12 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 // ciir integer variable indices
 
 #define _ns       2
-
-//--------------------------------------
+#define _cm       3
 
 // icmp integer variable indices
 
+#define _nw       2
 #define _cm       3
-
-//--------------------------------------
 
 // afc integer variable indices
 
@@ -313,8 +311,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 #define _fs       0
 
-//--------------------------------------
-
 // agc double variable indices
 
 #define _alfa     1
@@ -330,8 +326,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 // icmp double variable indices
 
 #define _lrpk     1
-
-//--------------------------------------
 
 // afc double variable indices
 
