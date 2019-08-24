@@ -16,7 +16,7 @@ axis([t_lim p_lim])
 xlabel('time (ms)')
 % transfer function
 figure(2);clf
-dc=4+1;       % desired group delay (ms)
+dc=2.96;       % desired group delay (ms)
 H=ffa(y)./ffa(x);
 f=linspace(0,rate/2000,length(H))';
 fm=max(f);
