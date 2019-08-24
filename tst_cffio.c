@@ -87,7 +87,7 @@ init_wav(I_O *io)
     fprintf(stdout, "CFIRFB i/o with ");
     if (tone_io == 0) {
         fprintf(stdout, "impulse: \n");
-        io->ofn = "test/tst_cffio.mat";
+        io->ofn = "test/cffio_impulse.mat";
         io->iwav[0] = 1;
     } else {
         fprintf(stdout, "tone: \n");
