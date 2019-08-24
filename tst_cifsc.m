@@ -1,7 +1,7 @@
-% tst_cifsc - CHAPRO demonstration of GFIC processing
+% tst_cifsc - CHAPRO demonstration of complex IIR processing
 function tst_cifsc
 x=audioread('test/cat.wav')/5;
-load('test/tst_gfsc')
+load('test/tst_cifsc')
 y=wave;
 figure(1); clf
 nx=length(x);
