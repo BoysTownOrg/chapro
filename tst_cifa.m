@@ -1,7 +1,7 @@
-% test gammatone filterbank analysis
+% test gammatone filterbank analysis 
 function tst_cifa
 td=4;
-load('test/gfa_impulse')
+load('test/tst_cifa')
 y=real(y);
 t=1000*(0:(length(y)-1))/rate;
 figure(1);clf
