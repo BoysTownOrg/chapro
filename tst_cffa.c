@@ -67,15 +67,16 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 static int
 cross_freq(double *cf, double sr)
 {
-    int i, nh, nc, nm = 10;
+    int i, nh, nc, nm = 5;
+    double fmid = 1000, bpo = 3;
 
-    nh = (int) floor(log2(sr / 2000) * 6);
+    nh = (int) floor(log2(sr / 2000) * bpo);
     nc = nh + nm;
     for (i = 0; i < nm; i++) {
-        cf[i] = 100 * (i + 1) + 50;
+        cf[i] = (fmid / nm) * (i + 1);
     }
     for (i = nm; i < nc; i++) {
-        cf[i] = 1000 * pow(2.0, (i - 8.5) / 6.0);
+        cf[i] = fmid * pow(2.0, (i + 1 - nm) / bpo);
     }
 
     return (nc);
