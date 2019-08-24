@@ -30,7 +30,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "impulse response: \n");
-    io->ofn = "test/cffa_impulse.mat";
+    io->ofn = "test/tst_cffa.mat";
     io->iwav[0] = 1;
     io->nsmp = io->nwav;
     io->mseg = 1;
