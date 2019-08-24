@@ -1,6 +1,6 @@
 % test gammatone filterbank input/output
 function tst_cifio
-load('test/gfio_impulse')
+load('test/cifio_impulse')
 p_lim=[-0.1 1.1];
 t_lim=[-1 30];
 t=1000*(0:(length(y)-1))/rate;
@@ -36,7 +36,7 @@ semilogx(f,d,':',f,D)
 axis(d_lim)
 xlabel('frequency (kHz)')
 ylabel('delay (ms)')
-load('test/gfio_tone')
+load('test/cifio_tone')
 p_lim=[-2 2];
 figure(3);clf
 subplot(2,1,1)
