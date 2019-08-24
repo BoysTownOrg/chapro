@@ -1,4 +1,4 @@
-// tst_gfio.c - test gammatone-filterbank i/o with impulse signal
+// tst_cifio.c - test gammatone-filterbank i/o with impulse signal
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ static int tone_io = 0;
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_gfio [-options]\n");
+    fprintf(stdout, "usage: tst_cifio [-options]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
     fprintf(stdout, "-d N  set downsample factor to N [24]\n");
@@ -97,13 +97,13 @@ init_wav(I_O *io)
     fprintf(stdout, "filterbank i/o with ");
     if (tone_io == 0) {
         fprintf(stdout, "impulse: \n");
-        io->ofn = "test/gfio_impulse.mat";
+        io->ofn = "test/cifio_impulse.mat";
         io->iwav[0] = 1;
     } else {
         fprintf(stdout, "tone: \n");
         f = 1000;
         p = (float) ((2 * M_PI * f) / io->rate);
-        io->ofn = "test/gfio_tone.mat";
+        io->ofn = "test/cifio_tone.mat";
         for (i = 0; i < io->nwav; i++) {
             io->iwav[i] = (float) sin(i * p);
         }
