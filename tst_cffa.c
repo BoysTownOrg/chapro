@@ -68,15 +68,15 @@ static int
 cross_freq(double *cf, double sr)
 {
     int i, nh, nc, nm = 5;
-    double fmid = 1000, bpo = 3;
+    double fmin = 250, fmid = 1000, bpo = 3;
 
     nh = (int) floor(log2(sr / 2000) * bpo);
-    nc = nh + nm;
+    nc = nh + nm - 1;
     for (i = 0; i < nm; i++) {
-        cf[i] = (fmid / nm) * (i + 1);
+        cf[i] = fmin + i * (fmid - fmin)  / (nm - 0.5);
     }
-    for (i = nm; i < nc; i++) {
-        cf[i] = fmid * pow(2.0, (i + 1 - nm) / bpo);
+    for (i = 0; i < nh; i++) {
+        cf[i + nm] = fmid * pow(2.0, (i + 0.5) / bpo);
     }
 
     return (nc);
