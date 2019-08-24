@@ -1,6 +1,6 @@
-% test FIR filterbank analysis
+% test FIR filterbank analysis 
 function tst_ffa
-load('test/ffa_impulse')
+load('test/tst_ffa')
 td=5;
 y=real(y);
 t=1000*(0:(length(y)-1))/rate;

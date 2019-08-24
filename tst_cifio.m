@@ -1,3 +1,4 @@
+% test gammatone filterbank input/output
 function tst_cifio
 load('test/gfio_impulse')
 p_lim=[-0.1 1.1];
