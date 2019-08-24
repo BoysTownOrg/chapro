@@ -1,6 +1,6 @@
-% test complex FIR filterbank analysis
+% test complex FIR filterbank analysis 
 function tst_cffa
-load('test/cffa_impulse')
+load('test/tst_cffa')
 nc=size(y,2);
 yk=y(:,round(nc/2));
 y=real(y);
