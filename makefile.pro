@@ -22,7 +22,7 @@ TEST=test/carrots80.wav
 
 profile : $(PGMS) $(TEST)
 	# profiling...
-	./tst_bbb
+	./tst_bbb # feedback simulation enabled
 	gprof tst_bbb > gprof1.txt
 	head gprof1.txt
 
