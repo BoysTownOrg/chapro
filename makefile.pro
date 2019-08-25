@@ -17,7 +17,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
 	afc_prepare.o afc_process.o \
 	icmp_prepare.o icmp_process.o
-PGMS=tst_bbb
+PGMS=tst_bbb wavrep
 TEST=test/carrots80.wav
 
 profile : $(PGMS) $(TEST)
@@ -33,6 +33,9 @@ fast : $(PGMS) $(TEST)
 	head gprof2.txt
 
 tst_bbb : tst_bbb.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+wavrep : wavrep.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 $(TEST) : test/carrots.wav
