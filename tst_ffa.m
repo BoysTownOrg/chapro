@@ -58,3 +58,16 @@ dx(1)=x(2)-x(1);
 dx(2:(n-1))=(x(3:n)-x(1:(n-2)))/2;
 dx(n)=x(n)-x(n-1);
 return
+
+% ffa - fast Fourier analyze real signal
+% usage: H=ffa(h)
+% h - impulse response
+% H - transfer function
+function H=ffa(h)
+H=fft(real(h));
+n=length(H);
+m=1+n/2;            % assume n is even
+H(1,:)=real(H(1,:));
+H(m,:)=real(H(m,:));
+H((m+1):n,:)=[];    % remove upper frequencies
+return

@@ -11,7 +11,7 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-//#include "cha_gha_data.h"
+#include "cha_gha_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -53,7 +53,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process IIR+AFC+AGC

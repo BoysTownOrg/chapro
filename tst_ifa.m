@@ -99,4 +99,3 @@ H(1,:)=real(H(1,:));
 H(m,:)=real(H(m,:));
 H((m+1):n,:)=[];    % remove upper frequencies
 return
-

@@ -183,15 +183,14 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _size     0
 #define _ivar     1
 #define _dvar     2
-#define _reserve  3
+#define _cc       3
 
-#define _offset   _reserve
+#define _offset   4
 
 //----------------------------------------
 
 // fir & cfir pointer indices
 
-#define _cc       _offset+0
 #define _ffhh     _offset+1
 #define _ffxx     _offset+2
 #define _ffyy     _offset+3
@@ -199,7 +198,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 // fir & cfir pointer indices
 
-#define _cc       _offset+0
 #define _ffhh     _offset+1
 #define _ffxx     _offset+2
 #define _ffyy     _offset+3
@@ -207,7 +205,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 // iir pointer indices
 
-#define _cc       _offset+0
 #define _bb       _offset+1
 #define _aa       _offset+2
 #define _zz       _offset+3
@@ -216,7 +213,6 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 // ciir pointer indices
 
-#define _cc       _offset+0
 #define _dn       _offset+1
 #define _ydr      _offset+2
 #define _br       _offset+3

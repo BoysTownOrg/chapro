@@ -68,10 +68,11 @@ cha_data_gen(CHA_PTR cp, char *fn)
     };
     static int hdsz = sizeof(head) / sizeof(char *);
     static int tlsz = sizeof(tail) / sizeof(char *);
-    static int ptpl = 16;
-    static int arpl = 8;
-    static int ivpl = 8;
-    static int dvpl = 5;
+    static int ptpl = 15;
+    static int arpl = 6;
+    static int ivpl = 6;
+    static int dvpl = 4;
+    static int cptr = 4; // number of cast pointers
 
     fp = fopen(fn, "wt");
     if (fp == NULL) {
@@ -118,7 +119,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             }
             fprintf(fp, "static CHA_DATA p%02d[%8d] = { // _size\n", i, arlen);
             for (j = 0; j < arsiz; j++) {
-                if ((j % arpl) == 0) fprintf(fp, "        ");
+                if ((j % arpl) == 0) fprintf(fp, "    ");
                 fprintf(fp, "%10u", ulptr[j]);
                 if (j < (arsiz - 1)) fprintf(fp, ",");
                 if ((j % arpl) == (arpl - 1)) fprintf(fp, "\n");
@@ -133,7 +134,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             }
             fprintf(fp, "static CHA_DATA p%02d[%8d] = { // _ivar\n", i, arlen);
             for (j = 0; j < arsiz; j++) {
-                if ((j % ivpl) == 0) fprintf(fp, "        ");
+                if ((j % ivpl) == 0) fprintf(fp, "    ");
                 fprintf(fp, "%10d", CHA_IVAR[j]);
                 if (j < (arsiz - 1)) fprintf(fp, ",");
                 if ((j % ivpl) == (ivpl - 1)) fprintf(fp, "\n");
@@ -148,7 +149,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             }
             fprintf(fp, "static double   p%02d[%8d] = { // _dvar\n", i, arlen);
             for (j = 0; j < arsiz; j++) {
-                if ((j % dvpl) == 0) fprintf(fp, "        ");
+                if ((j % dvpl) == 0) fprintf(fp, "    ");
                 fprintf(fp, "%15.9g", CHA_DVAR[j]);
                 if (j < (arsiz - 1)) fprintf(fp, ",");
                 if ((j % dvpl) == (dvpl - 1)) fprintf(fp, "\n");
@@ -156,7 +157,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             if ((j % dvpl) != 0) fprintf(fp, "\n");
             fprintf(fp, "};\n");
         } else if (cpsiz[i] == 0) {
-            fprintf(fp, "// empty array ->     p%02d\n", i);
+            fprintf(fp, "// empty array: p%02d\n", i);
         } else if ((cpsiz[i] % sizeof(int32_t)) == 0) {
             arlen = cpsiz[i] / sizeof(int32_t);
             arsiz = 0;
@@ -172,7 +173,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             } else {
                 fprintf(fp, "static CHA_DATA p%02d[%8d] = {\n", i, arlen);
                 for (j = 0; j < arsiz; j++) {
-                    if ((j % arpl) == 0) fprintf(fp, "        ");
+                    if ((j % arpl) == 0) fprintf(fp, "    ");
                     fprintf(fp, "0x%08X", ulptr[j]);
                     if (j < (arsiz - 1)) fprintf(fp, ",");
                     if ((j % arpl) == (arpl - 1)) fprintf(fp, "\n");
@@ -197,13 +198,13 @@ cha_data_gen(CHA_PTR cp, char *fn)
     } else {
         fprintf(fp, "static CHA_DATA *cha_data[NPTR+1] = {\n");
         fprintf(fp, "    ");
-        for (i = 0; i < _reserve; i++) {
+        for (i = 0; i < cptr; i++) {
             fprintf(fp, "(CHA_DATA *)p%02d,", i);
         }
         fprintf(fp, "\n");
-        for (i = _reserve; i < ptsiz; i++) {
-            j = i - _reserve;
-            if ((j % ptpl) == 0) fprintf(fp, "   ");
+        for (i = cptr; i < ptsiz; i++) {
+            j = i - cptr;
+            if ((j % ptpl) == 0) fprintf(fp, "    ");
             if (cpsiz[i] == 0) {
                 fprintf(fp, "NULL");
             } else {

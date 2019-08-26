@@ -84,3 +84,16 @@ subplot(2,1,2)
 plot(t,y)
 axis([t_lim p_lim])
 return
+
+% ffa - fast Fourier analyze real signal
+% usage: H=ffa(h)
+% h - impulse response
+% H - transfer function
+function H=ffa(h)
+H=fft(real(h));
+n=length(H);
+m=1+n/2;            % assume n is even
+H(1,:)=real(H(1,:));
+H(m,:)=real(H(m,:));
+H((m+1):n,:)=[];    % remove upper frequencies
+return
