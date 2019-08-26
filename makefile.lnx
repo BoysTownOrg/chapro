@@ -79,6 +79,9 @@ tst_gha : tst_gha.o  libchapro.a
 gha_demo : gha_demo.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
+wavrep : wavrep.o
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
 libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)
 
