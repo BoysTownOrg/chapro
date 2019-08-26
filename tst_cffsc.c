@@ -316,7 +316,7 @@ cross_freq(double *cf, double sr)
     double fmin = 250, fmid = 1000, bpo = 3;
 
     nh = (int) floor(log2(sr / 2000) * bpo);
-    nc = nh + nm - 1;
+    nc = nh + nm;
     for (i = 0; i < nm; i++) {
         cf[i] = fmin + i * (fmid - fmin)  / (nm - 0.5);
     }
@@ -324,7 +324,7 @@ cross_freq(double *cf, double sr)
         cf[i + nm] = fmid * pow(2.0, (i + 0.5) / bpo);
     }
 
-    return (nc);
+    return (nc + 1); // return number of channels = crossovers + 1
 }
 
 // CSL prescription
