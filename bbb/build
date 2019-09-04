@@ -1,0 +1,8 @@
+# cross-compile plugin for bbb
+sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+rm CMakeCache.txt
+cmake -DCMAKE_TOOLCHAIN_FILE=./bbb/Toolchain-arm-linux.cmake -DCMAKE_INSTALL_PREFIX=./bbb .
+make clean
+make
+make install
+ls -l bbb/lib
