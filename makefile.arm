@@ -1,4 +1,6 @@
 # makefile for CHAPRO cross-compilation to Linux/ARM
+# Library requirement: sigpro
+# Ubuntu Linux package requirement: sudo apt install gcc-arm-linux-gnueabihf
 
 LIBS=-lsigpro -lm
 CC=arm-linux-gnueabihf-gcc
@@ -46,7 +48,7 @@ dist: zipsrc
 
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
-	rm -f out*.mat out*.wav *.cfg *~
+	rm -f out*.mat out*.wav *.cfg *~ *.so
 	rm -f tst_bbb gprof*.txt gmon.out
 
 clean_test:
