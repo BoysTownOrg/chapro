@@ -1,0 +1,3 @@
+sudo chown root.root chapro.so
+sudo chmod a+rx chapro.so
+sudo mv chapro.so /usr/lib
