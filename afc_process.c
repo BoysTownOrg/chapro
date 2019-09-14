@@ -17,9 +17,13 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     static float *rng0, *rng3, *rng2, *rng1, *efbp, *sfbp, *wfrp, *ffrp, *merr;
     static float mu, rho, eps, fbm;
     static float pwr = 0;
-    static int rsz, mask, afl, wfl, pfl, fbl, nqm, hdel; 
+    static int mxl, rsz, mask, afl, wfl, pfl, fbl, nqm, hdel; 
     static int first_time = 1;
 
+    mxl  = CHA_IVAR[_mxl];
+    if (mxl == 0) { // if no AFC, do nothing
+        return;
+    }
     if (first_time) {
         efbp = (float *) cp[_efbp];
         sfbp = (float *) cp[_sfbp];

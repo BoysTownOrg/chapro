@@ -24,6 +24,9 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl,
     while (rsz < (mxl + hdel + cs))  rsz *= 2;
     CHA_IVAR[_rsz] = rsz;
     CHA_IVAR[_mxl] = mxl;
+    if (mxl == 0) { // if no AFC, do nothing
+        return (0);
+    }
     cha_allocate(cp, rsz, sizeof(float), _rng0);
     // allocate AFC-filter buffer
     if (afl > 0) {

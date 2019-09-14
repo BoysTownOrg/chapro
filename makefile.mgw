@@ -145,7 +145,6 @@ tst_cifsc.o: tst_cifsc.c chapro.h
 tst_ffa.o: tst_ffa.c chapro.h 
 tst_ffio.o: tst_ffio.c chapro.h 
 tst_ffsc.o: tst_ffsc.c chapro.h 
-tst_fm.o: tst_fm.c chapro.h 
 tst_gha.o: tst_gha.c chapro.h 
 tst_ifa.o: tst_ifa.c chapro.h 
 tst_iffb.o: tst_iffb.c chapro.h 
