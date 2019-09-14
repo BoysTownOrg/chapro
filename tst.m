@@ -1,3 +1,4 @@
+% examine "make test" output files
 input('tst_ffa  ');close all;tst_ffa
 input('tst_ffio ');close all;tst_ffio
 input('tst_ffsc ');close all;tst_ffsc
