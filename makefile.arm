@@ -52,7 +52,7 @@ clean:
 	rm -f tst_bbb gprof*.txt gmon.out
 
 clean_test:
-	rm -f test/*.mat test/tst_*.wav
+	rm -f test.lst test/*.mat test/tst_*.wav
 
 # dependencies
 afc_prepare.o: afc_prepare.c chapro.h ite_fb.h 

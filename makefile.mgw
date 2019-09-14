@@ -25,7 +25,7 @@ HDRS=chapro.h
 
 all: $(PGMS)
 
-test: $(PGMS)
+test: $(PGMS) test.lst
 	tst_ffa
 	tst_ffio
 	tst_ffio -t
@@ -44,6 +44,9 @@ test: $(PGMS)
 	tst_cifsc
 	tst_gha
 	gha_demo
+
+test.lst:
+	ls -l test > test.lst
 
 tst_cffa : tst_cffa.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
@@ -114,7 +117,7 @@ clean:
 	rm -f tst_bbb gprof*.txt gmon.out
 
 clean_test:
-	rm -f test/*.mat test/tst_*.wav
+	rm -f test.lst test/*.mat test/tst_*.wav
 
 # dependencies
 afc_prepare.o: afc_prepare.c chapro.h ite_fb.h 
