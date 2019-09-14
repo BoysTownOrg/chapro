@@ -106,6 +106,5 @@ tst_ffio.o: tst_ffio.c chapro.h
 tst_ffsc.o: tst_ffsc.c chapro.h 
 tst_gha.o: tst_gha.c chapro.h 
 tst_ifa.o: tst_ifa.c chapro.h 
-tst_iffb.o: tst_iffb.c chapro.h 
 tst_ifio.o: tst_ifio.c chapro.h 
 tst_ifsc.o: tst_ifsc.c chapro.h 
