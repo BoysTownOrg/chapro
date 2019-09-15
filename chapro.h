@@ -12,7 +12,7 @@
 #endif
 
 #define NPTR       64
-#define NVAR       16
+#define NVAR       32
 #define CHA_IVAR   ((int *)cp[_ivar])
 #define CHA_DVAR   ((double *)cp[_dvar])
 
@@ -312,6 +312,9 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _wfl      10
 #define _pfl      11
 #define _mxl      12
+#define _in1      13
+#define _in2      14
+#define _rhd      15
 
 /*****************************************************/
 

@@ -152,8 +152,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 
     parse_args(io, ac, av, sr, &nw);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
-    // initialize waveform
-    init_wav(io);
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
@@ -161,6 +159,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fprintf(stdout, "FIRFB: nw=%d\n", nw);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
+    // initialize waveform
+    init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_ff_data.h");
 }

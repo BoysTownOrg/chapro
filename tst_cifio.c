@@ -215,8 +215,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f Hz, ", sr);
     fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
     fprintf(stdout, "compression: gain=%.0f, ds=%d\n", gn, ds);
-    // initialize waveform
-    init_wav(io);
     // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
@@ -228,6 +226,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare compressor
     compressor_init(&cls, gn);
     cha_icmp_prepare(cp, &cls, lr, ds);
+    // initialize waveform
+    init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_gf_data.h");
 }

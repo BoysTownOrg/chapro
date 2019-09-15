@@ -376,15 +376,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     parse_args(io, ac, av, sr, &ds, &gn);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
     fprintf(stdout, "inst. compression: gain=%.0f, ds=%d\n", gn, ds);
-    // initialize waveform
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        cs = io->nsmp;
-        init_aud(io);
-    }
     // prepare complex-FIR filterbank
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
@@ -393,6 +384,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare compressor
     compressor_init(&cls, cf, sr, gn, nc);
     cha_icmp_prepare(cp, &cls, lr, ds);
+    // initialize waveform
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
 }

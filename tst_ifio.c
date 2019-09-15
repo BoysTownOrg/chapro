@@ -141,14 +141,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 
     parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
-    // initialize waveform
-    init_wav(io);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
+    // initialize waveform
+    init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_if_data.h");
 }

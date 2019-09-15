@@ -1,5 +1,5 @@
 // tst_cifsc.c - test gammatone-filterbank & instantaneous-compression
-//              with WAV file input & ARSC output
+//              with WAV file input & ARSC output 
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -381,15 +381,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
     fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
     fprintf(stdout, "inst. compression: gain=%.0f, ds=%d\n", gn, ds);
-    // initialize waveform
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        cs = io->nsmp;
-        init_aud(io);
-    }
     // prepare gammatone filterbank
     nc = cls.nc;
     fc = cls.fc;
@@ -401,6 +392,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     // prepare compressor
     compressor_init(&cls, gn, nc);
     cha_icmp_prepare(cp, &cls, lr, ds);
+    // initialize waveform
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
     // generate C code from prepared data
     cha_data_gen(cp, "cha_gf_data.h");
 }

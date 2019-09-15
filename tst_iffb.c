@@ -1,4 +1,4 @@
-// tst_ifsc.c - test IIR-filterbank & AGC-compression
+// tst_iffb.c - test IIR-filterbank + AFC
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -24,6 +24,39 @@ typedef struct {
 
 /***********************************************************/
 
+static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
+static int    iqm, nqm, fbl, wfl, pfl;
+static double  sr = 24000;     // sampling rate (Hz)
+// AFC parameters
+static double rho  = 0.3000; // forgetting factor
+static double eps  = 0.0008; // power threshold
+static double mu   = 0.0002; // step size
+static int    afl  = 100;    // adaptive filter length
+static int    hdel = 0;      // output/input hardware delay
+static double fbg  = 1;      // simulated-feedback gain
+
+/***********************************************************/
+
+static void
+save_qm(CHA_PTR cp, int cs)
+{
+    int n;
+    float *merr;
+
+    merr = (float *) cp[_merr];
+    n = ((iqm + cs) < nqm) ? cs : (nqm - iqm);
+    if (merr) fcopy(qm + iqm, merr, n);
+    iqm += n;
+    // copy filters
+    fbl =     CHA_IVAR[_fbl];
+    wfl =     CHA_IVAR[_wfl];
+    pfl =     CHA_IVAR[_pfl];
+    efbp = (float *) cp[_efbp];
+    sfbp = (float *) cp[_sfbp];
+    wfrp = (float *) cp[_wfrp];
+    ffrp = (float *) cp[_ffrp];
+}
+
 static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
@@ -33,12 +66,13 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIR+AGC
-    cha_agc_input(cp, x, x, cs);
+    // process IIR+AFC
+    cha_afc_input(cp, x, x, cs);
     cha_iirfb_analyze(cp, x, z, cs);
-    cha_agc_channel(cp, z, z, cs);
     cha_iirfb_synthesize(cp, z, y, cs);
-    cha_agc_output(cp, y, y, cs);
+    cha_afc_output(cp, y, cs);
+    // save quality metric
+    save_qm(cp, cs);
 }
 
 /***********************************************************/
@@ -48,12 +82,28 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_ifsc [-options] [input_file] [output_file]\n");
+    fprintf(stdout, "usage: tst_iffb [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
+}
+
+static void
+var_string(VAR *vl, char *name, char *s)
+{
+    int i, n;
+    float *data;
+
+    n = strlen(s);
+    data = (float *) calloc(n, sizeof(float));
+    for (i = 0; i < n; i++) {
+        data[i] = s[i];
+    }
+    sp_var_set(vl, name, data, 1, n, "f4");
+    vl[0].text = 1;
+    free(data);
 }
 
 static void
@@ -86,7 +136,6 @@ static void
 parse_args(I_O *io, int ac, char *av[], double rate)
 {
     io->rate = rate;
-    io->ifn = "test/cat.wav";
     io->mat = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
@@ -103,8 +152,33 @@ parse_args(I_O *io, int ac, char *av[], double rate)
             break;
         }
     }
-    //io->ifn = (ac > 1) ? av[1] : NULL;
-    io->ofn = (ac > 2) ? av[2] : NULL;
+    while ((ac > 1) && strchr(av[1], '=')) {
+        if (strncmp(av[1], "afl", 3) == 0) {
+            afl = atoi(av[1] + 4);
+        }
+        if (strncmp(av[1], "eps", 3) == 0) {
+            eps = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "fbg", 3) == 0) {
+            fbg = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "hdel", 4) == 0) {
+            hdel = atoi(av[1] + 5);
+        }
+        if (strncmp(av[1], "mu", 2) == 0) {
+            mu = atof(av[1] + 3);
+        }
+        if (strncmp(av[1], "rho", 3) == 0) {
+            rho = atof(av[1] + 4);
+        }
+        if (strncmp(av[1], "sr", 2) == 0) {
+            sr = atof(av[1] + 3);
+        }
+        ac--;
+        av++;
+    }
+    io->ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
+    io->ofn = (ac > 2) ? _strdup(av[2]) : NULL;
     if (mat_file(io->ofn)) {
         io->mat = 1;
     }
@@ -134,8 +208,8 @@ static void
 init_wav(I_O *io)
 {
     float fs;
-    static char *wfn = "test/tst_ifsc.wav";
-    static char *mfn = "test/tst_ifsc.mat";
+    static char *wfn = "test/tst_iffb.wav";
+    static char *mfn = "test/tst_iffb.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
@@ -255,9 +329,15 @@ write_wave(I_O *io)
     n = io->nwav;
     w = io->owav;
     r[0] = (float) io->rate;
-    vl = sp_var_alloc(2);
-    sp_var_set(vl + 0, "rate", r, 1, 1, "f4");
-    sp_var_set(vl + 1, "wave", w, n, 1, "f4");
+    vl = sp_var_alloc(8);
+    sp_var_set(vl + 0, "rate",    r,   1, 1, "f4");
+    sp_var_set(vl + 1, "wave",    w,   n, 1, "f4");
+    sp_var_set(vl + 2, "merr",   qm, nqm, 1, "f4");
+    sp_var_set(vl + 3, "sfbp", sfbp, fbl, 1, "f4");
+    sp_var_set(vl + 4, "efbp", efbp, fbl, 1, "f4");
+    sp_var_set(vl + 5, "wfrp", wfrp, wfl, 1, "f4");
+    sp_var_set(vl + 6, "ffrp", ffrp, pfl, 1, "f4");
+    var_string(vl + 7, "ifn",  io->ifn);
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
     } else {
@@ -291,6 +371,19 @@ stop_wav(I_O *io)
     fprintf(stdout, "\n");
 }
 
+// adjust IIR gain & delay to simulate processing
+static void
+simulate_processing(float *g, int *d, int nc, int ds, double gs)
+{
+    int i;
+
+    ds -= (int) d[nc - 1];
+    for (i = 0; i < nc; i++) {
+        g[i] *= (float) gs;
+        if (ds > 0) d[i] += ds;
+    }
+}
+
 /***********************************************************/
 
 // prepare io
@@ -300,33 +393,33 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 {
     float   z[64], p[64], g[8];
     int     d[8];
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
+    static int     cs = 32;      // chunk size
     // filterbank parameters
     static int nc = 8;
     static int nz = 4;
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
-    static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
+    // AFC parameters
+    static int    sqm  = 1;      // save quality metric ?
+    static int    wfl  = 0;      // whitening-filter length
+    static int    pfl  = 0;      // persistent-filter length
+     // simulation parameters
+    static int     ds = 200;     // simulated-processing delay
+    static double  gs = 4;       // simulated-processing gain
 
     parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
+    ds -= cs; // subtract chunk size from simulated processing delay
+    simulate_processing(g, d, nc, ds, gs); // adjust IIR gain & delay to simulate processing
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIR+AGC: nc=%d nz=%d\n", nc, nz);
-    // prepare chunk buffers
+    fprintf(stdout, "IIR+AFC: nc=%d nz=%d\n", nc, nz);
+    // allocate chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
-    // prepare AGC
-    cha_agc_prepare(cp, &dsl, &gha);
+    // prepare AFC
+    fprintf(stdout, "AFC parameters: rho=%.4f eps=%.3e mu=%.3e\n", rho, eps, mu);
+    cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // initialize waveform
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
@@ -335,6 +428,10 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     if (!io->ofn) {
         init_aud(io);
     }
+    // initialize quality metric
+    nqm = io->nsmp;
+    iqm = 0;
+    qm = (float *) calloc(nqm, sizeof(float));
     // generate C code from prepared data
     cha_data_gen(cp, "cha_if_data.h");
 }
@@ -345,8 +442,8 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
-    int i, n, cs, nk;
-    double t1, t2;
+    int i, i1, n, cs, nk;
+    double t1, t2, sum, amae, fmae;
 
     if (io->ofn) {
         // initialize i/o pointers
@@ -362,6 +459,17 @@ process(I_O *io, CHA_PTR cp)
         t1 = sp_toc();
         t2 = io->nwav / io->rate;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
+        if (iqm > 0) {
+            i1 =  round(io->rate);
+            sum = 0;
+            for (i =i1; i < iqm; i++) {
+                sum += qm[i];
+            }
+            amae = 10 * log10(sum / (iqm - i1));
+            fmae = 10 * log10(qm[iqm - 1]);
+            fprintf(stdout, "average misalignment error = %.2f dB\n", amae);
+            fprintf(stdout, "  final misalignment error = %.2f dB\n", fmae);
+        }
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);
@@ -379,6 +487,7 @@ cleanup(I_O *io, CHA_PTR cp)
     }
     stop_wav(io);
     cha_cleanup(cp);
+    free(qm);
 }
 
 /***********************************************************/

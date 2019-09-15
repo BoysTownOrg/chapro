@@ -335,15 +335,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 
     parse_args(io, ac, av, sr, &nw);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    // initialize waveform
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        cs = io->nsmp;
-        init_aud(io);
-    }
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
@@ -355,6 +346,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
+    // initialize waveform
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
     // generate C code from prepared data
     cha_data_gen(cp, "cha_ff_data.h");
 }

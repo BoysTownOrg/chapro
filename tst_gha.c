@@ -11,7 +11,7 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#include "cha_gha_data.h"
+//#include "cha_gha_data.h"
 
 typedef struct {
     char *ifn, *ofn, mat;
@@ -53,7 +53,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     float *z;
 
     // next line switches to compiled data
-    cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data; 
     // initialize data pointers
     z = (float *) cp[_cc];
     // process IIR+AFC+AGC
@@ -378,15 +378,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
 
     parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    // initialize waveform
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        cs = io->nsmp;
-        init_aud(io);
-    }
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
@@ -397,6 +388,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
+    // initialize waveform
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
     // initialize quality metric
     nqm = io->nsmp;
     iqm = 0;

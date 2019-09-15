@@ -115,9 +115,6 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
     fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", sr / 1000);
     fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
-    // initialize waveform
-    init_wav(io);
-    ns = io->nsmp;
     // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
@@ -126,6 +123,9 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
+    // initialize waveform
+    init_wav(io);
+    ns = io->nsmp;
     // output buffer
     io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
 }

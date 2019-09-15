@@ -5,8 +5,6 @@
 #include <math.h>
 #include "chapro.h"
 
-static int rhd = 0;
-
 /***********************************************************/
 
 FUNC(void)
@@ -17,14 +15,12 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     static float *rng0, *rng3, *rng2, *rng1, *efbp, *sfbp, *wfrp, *ffrp, *merr;
     static float mu, rho, eps, fbm;
     static float pwr = 0;
-    static int mxl, rsz, mask, afl, wfl, pfl, fbl, nqm, hdel; 
-    static int first_time = 1;
+    static int rhd, rsz, mask, afl, wfl, pfl, fbl, nqm, hdel; 
 
-    mxl  = CHA_IVAR[_mxl];
-    if (mxl == 0) { // if no AFC, do nothing
+    if (CHA_IVAR[_mxl] == 0) { // if no AFC, do nothing
         return;
     }
-    if (first_time) {
+    if (CHA_IVAR[_in1] == 0) {
         efbp = (float *) cp[_efbp];
         sfbp = (float *) cp[_sfbp];
         wfrp = (float *) cp[_wfrp];
@@ -48,12 +44,12 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         if (pfl <= 0) rng1 = rng0; // bypass rng1
         if (wfl <= 0) rng2 = rng1; // bypass rng2
         mask = rsz - 1;
-        first_time = 0;
     }
     // ss -> rng0
     // uu -> rng1
     // uf -> rng2
     // ee -> rng3
+    rhd  = CHA_IVAR[_rhd];
     // subtract estimated feedback signal
     for (i = 0; i < cs; i++) {
         xx = x[i];
@@ -127,17 +123,16 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 FUNC(void)
 cha_afc_output(CHA_PTR cp, float *x, int cs)
 {
-    int i, j;
+    int i, j, rhd;
     static float *rng0;
     static int rsz, mask;
     static int rtl = 0;
-    static int first_time = 1;
 
-    if (first_time) {
+    if (CHA_IVAR[_in1] == 0) {
         rng0 = (float *) cp[_rng0];
         rsz = CHA_IVAR[_rsz];
         mask = rsz - 1;
-        first_time = 0;
+        CHA_IVAR[_in1] = CHA_IVAR[_in2];
     }
         rsz = CHA_IVAR[_rsz];
     // copy chunk to ring buffer
@@ -147,4 +142,5 @@ cha_afc_output(CHA_PTR cp, float *x, int cs)
         rng0[j] = x[i];
     }
     rtl = (rhd + cs) % rsz;
+    CHA_IVAR[_rhd] = rhd;
 }

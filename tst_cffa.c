@@ -101,14 +101,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     io->mat = 0;
     fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
     fprintf(stdout, "CFIRFB: nw=%d \n", nw);
-    // initialize waveform
-    init_wav(io);
-    ns = io->nsmp;
     // prepare CFIRFB
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare chunk buffer
     cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
+    // initialize waveform
+    init_wav(io);
+    ns = io->nsmp;
     // output buffer
     io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
 }
