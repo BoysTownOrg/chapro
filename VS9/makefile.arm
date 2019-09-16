@@ -1,0 +1,84 @@
+# makefile for CHAPRO cross-compilation to Linux/ARM
+# Library requirement: sigpro
+# Ubuntu Linux package requirement: sudo apt install gcc-arm-linux-gnueabihf
+
+LIBS=-lsigpro -lm
+CC=arm-linux-gnueabihf-gcc
+AR=arm-linux-gnueabihf-ar
+LIBDIR=/usr/local/lib/arm
+INCDIR=/usr/local/include
+
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O3
+LFLAGS=-L$(LIBDIR)
+CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
+	agc_prepare.o agc_process.o \
+	cfirfb_prepare.o cfirfb_process.o \
+	firfb_prepare.o firfb_process.o \
+	iirfb_design.o iirfb_prepare.o iirfb_process.o \
+	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
+	afc_prepare.o afc_process.o \
+	icmp_prepare.o icmp_process.o
+PGMS=tst_bbb
+
+all: $(PGMS)
+
+tst_bbb : tst_bbb.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
+
+libchapro.a: $(CHAPRO)
+	$(AR) rs libchapro.a $(CHAPRO)
+
+$(LIBDIR)/libchapro.a : libchapro.a
+	sudo mkdir -p $(LIBDIR)
+	sudo cp -f libchapro.a $(LIBDIR)
+
+install: $(LIBDIR)/libchapro.a $(PGMS)
+	scp $(PGMS) mha@192.168.7.2:/home/mha
+
+zipsrc:
+	zip chaprosc *.mgw *.lnx *.mac
+	zip chaprosc *.h *.c *.m *.def
+	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
+	zip chaprosc configure configure.bat 
+	zip chaprosc compress.bat suppress.bat shacmp.bat
+
+dist: zipsrc 
+	cp -f chapr*.zip ../dist
+	rm -f *.zip
+
+clean:
+	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
+	rm -f out*.mat out*.wav *.cfg *~ *.so
+	rm -f tst_bbb gprof*.txt gmon.out test.lst
+
+clean_test:
+	rm -f test.lst test/*.mat test/tst_*.wav
+
+# dependencies
+afc_prepare.o: afc_prepare.c chapro.h ite_fb.h 
+afc_process.o: afc_process.c chapro.h 
+agc_prepare.o: agc_prepare.c chapro.h 
+agc_process.o: agc_process.c chapro.h
+cfirfb_prepare.o: cfirfb_prepare.c chapro.h 
+cfirfb_process.o: cfirfb_process.c chapro.h 
+cha_core.o: cha_core.c chapro.h
+cha_scale.o: cha_scale.c chapro.h
+chapro.o: chapro.c 
+ciirfb_design.o: ciirfb_design.c chapro.h 
+ciirfb_prepare.o: ciirfb_prepare.c chapro.h 
+ciirfb_process.o: ciirfb_process.c chapro.h 
+db.o: db.c chapro.h 
+dciirfb_prepare.o: dciirfb_prepare.c chapro.h 
+dciirfb_process.o: dciirfb_process.c chapro.h 
+fft.o: fft.c chapro.h 
+firfb_prepare.o: firfb_prepare.c chapro.h 
+firfb_process.o: firfb_process.c chapro.h 
+gha_demo.o: gha_demo.c chapro.h 
+icmp_prepare.o: icmp_prepare.c chapro.h 
+icmp_process.o: icmp_process.c chapro.h 
+iirfb.o: iirfb.c 
+iirfb_design.o: iirfb_design.c chapro.h 
+iirfb_prepare.o: iirfb_prepare.c chapro.h 
+iirfb_process.o: iirfb_process.c chapro.h 
+rfft.o: rfft.c chapro.h 
+tst_bbb.o: tst_bbb.c chapro.h 
