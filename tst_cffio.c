@@ -21,6 +21,10 @@ typedef struct {
 } I_O;
 
 static int tone_io = 0;
+static struct {
+    char *ifn, *ofn, mat;
+    int nw;
+} args;
 
 /***********************************************************/
 
@@ -33,7 +37,6 @@ usage()
     fprintf(stdout, "options\n");
     fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
     fprintf(stdout, "-h    print help\n");
-    fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
     fprintf(stdout, "-w N  window size [128]\n");
@@ -48,22 +51,19 @@ version()
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->mat = 0;
+    args.nw = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
-            } else if (av[1][1] == 'm') {
-                io->mat = 1;
             } else if (av[1][1] == 't') {
                 tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
-                *nw = atoi(av[2]);
+                args.nw = atoi(av[2]);
                 ac--;
                 av++;
             }
@@ -182,7 +182,7 @@ compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     double cf[32];
     int nc;
@@ -195,18 +195,20 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double gn = 20;      // flat suppressor gain (dB)
     static int    ds = 24;      // downsample factor
 
-    parse_args(io, ac, av, sr, &nw);
+    if (args.nw) nw = args.nw;
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
     fprintf(stdout, "CFIRFB: nw=%d\n", nw);
     // prepare complex-FIR filterbank
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
     compressor_init(&cls, cf, sr, gn, nc);
     cha_icmp_prepare(cp, &cls, lr, ds);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
+    io->mat = args.mat;
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
@@ -253,7 +255,8 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    parse_args(ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

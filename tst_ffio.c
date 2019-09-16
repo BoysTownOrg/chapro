@@ -21,6 +21,10 @@ typedef struct {
 } I_O;
 
 static int tone_io = 0;
+static struct {
+    char *ifn, *ofn, mat;
+    int nw;
+} args;
 
 /***********************************************************/
 
@@ -33,7 +37,6 @@ usage()
     fprintf(stdout, "options\n");
     fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
     fprintf(stdout, "-h    print help\n");
-    fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
     fprintf(stdout, "-w N  window size [128]\n");
@@ -48,22 +51,19 @@ version()
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate, int *nw)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->mat = 0;
+    args.nw = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
-            } else if (av[1][1] == 'm') {
-                io->mat = 1;
             } else if (av[1][1] == 't') {
                 tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
-                *nw = atoi(av[2]);
+                args.nw = atoi(av[2]);
                 ac--;
                 av++;
             }
@@ -132,7 +132,7 @@ write_wave(I_O *io)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     double *cf;
     int nc;
@@ -150,16 +150,17 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
         {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
     };
 
-    parse_args(io, ac, av, sr, &nw);
+    if (args.nw) nw = args.nw;
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
     cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     fprintf(stdout, "FIRFB: nw=%d\n", nw);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_ff_data.h");
@@ -206,7 +207,8 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    parse_args(ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

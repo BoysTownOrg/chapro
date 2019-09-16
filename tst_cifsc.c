@@ -22,6 +22,12 @@ typedef struct {
     void **out;
 } I_O;
 
+static struct {
+    char *ifn, *ofn, mat;
+    double gn;
+    int ds;
+} args;
+
 /***********************************************************/
 
 static void
@@ -84,30 +90,26 @@ mat_file(char *fn)
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate, int *ds, 
-    double *gn)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->ifn = "test/cat.wav";
-    io->mat = 1;
+    args.ifn = "test/cat.wav";
+    args.mat = 1;
+    args.ds = 0;
+    args.gn = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'c') {
-                *gn = atof(av[2]);
+                args.gn = atof(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'd') {
-                *ds = atoi(av[2]);
+                args.ds = atoi(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
-                io->mat = 1;
-            } else if (av[1][1] == 's') {
-                *gn = atof(av[2]);
-                ac--;
-                av++;
+                args.mat = 1;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -117,11 +119,9 @@ parse_args(I_O *io, int ac, char *av[], double rate, int *ds,
             break;
         }
     }
-    //io->ifn = (ac > 1) ? av[1] : NULL;
-    io->ofn = (ac > 2) ? av[2] : NULL;
-    if (mat_file(io->ofn)) {
-        io->mat = 1;
-    }
+    //args.ifn = (ac > 1) ? av[1] : NULL;
+    args.ofn = (ac > 2) ? av[2] : NULL;
+    if (args.ofn) args.mat = mat_file(args.ofn);
 }
 
 static void
@@ -361,7 +361,7 @@ compressor_init(CHA_CLS *cls, double gn, int nc)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     float z[256], p[256], g[64]; 
     double gd, *fc, *bw;
@@ -376,7 +376,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    no =  4;      // gammatone filter order
     static int    ds = 24;      // downsample factor
 
-    parse_args(io, ac, av, sr, &ds, &gn);
+    if (args.ds) ds = args.ds;
+    if (args.gn) gn = args.gn;
     gd = cgtfb_init(&cls, sr, nm, cpo);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
     fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
@@ -387,12 +388,14 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     bw = cls.bw;
     cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
     compressor_init(&cls, gn, nc);
     cha_icmp_prepare(cp, &cls, lr, ds);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
+    io->mat = args.mat;
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
     // prepare i/o
@@ -454,7 +457,8 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    parse_args(ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

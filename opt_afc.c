@@ -25,6 +25,9 @@ typedef struct {
 static double  sr = 24000;   // sampling rate (Hz)
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
 static int    iqm, jqm, kqm, lqm, nqm, fbl, wfl, pfl, prn = 0;
+static struct {
+    char *ifn, *ofn, mat;
+} args;
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -107,16 +110,15 @@ mat_file(char *fn)
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->mat = 1;
+    args.mat = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
-                io->mat = 1;
+                args.mat = 1;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -126,11 +128,9 @@ parse_args(I_O *io, int ac, char *av[], double rate)
             break;
         }
     }
-    io->ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
-    io->ofn = (ac > 2) ? _strdup(av[2]) : NULL;
-    if (mat_file(io->ofn)) {
-        io->mat = 1;
-    }
+    args.ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
+    args.ofn = (ac > 2) ? _strdup(av[2]) : NULL;
+    if (args.ofn) args.mat = mat_file(args.ofn);
 }
 
 static void
@@ -156,28 +156,27 @@ set_spl(float *x, int n, double speech_lev, double spl_ref)
 static void
 init_wav(I_O *io)
 {
-    float fs;
-    static VAR *vl;
+    static float fs = 0;
+    static VAR *vl = NULL;
     static double spl_ref = 1.1219e-6;
     static double speech_lev = 65;
-    static int first_time = 1;
 
     if (io->ifn) {
-        if (first_time) {
-            // get WAV file info
-            vl = sp_wav_read(io->ifn, 0, 0, &fs);
-            if (vl == NULL) {
-                fprintf(stderr, "can't open %s\n", io->ifn);
-                exit(1);
-            }
-            if (fs != io->rate) {
-                fprintf(stderr, "%s rate mismatch: ", io->ifn);
-                fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
-                exit(2);
-            }
-            io->nwav = vl[0].rows * vl[0].cols;
-            io->iwav = vl[0].data;
+        // get WAV file info
+        if (fs == 0) vl = sp_wav_read(io->ifn, 0, 0, &fs);
+        if (vl == NULL) {
+            fprintf(stderr, "can't open %s\n", io->ifn);
+            exit(1);
         }
+        if (fs != io->rate) {
+            fprintf(stderr, "%s rate mismatch: ", io->ifn);
+            fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
+            exit(2);
+        }
+        io->nwav = vl[0].rows * vl[0].cols;
+        if (io->iwav) free(io->iwav);
+	io->iwav = (float *) calloc(io->nwav, sizeof(float));
+        fcopy(io->iwav, vl[0].data, io->nwav);
         set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
         if (prn) fprintf(stdout, "WAV input: %s...\n", io->ifn);
     } else {    /* 8-second impulse input */
@@ -198,12 +197,7 @@ init_wav(I_O *io)
         io->nseg = (io->nwav + io->nsmp - 1) / io->nsmp;
         io->owav = (float *) calloc(io->nsmp * io->mseg, sizeof(float));
     }
-    //first_time = 0;
 }
-
-/***********************************************************/
-
-// monitor io
 
 /***********************************************************/
 
@@ -240,8 +234,8 @@ stop_wav(I_O *io)
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    float   z[64], p[64], g[8];
-    int     d[8];
+    static float   z[64], p[64], g[8];
+    static int     d[8];
     static int     cs = 32;      // chunk size
     // filterbank parameters
     static int nc = 8;
@@ -275,22 +269,23 @@ prepare(I_O *io, CHA_PTR cp)
         fprintf(stdout, "IIR+AFC+AGC: nc=%d nz=%d\n", nc, nz);
     }
     // prepare IIRFB
-    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
+    if (qm == NULL) cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    // allocate chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
     init_wav(io);
     // prepare i/o
     io->pseg = io->mseg;
     // initialize quality metric
     nqm = io->nsmp;
     iqm = 0;
-    qm = (float *) calloc(nqm, sizeof(float));
+    if (qm == NULL) qm = (float *) calloc(nqm, sizeof(float));
 }
 
 // process io
@@ -317,7 +312,7 @@ process(I_O *io, CHA_PTR cp)
     if (prn) {
         t1 = sp_toc();
         t2 = io->nwav / io->rate;
-        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
+        fprintf(stdout, "(wall/wave) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
         if (iqm > 0) {
             if (qm[iqm - 1] > 0) {
                 fme = 10 * log10(qm[iqm - 1]);
@@ -345,7 +340,6 @@ process(I_O *io, CHA_PTR cp)
             fprintf(stdout, "range=%d %d %d %d %d\n",
                 jqm, kqm, lqm, iqm, nqm);
         }
-        //first_time = 0;
     }
 }
 
@@ -376,6 +370,8 @@ afc_error(float *par)
     if (par[2] < 1e-9) return (1e9);
     // set AFC parameters
     prepare(&io, cp);
+    //init_wav(&io);
+    //qm = 0;
     CHA_IVAR[_in1] = 0;
     CHA_DVAR[_rho] = par[0];
     CHA_DVAR[_eps] = par[1];
@@ -423,9 +419,10 @@ main(int ac, char *av[])
         0.0002  // mu 
     };
 
-    parse_args(&io, ac, av, sr);
+    parse_args(ac, av);
     fcopy(par, p0, 3);
     prn = 1;
+    prepare(&io, cp);
     afc_error(par);
     prn = 0;
     sp_fmins(par, 3, &afc_error, NULL);

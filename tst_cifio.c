@@ -21,6 +21,11 @@ typedef struct {
 } I_O;
 
 static int tone_io = 0;
+static struct {
+    char *ifn, *ofn, mat;
+    double gn;
+    int ds;
+} args;
 
 /***********************************************************/
 
@@ -35,7 +40,6 @@ usage()
     fprintf(stdout, "-d N  set downsample factor to N [24]\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-k N  compression kneepoint=N (dB) [0]\n");
-    fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
@@ -49,29 +53,22 @@ version()
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate, int *ds, double *gn)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->mat = 0;
+    args.ds = 0;
+    args.gn = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'c') {
-                *gn = atof(av[2]);
+                args.gn = atof(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'd') {
-                *ds = atoi(av[2]);
+                args.ds = atoi(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'h') {
                 usage();
-            } else if (av[1][1] == 'm') {
-                io->mat = 1;
-            } else if (av[1][1] == 'r') {
-            } else if (av[1][1] == 's') {
-                *gn = atof(av[2]);
-                ac--;
-                av++;
             } else if (av[1][1] == 't') {
                 tone_io = 1;
             } else if (av[1][1] == 'v') {
@@ -193,7 +190,7 @@ compressor_init(CHA_CLS *cls, double gn)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     float z[256], p[256], g[64]; 
     double *fc, *bw;
@@ -210,7 +207,8 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    no =  4;      // gammatone filter order
     static int    ds = 24;      // downsample factor
 
-    parse_args(io, ac, av, sr, &ds, &gn);
+    if (args.ds) ds = args.ds;
+    if (args.gn) gn = args.gn;
     gd = cgtfb_init(&cls, sr, nm, cpo);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f Hz, ", sr);
     fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
@@ -221,12 +219,13 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     bw = cls.bw;
     cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare compressor
     compressor_init(&cls, gn);
     cha_icmp_prepare(cp, &cls, lr, ds);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_gf_data.h");
@@ -274,7 +273,8 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    parse_args(ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

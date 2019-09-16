@@ -22,6 +22,10 @@ typedef struct {
     void **out;
 } I_O;
 
+static struct {
+    char *ifn, *ofn, mat;
+} args;
+
 /***********************************************************/
 
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
@@ -126,16 +130,15 @@ mat_file(char *fn)
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->mat = 1;
+    args.mat = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
-                io->mat = 1;
+                args.mat = 1;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -145,11 +148,9 @@ parse_args(I_O *io, int ac, char *av[], double rate)
             break;
         }
     }
-    io->ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
-    io->ofn = (ac > 2) ? _strdup(av[2]) : NULL;
-    if (mat_file(io->ofn)) {
-        io->mat = 1;
-    }
+    args.ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
+    args.ofn = (ac > 2) ? _strdup(av[2]) : NULL;
+    if (args.ofn) args.mat = mat_file(args.ofn);
 }
 
 static void
@@ -344,7 +345,7 @@ stop_wav(I_O *io)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     float   z[64], p[64], g[8];
     int     d[8];
@@ -376,19 +377,20 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     };
     static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
 
-    parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIR+AFC+AGC: nc=%d nz=%d\n", nc, nz);
-    // allocate chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // prepare AFC
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
     // prepare AGC
     cha_agc_prepare(cp, &dsl, &gha);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
+    io->mat = args.mat;
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
     // prepare i/o
@@ -465,7 +467,8 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    parse_args(ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

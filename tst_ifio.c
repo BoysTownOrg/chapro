@@ -21,6 +21,9 @@ typedef struct {
 } I_O;
 
 static int tone_io = 0;
+static struct {
+    char *ifn, *ofn, mat;
+} args;
 
 /***********************************************************/
 
@@ -33,7 +36,6 @@ usage()
     fprintf(stdout, "options\n");
     fprintf(stdout, "-c N  compress with gain=N (dB) [0]\n");
     fprintf(stdout, "-h    print help\n");
-    fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-t    tone response [default is impulse]\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
@@ -47,16 +49,12 @@ version()
 }
 
 static void
-parse_args(I_O *io, int ac, char *av[], double rate)
+parse_args(int ac, char *av[])
 {
-    io->rate = rate;
-    io->mat = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
-            } else if (av[1][1] == 'm') {
-                io->mat = 1;
             } else if (av[1][1] == 't') {
                 tone_io = 1;
             } else if (av[1][1] == 'v') {
@@ -127,7 +125,7 @@ write_wave(I_O *io)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     float   z[64], p[64], g[8];
     int     d[8];
@@ -139,15 +137,15 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
 
-    parse_args(io, ac, av, sr);
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // initialize waveform
+    io->rate = sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_if_data.h");
@@ -194,7 +192,8 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    parse_args(ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

@@ -87,7 +87,7 @@ cross_freq(double *cf, double sr)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     double cf[32];
     int nc, ns;
@@ -97,16 +97,13 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static int    cs = 32;      // chunk size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
 
-    io->rate = sr;
-    io->mat = 0;
     fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
     fprintf(stdout, "CFIRFB: nw=%d \n", nw);
     // prepare CFIRFB
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
     // initialize waveform
+    io->rate = sr;
     init_wav(io);
     ns = io->nsmp;
     // output buffer
@@ -164,7 +161,7 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

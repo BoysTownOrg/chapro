@@ -65,7 +65,7 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     int ns;
 
@@ -78,14 +78,12 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double cf[] = {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
 
     io->rate = sr;
-    io->mat = 0;
     fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
     fprintf(stdout, "FIRFB: nw=%d \n", nw);
     // prepare FIRFB
     cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // initialize waveform
+    io->rate = sr;
     init_wav(io);
     ns = io->nsmp;
     // output buffer
@@ -143,7 +141,7 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

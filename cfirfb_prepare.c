@@ -191,6 +191,8 @@ cha_cfirfb_prepare(CHA_PTR cp, double *cf, int nc, double sr,
         fir_transform_lc(cp, bb, nc, nw, cs);
     }
     free(bb);
+    // allocate chunk buffer
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
 
     return (0);
 }

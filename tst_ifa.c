@@ -65,7 +65,7 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 // prepare io
 
 static void
-prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
+prepare(I_O *io, CHA_PTR cp)
 {
     float  z[64], p[64], g[8];
     int     ns, d[8];
@@ -77,16 +77,13 @@ prepare(I_O *io, CHA_PTR cp, int ac, char *av[])
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
 
-    io->rate = sr;
-    io->mat = 0;
     fprintf(stdout, "CHA iirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
-    // prepare chunk buffer
-    cha_allocate(cp, nc * cs, sizeof(float), _cc);
     // initialize waveform
+    io->rate = sr;
     init_wav(io);
     ns = io->nsmp;
     // output buffer
@@ -144,7 +141,7 @@ main(int ac, char *av[])
     static I_O io;
     static void *cp[NPTR] = {0};
 
-    prepare(&io, cp, ac, av);
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

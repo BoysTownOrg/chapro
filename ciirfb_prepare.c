@@ -104,6 +104,8 @@ cha_ciirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d,
 {
     cha_prepare(cp);
     filterbank_prepare(cp, z, p, g, d, nc, no, sr, cs);
+    // allocate chunk buffer
+    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
 
     return (0);
 }
