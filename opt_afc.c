@@ -296,12 +296,14 @@ prepare_feedback(CHA_PTR cp, int n)
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
+    double fs;
     int nc, nz;
 
     prepare_filterbank(cp);
     prepare_compressor(cp);
     // initialize waveform
-    io->rate = sr;
+    fs = CHA_DVAR[_fs];
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     init_wav(io);
@@ -312,7 +314,7 @@ prepare(I_O *io, CHA_PTR cp)
         nc = CHA_IVAR[_nc];
         nz = CHA_IVAR[_op] - 1;
         fprintf(stdout, "CHA ARSC simulation: ");
-        fprintf(stdout, "sampling rate=%.0f kHz, ", sr / 1000);
+        fprintf(stdout, "sampling rate=%.0f kHz, ", fs);
         fprintf(stdout, "IIR+AGC+AFC: nc=%d nz=%d\n", nc, nz);
     }
 }
