@@ -22,7 +22,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
-     tst_gha gha_demo wavrep opt_afc
+     tst_gha gha_demo wavrep opt_afc 
 HDRS=chapro.h
 
 all: $(PGMS)
@@ -89,9 +89,6 @@ tst_ifsc : tst_ifsc.o  libchapro.a
 tst_gha : tst_gha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
-tst_bbb : tst_bbb.o  libchapro.a
-	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
-
 opt_afc : opt_afc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
@@ -100,6 +97,15 @@ gha_demo : gha_demo.o  libchapro.a
 
 wavrep : wavrep.o
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+mha : mha.o  libchapro.a $(LIBDIR)/mha_agc.so
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+mha_agc.so : mha_agc.c  libchapro.a
+	$(CC) $(LFLAGS) -shared -o $@ $^ $(LIBS) $(SCLIB)
+
+$(LIBDIR)/mha_agc.so : mha_agc.so
+	cp -f $^ $@
 
 libchapro.a: $(CHAPRO)
 	$(AR) rus libchapro.a $(CHAPRO)
@@ -122,7 +128,7 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~ *.so
-	rm -f tst_bbb gprof*.txt gmon.out test.lst
+	rm -f tst_bbb gprof*.txt gmon.out
 
 clean_test:
 	rm -f test/*.mat test/tst_*.wav
@@ -169,3 +175,4 @@ opt_afc.o: opt_afc.c chapro.h
 tst_ifa.o: tst_ifa.c chapro.h 
 tst_ifio.o: tst_ifio.c chapro.h 
 tst_ifsc.o: tst_ifsc.c chapro.h 
+mha.o: mha.c chapro.h 
