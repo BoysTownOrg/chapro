@@ -22,12 +22,15 @@ typedef struct {
 
 /***********************************************************/
 
-static double  sr = 24000;   // sampling rate (Hz)
 static float *qm, *efbp, *sfbp, *wfrp, *ffrp;
 static int    iqm, jqm, kqm, lqm, nqm, fbl, wfl, pfl, prn = 0;
 static struct {
     char *ifn, *ofn, mat;
 } args;
+static CHA_DSL dsl = {0};
+static CHA_WDRC gha = {0};
+
+/***********************************************************/
 
 static void
 save_qm(CHA_PTR cp, int cs)
@@ -56,7 +59,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 
     // initialize data pointers
     z = (float *) cp[_cc];
-    // process IIR+AFC+AGC
+    // process IIR+AGC+AFC
     cha_afc_input(cp, x, x, cs);
     cha_agc_input(cp, x, x, cs);
     cha_iirfb_analyze(cp, x, z, cs);
@@ -229,52 +232,74 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
-// prepare io
+// prepare IIR filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
-    static float   z[64], p[64], g[8];
-    static int     d[8];
+    double sr, *cf;
+    int nc;
     static int     cs = 32;      // chunk size
     // filterbank parameters
-    static int nc = 8;
     static int nz = 4;
     static double td = 2.5;
-    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
+    // zeros, poles, gains, & delays
+    static float   z[64], p[64], g[8];
+    static int     d[8];
+
+    // prepare IIRFB
+    nc = dsl.nchannel;
+    cf = dsl.cross_freq;
+    sr = gha.fs;
+    if (qm == NULL) { // to speed optimization, design only once 
+        cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
+    };
+    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
+}
+
+// prepare AGC compressor
+
+static void
+prepare_compressor(CHA_PTR cp)
+{
+    // prepare AGC
+    cha_agc_prepare(cp, &dsl, &gha);
+}
+
+// prepare feedback
+
+static void
+prepare_feedback(CHA_PTR cp, int n)
+{
     // AFC parameters
     static double rho  = 0.3000; // forgetting factor
     static double eps  = 0.0008; // power threshold
     static double  mu  = 0.0002; // step size
     static int    afl  = 100;    // adaptive filter length
-    static int    sqm  = 1;      // save quality metric ?
     static int    wfl  = 0;      // whitening-filter length
     static int    pfl  = 0;      // persistent-filter length
     static int    hdel = 0;      // output/input hardware delay
+    static int    sqm  = 1;      // save quality metric ?
     // simulation parameters
     static double fbg = 1;       // simulated-feedback gain
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
-    static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
 
-    if (prn) {
-        fprintf(stdout, "CHA ARSC simulation: ");
-        fprintf(stdout, "sampling rate=%.0f kHz, ", sr / 1000);
-        fprintf(stdout, "IIR+AFC+AGC: nc=%d nz=%d\n", nc, nz);
-    }
-    // prepare IIRFB
-    if (qm == NULL) cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
-    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
     // prepare AFC
     cha_afc_prepare(cp, mu, rho, eps, afl, wfl, pfl, hdel, fbg, sqm);
-    // prepare AGC
-    cha_agc_prepare(cp, &dsl, &gha);
+    // initialize quality metric
+    nqm = n;
+    iqm = 0;
+    if (qm == NULL) qm = (float *) calloc(nqm, sizeof(float));
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    int nc, nz;
+
+    prepare_filterbank(cp);
+    prepare_compressor(cp);
     // initialize waveform
     io->rate = sr;
     io->ifn = args.ifn;
@@ -282,10 +307,14 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     // prepare i/o
     io->pseg = io->mseg;
-    // initialize quality metric
-    nqm = io->nsmp;
-    iqm = 0;
-    if (qm == NULL) qm = (float *) calloc(nqm, sizeof(float));
+    prepare_feedback(cp, io->nsmp);
+    if (prn) { // report
+        nc = CHA_IVAR[_nc];
+        nz = CHA_IVAR[_op] - 1;
+        fprintf(stdout, "CHA ARSC simulation: ");
+        fprintf(stdout, "sampling rate=%.0f kHz, ", sr / 1000);
+        fprintf(stdout, "IIR+AGC+AFC: nc=%d nz=%d\n", nc, nz);
+    }
 }
 
 // process io
@@ -409,6 +438,27 @@ print_par(float *par, int tst_gha)
     }
 }
 
+/***********************************************************/
+
+// initialize DSL prescription
+
+static void
+prescribe(void)
+{
+    // DSL prescription example
+    static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
+        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
+        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
+        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
+        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
+        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
+    };
+    static CHA_WDRC gha_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
+
+    memcpy(&dsl, &dsl_ex, sizeof(CHA_DSL));
+    memcpy(&gha, &gha_ex, sizeof(CHA_WDRC));
+}
+
 int
 main(int ac, char *av[])
 {
@@ -420,13 +470,11 @@ main(int ac, char *av[])
     };
 
     parse_args(ac, av);
+    prescribe();
     fcopy(par, p0, 3);
     prn = 1;
-    prepare(&io, cp);
     afc_error(par);
     prn = 0;
-    sp_fmins(par, 3, &afc_error, NULL);
-    sp_fmins(par, 3, &afc_error, NULL);
     sp_fmins(par, 3, &afc_error, NULL);
     sp_fmins(par, 3, &afc_error, NULL);
     prn = 1;

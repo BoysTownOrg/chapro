@@ -69,7 +69,6 @@ filterbank_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d,
                    int nc, int no, double sr, int cs)
 {
     float  *br;
-    double  fs;
     int     k, mxd, ns, op, *dn;
 
     op = no + 1;
@@ -90,9 +89,8 @@ filterbank_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d,
     CHA_IVAR[_ns] = ns;
     cha_allocate(cp, ns * nc * 2, sizeof(float), _ydr);
     //-----------------------------
-    fs = sr / 1000;
     CHA_IVAR[_cs] = cs;
-    CHA_DVAR[_fs] = fs;
+    CHA_DVAR[_fs] = sr / 1000;
     CHA_IVAR[_nc] = nc;
 }
 

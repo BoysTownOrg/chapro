@@ -84,26 +84,40 @@ cross_freq(double *cf, double sr)
 
 /***********************************************************/
 
-// prepare io
+// prepare CFIR filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
     double cf[32];
-    int nc, ns;
-
+    int nc; 
     static double sr = 24000;   // sampling rate (Hz)
     static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
 
-    fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
-    fprintf(stdout, "CFIRFB: nw=%d \n", nw);
     // prepare CFIRFB
     nc = cross_freq(cf, sr);
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs;
+    int nc, ns, nw;
+
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    nc = CHA_IVAR[_nc];
+    ns = CHA_IVAR[_ns];
+    nw = CHA_IVAR[_nw];
+    fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", fs);
+    fprintf(stdout, "CFIRFB: nw=%d \n", nw);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     init_wav(io);
     ns = io->nsmp;
     // output buffer

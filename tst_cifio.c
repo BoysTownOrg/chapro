@@ -20,12 +20,13 @@ typedef struct {
     void **out;
 } I_O;
 
-static int tone_io = 0;
+static double target_delay = 4;
 static struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, mat, tone_io;
     double gn;
     int ds;
 } args;
+static CHA_CLS cls;
 
 /***********************************************************/
 
@@ -57,6 +58,7 @@ parse_args(int ac, char *av[])
 {
     args.ds = 0;
     args.gn = 0;
+    args.tone_io = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'c') {
@@ -70,7 +72,7 @@ parse_args(int ac, char *av[])
             } else if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 't') {
-                tone_io = 1;
+                args.tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -92,7 +94,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "filterbank i/o with ");
-    if (tone_io == 0) {
+    if (args.tone_io == 0) {
         fprintf(stdout, "impulse: \n");
         io->ofn = "test/cifio_impulse.mat";
         io->iwav[0] = 1;
@@ -187,43 +189,52 @@ compressor_init(CHA_CLS *cls, double gn)
 
 /***********************************************************/
 
-// prepare io
+// prepare filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
+    double gd, *fc, *bw;
     float z[256], p[256], g[64]; 
-    double *fc, *bw;
     int nc, d[32];
-    CHA_CLS cls;
-
     static double sr = 24000;   // sampling rate (Hz)
-    static double gd = 4;       // filterbank target delay (ms)
-    static double lr = 2e-5;    // signal-level reference (Pa)
-    static double gn = 0;       // flat suppressor gain (dB)
     static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of frequency bands per octave above 1 kHz
+    static int   cpo =  3;      // number of bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
-    static int    ds = 24;      // downsample factor
 
-    if (args.ds) ds = args.ds;
-    if (args.gn) gn = args.gn;
-    gd = cgtfb_init(&cls, sr, nm, cpo);
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f Hz, ", sr);
-    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
-    fprintf(stdout, "compression: gain=%.0f, ds=%d\n", gn, ds);
+    gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
     // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
     bw = cls.bw;
     cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs, gd; 
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static double gn = 0;       // flat suppressor gain (dB)
+    static int    ds = 24;      // downsample factor
+
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    gd = target_delay;
+    if (args.ds) ds = args.ds;
+    if (args.gn) gn = args.gn;
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
+    fprintf(stdout, "compression: gain=%.0f, ds=%d\n", gn, ds);
     // prepare compressor
     compressor_init(&cls, gn);
     cha_icmp_prepare(cp, &cls, lr, ds);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     init_wav(io);

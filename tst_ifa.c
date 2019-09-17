@@ -62,28 +62,42 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 
 /***********************************************************/
 
-// prepare io
+// prepare IIR filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
-    float  z[64], p[64], g[8];
-    int     ns, d[8];
-    static int    cs = 32;      // chunk size
-    static double sr = 24000;   // sampling rate (Hz)
+    float   z[64], p[64], g[8];
+    int     d[8];
+    static double  sr = 24000;   // sampling rate (Hz)
+    static int     cs = 32;      // chunk size
     // filterbank parameters
     static int nc = 8;
     static int nz = 4;
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
 
-    fprintf(stdout, "CHA iirfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs;
+    int nc, nz, ns; 
+
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    nc = CHA_IVAR[_nc];
+    nz = CHA_IVAR[_op] - 1;
+    fprintf(stdout, "CHA iirfb_analyze: sampling rate=%.1f kHz, ", fs);
     fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     init_wav(io);
     ns = io->nsmp;
     // output buffer

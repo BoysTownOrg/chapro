@@ -22,11 +22,15 @@ typedef struct {
     void **out;
 } I_O;
 
+/***********************************************************/
+
+static double sampling_rate;
 static struct {
     char *ifn, *ofn, mat;
     double gn;
     int ds;
 } args;
+static CHA_CLS cls;
 
 /***********************************************************/
 
@@ -357,34 +361,48 @@ compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
 
 /***********************************************************/
 
+// prepare CFIR filterbank
+
+static void
+prepare_filterbank(CHA_PTR cp)
+{
+    double sr, *cf;
+    int nc; 
+    static int    nw = 256;     // window size
+    static int    cs = 32;      // chunk size
+    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
+
+    // prepare CFIRFB
+    nc = cls.nc;
+    cf = cls.fc;
+    sr = sampling_rate;
+    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+}
+
+// prepare compressor
+
+static void
+prepare_compressor(CHA_PTR cp)
+{
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static int    ds = 24;      // downsample factor
+
+    if (args.ds) ds = args.ds;
+    cha_icmp_prepare(cp, &cls, lr, ds);
+}
+
 // prepare io
 
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    double cf[32];
-    int nc;
-    CHA_CLS cls;
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
-    static int    nw = 256;     // window size
-    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
-    static double lr = 2e-5;    // signal-level reference (Pa)
-    static double gn = 20;      // flat suppressor gain (dB)
-    static int    ds = 24;      // downsample factor
+    double fs;
 
-    if (args.ds) ds = args.ds;
-    if (args.gn) gn = args.gn;
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    fprintf(stdout, "inst. compression: gain=%.0f, ds=%d\n", gn, ds);
-    // prepare complex-FIR filterbank
-    nc = cross_freq(cf, sr);
-    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-    // prepare compressor
-    compressor_init(&cls, cf, sr, gn, nc);
-    cha_icmp_prepare(cp, &cls, lr, ds);
+    prepare_filterbank(cp);
+    prepare_compressor(cp);
     // initialize waveform
-    io->rate = sr;
+    fs = CHA_DVAR[_fs];
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     io->mat = args.mat;
@@ -395,6 +413,9 @@ prepare(I_O *io, CHA_PTR cp)
     if (!io->ofn) {
         init_aud(io);
     }
+    // report
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "FIR + inst. compression\n");
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
 }
@@ -443,6 +464,20 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
+// initialize CSL prescription
+
+static void
+prescribe(void)
+{
+    static double sr = 24000;   // sampling rate (Hz)
+    static double gn = 20;      // flat suppressor gain (dB)
+
+    if (args.gn) gn = args.gn;
+    sampling_rate = sr;
+    cls.nc = cross_freq(cls.fc, sr);
+    compressor_init(&cls, cls.fc, sr, gn, cls.nc);
+}
+
 int
 main(int ac, char *av[])
 {
@@ -450,6 +485,7 @@ main(int ac, char *av[])
     static void *cp[NPTR] = {0};
 
     parse_args(ac, av);
+    prescribe();
     prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);

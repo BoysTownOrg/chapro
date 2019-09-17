@@ -300,12 +300,13 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 #define _nw       2
 #define _cm       3
+#define _ds       4
 
 //----------------------------------------
 
 // afc integer variable indices
 
-#define _rsz      4
+#define _rsz      6
 #define _afl      7
 #define _fbl      8
 #define _nqm      9

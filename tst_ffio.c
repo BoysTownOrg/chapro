@@ -20,9 +20,8 @@ typedef struct {
     void **out;
 } I_O;
 
-static int tone_io = 0;
 static struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, mat, tone_io;
     int nw;
 } args;
 
@@ -54,12 +53,13 @@ static void
 parse_args(int ac, char *av[])
 {
     args.nw = 0;
+    args.tone_io = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 't') {
-                tone_io = 1;
+                args.tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
@@ -85,7 +85,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "FIRFB i/o with ");
-    if (tone_io == 0) {
+    if (args.tone_io == 0) {
         fprintf(stdout, "impulse: \n");
         io->ofn = "test/ffio_impulse.mat";
         io->iwav[0] = 1;
@@ -129,36 +129,40 @@ write_wave(I_O *io)
 
 /***********************************************************/
 
+// prepare FIR filterbank
+
+static void
+prepare_filterbank(CHA_PTR cp)
+{
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    nw = 256;     // window size
+    static int    cs = 32;      // chunk size
+    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
+    static int    nc = 8;       // number of frequency bands
+    // cross frequencies
+    static double cf[] = {
+        317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
+
+    // prepare FIRFB
+    if (args.nw) nw = args.nw;
+    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+}
+
 // prepare io
 
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    double *cf;
-    int nc;
+    double fs;
+    int nw; 
 
-    static double sr = 24000;       // sampling rate (Hz)
-    static int    nw = 256;         // window size
-    static int    cs = 32;          // chunk size
-    static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
-
-    if (args.nw) nw = args.nw;
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
-    // prepare FIRFB
-    nc = dsl.nchannel;
-    cf = dsl.cross_freq;
-    cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    nw = CHA_IVAR[_nw];
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
     fprintf(stdout, "FIRFB: nw=%d\n", nw);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     init_wav(io);

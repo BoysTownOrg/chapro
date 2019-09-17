@@ -19,9 +19,9 @@ compr_ds_expand (
     int i, j, k, jk, nc, nf, ns, tc, jmx = 0, jmn = 0, scmx = 0, scmn = 0;
     static int ms = 5; /* mimimun samples per envelope cycle */
 
-    ns = ds;
     fs = CHA_DVAR[_fs];
     nc = CHA_IVAR[_nc];
+    ns = ds;
     bw = cls->bw;
     dsm = (int *) cha_allocate(cp, nc, sizeof(int), _dsm);    
     dso = (int *) cha_allocate(cp, nc, sizeof(int), _dso);
@@ -160,6 +160,7 @@ compressor_prep(CHA_PTR cp, int nc)
 FUNC(int)
 cha_icmp_prepare(CHA_PTR cp, CHA_CLS *cls, double lr, int ds)
 {
+    CHA_IVAR[_ds] = ds;
     cha_prepare(cp);
     compr_ds_expand(cp, cls, ds);
     compr_levl_config(cp, cls, lr);

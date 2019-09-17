@@ -63,7 +63,7 @@ zp2sos(float *z, float *p, float g, int nsos, float *c)
 
 // compute IIR-filterbank coefficients
 static __inline int
-iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double fs)
+iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double sr)
 {
     float *bb, *cc, *zz, *pp;
     int i, op, mxd, *dd;
@@ -89,7 +89,7 @@ iir_filterbank(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz,
 /***********************************************************/
 
 FUNC(int)
-cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double fs, int cs)
+cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int nz, double sr, int cs)
 {
     int nn, op, ncoef, nhist;
 
@@ -97,7 +97,7 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
         return (1);
     }
     cha_prepare(cp);
-    CHA_DVAR[_fs] = fs;
+    CHA_DVAR[_fs] = sr / 1000;
     CHA_IVAR[_cs] = cs;
     // allocate filter-coefficient buffers
     op = nz + 1;
@@ -109,7 +109,7 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
     cha_allocate(cp, nc * nhist, sizeof(float), _zz);
     cha_allocate(cp, nc, sizeof(int), _dd);
     // save IIR-filterbank coefficients
-    nn = iir_filterbank(cp, z, p, g, d, nc, nz, fs);
+    nn = iir_filterbank(cp, z, p, g, d, nc, nz, sr);
     CHA_IVAR[_nn] = nn;
     cha_allocate(cp, nc * nn, sizeof(float), _yd);
     // allocate chunk buffer

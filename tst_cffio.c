@@ -20,9 +20,8 @@ typedef struct {
     void **out;
 } I_O;
 
-static int tone_io = 0;
 static struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, mat, tone_io;
     int nw;
 } args;
 
@@ -54,12 +53,13 @@ static void
 parse_args(int ac, char *av[])
 {
     args.nw = 0;
+    args.tone_io = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 't') {
-                tone_io = 1;
+                args.tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
@@ -85,7 +85,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "CFIRFB i/o with ");
-    if (tone_io == 0) {
+    if (args.tone_io == 0) {
         fprintf(stdout, "impulse: \n");
         io->ofn = "test/cffio_impulse.mat";
         io->iwav[0] = 1;
@@ -179,29 +179,44 @@ compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
 
 /***********************************************************/
 
+// prepare CFIR filterbank
+
+static void
+prepare_filterbank(CHA_PTR cp)
+{
+    double cf[32];
+    int nc; 
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    nw = 256;     // window size
+    static int    cs = 32;      // chunk size
+    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
+
+    // prepare CFIRFB
+    if (args.nw) nw = args.nw;
+    nc = cross_freq(cf, sr);
+    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+}
+
 // prepare io
 
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    double cf[32];
-    int nc;
+    double fs, sr, cf[32];
+    int nc, nw; 
     CHA_CLS cls;
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    nw = 256;     // window size
-    static int    cs = 32;      // chunk size
-    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
     static double lr = 2e-5;    // signal-level reference (Pa)
     static double gn = 20;      // flat suppressor gain (dB)
     static int    ds = 24;      // downsample factor
 
-    if (args.nw) nw = args.nw;
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    nw = CHA_IVAR[_nw];
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
     fprintf(stdout, "CFIRFB: nw=%d\n", nw);
-    // prepare complex-FIR filterbank
-    nc = cross_freq(cf, sr);
-    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
     // prepare compressor
+    sr = fs * 1000;
+    nc = cross_freq(cf, sr);
     compressor_init(&cls, cf, sr, gn, nc);
     cha_icmp_prepare(cp, &cls, lr, ds);
     // initialize waveform

@@ -22,9 +22,13 @@ typedef struct {
     void **out;
 } I_O;
 
+/***********************************************************/
+
 static struct {
     char *ifn, *ofn, mat;
 } args;
+static CHA_DSL dsl = {0};
+static CHA_WDRC gha = {0};
 
 /***********************************************************/
 
@@ -294,39 +298,53 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// prepare IIR filterbank
+
+static void
+prepare_filterbank(CHA_PTR cp)
+{
+    double sr, *cf;
+    int nc;
+    static int     cs = 32;      // chunk size
+    // filterbank parameters
+    static int nz = 4;
+    static double td = 2.5;
+    // zeros, poles, gains, & delays
+    static float   z[64], p[64], g[8];
+    static int     d[8];
+
+    // prepare IIRFB
+    nc = dsl.nchannel;
+    cf = dsl.cross_freq;
+    sr = gha.fs;
+    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
+    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
+}
+
+// prepare AGC compressor
+
+static void
+prepare_compressor(CHA_PTR cp)
+{
+    // prepare AGC
+    cha_agc_prepare(cp, &dsl, &gha);
+}
+
+// prepare feedback
+
 // prepare io
 
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    float   z[64], p[64], g[8];
-    int     d[8];
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
-    // filterbank parameters
-    static int nc = 8;
-    static int nz = 4;
-    static double td = 2.5;
-    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
-    // DSL prescription
-    static CHA_DSL dsl = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
-    static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
+    double fs;
+    int nc, nz; 
 
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    // prepare IIRFB
-    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
-    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-    fprintf(stdout, "IIR+AGC: nc=%d nz=%d\n", nc, nz);
-    // prepare AGC
-    cha_agc_prepare(cp, &dsl, &gha);
+    prepare_filterbank(cp);
+    prepare_compressor(cp);
     // initialize waveform
-    io->rate = sr;
+    fs = CHA_DVAR[_fs];
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     io->mat = args.mat;
@@ -337,6 +355,11 @@ prepare(I_O *io, CHA_PTR cp)
     if (!io->ofn) {
         init_aud(io);
     }
+    // report
+    nc = CHA_IVAR[_nc];
+    nz = CHA_IVAR[_op] - 1;
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "IIR+AGC: nc=%d nz=%d\n", nc, nz);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_if_data.h");
 }
@@ -385,6 +408,25 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
+// initialize DSL prescription
+
+static void
+prescribe(void)
+{
+    // DSL prescription example
+    static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
+        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
+        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
+        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
+        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
+        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
+    };
+    static CHA_WDRC gha_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
+
+    memcpy(&dsl, &dsl_ex, sizeof(CHA_DSL));
+    memcpy(&gha, &gha_ex, sizeof(CHA_WDRC));
+}
+
 int
 main(int ac, char *av[])
 {
@@ -392,6 +434,7 @@ main(int ac, char *av[])
     static void *cp[NPTR] = {0};
 
     parse_args(ac, av);
+    prescribe();
     prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);

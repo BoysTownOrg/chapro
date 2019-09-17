@@ -1,4 +1,4 @@
-// tst_gfa.c - test gammatone-filterbank analysis 
+// tst_cifa.c - test gammatone-filterbank analysis 
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,35 +94,47 @@ cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
 
 /***********************************************************/
 
-// prepare io
+// prepare CIIR filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
-    float z[256], p[256], g[64]; 
     double gd, *fc, *bw;
-    int nc, ns, d[32];
+    float z[256], p[256], g[64]; 
+    int nc, d[32];
     CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
     static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of frequency bands per octave above 1 kHz
+    static int   cpo =  3;      // number of bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
 
-    //nm=5; cpo=3; // fewer frequency bands
-    io->rate = sr;
     gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
-    fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", sr / 1000);
-    fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
     // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
     bw = cls.bw;
     cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs, gd;
+    int nc, ns;
+
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    gd = target_delay;
+    fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     init_wav(io);
+    nc = CHA_IVAR[_nc];
     ns = io->nsmp;
     // output buffer
     io->owav = (float *) calloc(nc * ns * 2, sizeof(float));

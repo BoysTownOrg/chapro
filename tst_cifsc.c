@@ -22,11 +22,16 @@ typedef struct {
     void **out;
 } I_O;
 
+/***********************************************************/
+
+static double sampling_rate;
+static double target_delay = 4;
 static struct {
     char *ifn, *ofn, mat;
     double gn;
     int ds;
 } args;
+static CHA_CLS cls;
 
 /***********************************************************/
 
@@ -336,14 +341,14 @@ cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
 // CSL prescription
 
 static void
-compressor_init(CHA_CLS *cls, double gn, int nc)
+compressor_init(CHA_CLS *cls, double gn)
 {
-    int k;
+    int k, nc;
 
     // set compression mode
     cls->cm = 1;
     // loop over filterbank channel
-    cls->nc = nc;
+    nc = cls->nc;
     for (k = 0; k < nc; k++) {
         cls->Lcs[k] = 0;
         cls->Lcm[k] = 50;
@@ -358,41 +363,53 @@ compressor_init(CHA_CLS *cls, double gn, int nc)
 
 /***********************************************************/
 
-// prepare io
+// prepare filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
-    float z[256], p[256], g[64]; 
     double gd, *fc, *bw;
+    float z[256], p[256], g[64]; 
     int nc, d[32];
-    CHA_CLS cls;
     static double sr = 24000;   // sampling rate (Hz)
-    static double lr = 2e-5;    // signal-level reference (Pa)
-    static double gn = 20;      // flat suppressor gain (dB)
     static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of frequency bands per octave above 1 kHz
+    static int   cpo =  3;      // number of bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
-    static int    ds = 24;      // downsample factor
 
-    if (args.ds) ds = args.ds;
-    if (args.gn) gn = args.gn;
-    gd = cgtfb_init(&cls, sr, nm, cpo);
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", sr / 1000);
-    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
-    fprintf(stdout, "inst. compression: gain=%.0f, ds=%d\n", gn, ds);
-    // prepare gammatone filterbank
+    gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
+    // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
     bw = cls.bw;
     cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
-    // prepare compressor
-    compressor_init(&cls, gn, nc);
+}
+
+// prepare compressor
+
+static void
+prepare_compressor(CHA_PTR cp)
+{
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static int    ds = 24;      // downsample factor
+
+    if (args.ds) ds = args.ds;
     cha_icmp_prepare(cp, &cls, lr, ds);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs, gd;
+
+    prepare_filterbank(cp);
+    prepare_compressor(cp);
     // initialize waveform
-    io->rate = sr;
+    fs = CHA_DVAR[_fs];
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     io->mat = args.mat;
@@ -403,6 +420,11 @@ prepare(I_O *io, CHA_PTR cp)
     if (!io->ofn) {
         init_aud(io);
     }
+    // report
+    gd = target_delay;
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
+    fprintf(stdout, "IIR + inst. compression\n");
     // generate C code from prepared data
     cha_data_gen(cp, "cha_gf_data.h");
 }
@@ -451,6 +473,22 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
+// initialize CSL prescription
+
+static void
+prescribe(void)
+{
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    nm =  5;      // number of frequency bands below 1 kHz
+    static int   cpo =  3;      // number of bands per octave above 1 kHz
+    static double gn = 20;      // flat suppressor gain (dB)
+
+    if (args.gn) gn = args.gn;
+    target_delay = cgtfb_init(&cls, sr, nm, cpo);
+    sampling_rate = sr;
+    compressor_init(&cls, gn);
+}
+
 int
 main(int ac, char *av[])
 {
@@ -458,6 +496,7 @@ main(int ac, char *av[])
     static void *cp[NPTR] = {0};
 
     parse_args(ac, av);
+    prescribe();
     prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);

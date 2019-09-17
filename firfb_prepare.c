@@ -105,7 +105,7 @@ fir_transform_lc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
 /***********************************************************/
 
 FUNC(int)
-cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double fs, 
+cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double sr, 
     int nw, int wt, int cs)
 {
     float   *bb;
@@ -118,7 +118,7 @@ cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double fs,
 		return 1;
     cha_prepare(cp);
     CHA_IVAR[_cs] = cs;
-    CHA_DVAR[_fs] = fs;
+    CHA_DVAR[_fs] = sr / 1000;
     // allocate window buffers
     CHA_IVAR[_nw] = nw;
     CHA_IVAR[_nc] = nc;
@@ -129,7 +129,7 @@ cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double fs,
     cha_allocate(cp, nc * (nw + cs), sizeof(float), _ffzz);
     // compute FIR-filterbank coefficients
     bb = calloc(nc * nw, sizeof(float));
-    fir_filterbank(bb, cf, nc, nw, wt, fs);
+    fir_filterbank(bb, cf, nc, nw, wt, sr);
     // Fourier-transform FIR coefficients
     if (cs < nw) {  // short chunk
         fir_transform_sc(cp, bb, nc, nw, cs);

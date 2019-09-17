@@ -39,7 +39,7 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha)
     time_const(gha->attack, gha->release, gha->fs, &alfa, &beta);
     CHA_DVAR[_alfa]  = alfa;
     CHA_DVAR[_beta]  = beta;
-    CHA_DVAR[_fs]   = gha->fs;
+    //CHA_DVAR[_fs]   = gha->fs / 1000;
     CHA_DVAR[_mxdb] = gha->maxdB;
     CHA_DVAR[_tkgn] = gha->tkgain;
     CHA_DVAR[_cr]   = gha->cr;

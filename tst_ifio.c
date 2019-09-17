@@ -20,9 +20,8 @@ typedef struct {
     void **out;
 } I_O;
 
-static int tone_io = 0;
 static struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, mat, tone_io;
 } args;
 
 /***********************************************************/
@@ -51,12 +50,13 @@ version()
 static void
 parse_args(int ac, char *av[])
 {
+    args.tone_io = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 't') {
-                tone_io = 1;
+                args.tone_io = 1;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -78,7 +78,7 @@ init_wav(I_O *io)
     io->nwav = round(io->rate);
     io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "IIRFB i/o with ");
-    if (tone_io == 0) {
+    if (args.tone_io == 0) {
         fprintf(stdout, "impulse: \n");
         io->ofn = "test/ifio_impulse.mat";
         io->iwav[0] = 1;
@@ -122,28 +122,42 @@ write_wave(I_O *io)
 
 /***********************************************************/
 
-// prepare io
+// prepare IIR filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
     float   z[64], p[64], g[8];
     int     d[8];
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
+    static double  sr = 24000;   // sampling rate (Hz)
+    static int     cs = 32;      // chunk size
     // filterbank parameters
     static int nc = 8;
     static int nz = 4;
     static double td = 2.5;
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
 
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", sr / 1000);
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs;
+    int nc, nz; 
+
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    nc = CHA_IVAR[_nc];
+    nz = CHA_IVAR[_op] - 1;
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
     fprintf(stdout, "IIRFB: nc=%d nz=%d\n", nc, nz);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     init_wav(io);

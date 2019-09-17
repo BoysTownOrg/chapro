@@ -62,28 +62,40 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 
 /***********************************************************/
 
-// prepare io
+// prepare FIR filterbank
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp)
 {
-    int ns;
-
     static double sr = 24000;   // sampling rate (Hz)
     static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
     static int    nc = 8;       // number of frequency bands
     // cross frequencies
-    static double cf[] = {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
+    static double cf[] = {
+        317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
 
-    io->rate = sr;
-    fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", sr / 1000);
-    fprintf(stdout, "FIRFB: nw=%d \n", nw);
     // prepare FIRFB
     cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    double fs;
+    int nc, ns, nw; 
+
+    prepare_filterbank(cp);
+    fs = CHA_DVAR[_fs];
+    nc = CHA_IVAR[_nc];
+    nw = CHA_IVAR[_nw];
+    fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", fs);
+    fprintf(stdout, "FIRFB: nw=%d \n", nw);
     // initialize waveform
-    io->rate = sr;
+    io->rate = fs * 1000;
     init_wav(io);
     ns = io->nsmp;
     // output buffer
