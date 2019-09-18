@@ -159,6 +159,7 @@ iirfb.o: iirfb.c
 iirfb_design.o: iirfb_design.c chapro.h 
 iirfb_prepare.o: iirfb_prepare.c chapro.h 
 iirfb_process.o: iirfb_process.c chapro.h 
+opt_afc.o: opt_afc.c chapro.h 
 rfft.o: rfft.c chapro.h 
 tst_bbb.o: tst_bbb.c chapro.h 
 tst_cffa.o: tst_cffa.c chapro.h 
@@ -171,7 +172,6 @@ tst_ffa.o: tst_ffa.c chapro.h
 tst_ffio.o: tst_ffio.c chapro.h 
 tst_ffsc.o: tst_ffsc.c chapro.h 
 tst_gha.o: tst_gha.c chapro.h 
-opt_afc.o: opt_afc.c chapro.h 
 tst_ifa.o: tst_ifa.c chapro.h 
 tst_ifio.o: tst_ifio.c chapro.h 
 tst_ifsc.o: tst_ifsc.c chapro.h 

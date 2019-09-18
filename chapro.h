@@ -130,20 +130,28 @@ typedef struct {
 /*****************************************************/
 
 typedef struct {
-     float *efbp, *sfbp, *wfrp, *ffrp, *qm, *merr;
-     int    iqm, nqm;
+    // simulation parameters
+    double fbg;                  // simulated-feedback gain
     // AFC parameters
     double rho;                  // forgetting factor
     double eps;                  // power threshold
     double  mu;                  // step size
-    int    afl;                  // adaptive filter length
+    int    afl;                  // adaptive-filter length
     int    wfl;                  // whitening-filter length
     int    pfl;                  // persistent-filter length
-    int    fbl;                  // simulated feedback length
+    int    fbl;                  // simulated-feedback length
     int    hdel;                 // output/input hardware delay
+    // feedback filter buffers
+    float *efbp;                 // estimated-feedback buffer pointer
+    float *sfbp;                 // simulated-feedback buffer pointer
+    float *wfrp;                 // whitening-feedback buffer pointer
+    float *ffrp;                 // persistent-feedback buffer pointer
+    // quality metric buffers & parameters
+    float *merr;                 // chunk-error buffer pointer
+    float *qm;                   // quality-metric buffer pointer
+    int    nqm;                  // quality-metric buffer size
+    int    iqm;                  // quality-metric index
     int    sqm;                  // save quality metric ?
-    // simulation parameters
-    double fbg;                  // simulated-feedback gain
 } CHA_AFC;
 
 /*****************************************************/

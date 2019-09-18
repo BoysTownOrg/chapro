@@ -90,6 +90,9 @@ tst_gha : tst_gha.o  libchapro.a
 gha_demo : gha_demo.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
+opt_afc : opt_afc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
 wavrep : wavrep.o
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
@@ -145,6 +148,7 @@ iirfb.o: iirfb.c
 iirfb_design.o: iirfb_design.c chapro.h 
 iirfb_prepare.o: iirfb_prepare.c chapro.h 
 iirfb_process.o: iirfb_process.c chapro.h 
+opt_afc.o: opt_afc.c chapro.h 
 rfft.o: rfft.c chapro.h 
 tst_bbb.o: tst_bbb.c chapro.h 
 tst_cffa.o: tst_cffa.c chapro.h 
