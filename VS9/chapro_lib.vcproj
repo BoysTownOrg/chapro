@@ -219,6 +219,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\dciirfb_prepare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\dciirfb_process.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fft.c"
 				>
 			</File>
@@ -277,6 +285,10 @@
 			</File>
 			<File
 				RelativePath="..\chapro.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ite_fb.h"
 				>
 			</File>
 			<File
