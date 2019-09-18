@@ -14,7 +14,7 @@
 //#include "cha_gf_data.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -24,14 +24,13 @@ typedef struct {
 
 /***********************************************************/
 
-static double sampling_rate;
-static double target_delay = 4;
 static struct {
     char *ifn, *ofn, mat;
     double gn;
     int ds;
 } args;
-static CHA_CLS cls;
+static CHA_CLS cls = {0};
+static CHA_ICMP icmp = {0};
 
 /***********************************************************/
 
@@ -312,73 +311,20 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
-// specify filterbank center frequecies and bandwidths
-
-static double
-cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
-{
-    float lfbw, fmid = 1000;
-    int i, nh, nc;
-
-    lfbw = fmid / nm;
-    nh = (int) floor(log2(sr / 2000) * cpo);
-    nc = nh + nm;
-    cls->nc = nc;
-    for (i = 0; i < (nm - 1); i++) {
-        cls->fc[i] = lfbw * (i + 1);
-        cls->bw[i] = lfbw;
-    }
-    cls->fc[nm - 1] = fmid;
-    cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
-    for (i = nm; i < nc; i++) {
-        cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
-        cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo) - pow(2.0, (i - nm + 0.5) / cpo));
-    }
-
-    return (400 / lfbw);
-}
-
-// CSL prescription
-
-static void
-compressor_init(CHA_CLS *cls, double gn)
-{
-    int k, nc;
-
-    // set compression mode
-    cls->cm = 1;
-    // loop over filterbank channel
-    nc = cls->nc;
-    for (k = 0; k < nc; k++) {
-        cls->Lcs[k] = 0;
-        cls->Lcm[k] = 50;
-        cls->Lce[k] = 100;
-        cls->Lmx[k] = 120;
-        cls->Gcs[k] = (float) gn;
-        cls->Gcm[k] = (float) gn / 2;
-        cls->Gce[k] = 0;
-        cls->Gmx[k] = 90;
-    }
-}
-
-/***********************************************************/
-
 // prepare filterbank
 
 static void
 prepare_filterbank(CHA_PTR cp)
 {
-    double gd, *fc, *bw;
+    double gd, sr, *fc, *bw;
     float z[256], p[256], g[64]; 
-    int nc, d[32];
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
-    static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of bands per octave above 1 kHz
-    static int    no =  4;      // gammatone filter order
+    int cs, nc, no, d[32];
 
-    gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
     // prepare filterbank
+    sr = icmp.sr;      // sampling rate (Hz)
+    cs = icmp.cs;      // chunk size
+    no = icmp.no;      // gammatone filter order
+    gd = icmp.gd;      // target delay (ms) 
     nc = cls.nc;
     fc = cls.fc;
     bw = cls.bw;
@@ -403,16 +349,14 @@ prepare_compressor(CHA_PTR cp)
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    double fs, gd;
-
     prepare_filterbank(cp);
     prepare_compressor(cp);
     // initialize waveform
-    fs = CHA_DVAR[_fs];
-    io->rate = fs * 1000;
+    io->rate = icmp.sr;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     io->mat = args.mat;
+    io->cs = icmp.cs;
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
     // prepare i/o
@@ -420,11 +364,6 @@ prepare(I_O *io, CHA_PTR cp)
     if (!io->ofn) {
         init_aud(io);
     }
-    // report
-    gd = target_delay;
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
-    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
-    fprintf(stdout, "IIR + inst. compression\n");
     // generate C code from prepared data
     cha_data_gen(cp, "cha_gf_data.h");
 }
@@ -439,12 +378,12 @@ process(I_O *io, CHA_PTR cp)
     double t1, t2;
 
     if (io->ofn) {
+        sp_tic();
         // initialize i/o pointers
         x = io->iwav;
         y = io->owav;
         n = io->nsmp;
-        sp_tic();
-        cs = CHA_IVAR[_cs]; // chunk size
+        cs = io->cs;        // chunk size
         nk = n / cs;        // number of chunks
         for (i = 0; i < nk; i++) {
             process_chunk(cp, x + i * cs, y + i * cs, cs);
@@ -473,21 +412,88 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
+// specify filterbank center frequecies and bandwidths
+
+static double
+cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
+{
+    float lfbw, fmid = 1000;
+    int i, nh, nc;
+
+    lfbw = fmid / nm;
+    nh = (int) floor(log2(sr / 2000) * cpo);
+    nc = nh + nm;
+    cls->nc = nc;
+    for (i = 0; i < (nm - 1); i++) {
+        cls->fc[i] = lfbw * (i + 1);
+        cls->bw[i] = lfbw;
+    }
+    cls->fc[nm - 1] = fmid;
+    cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
+    for (i = nm; i < nc; i++) {
+        cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
+        cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo)
+                           - pow(2.0, (i - nm + 0.5) / cpo));
+    }
+
+    return (400 / lfbw);
+}
+
+// CSL prescription
+
+static void
+compressor_init(CHA_CLS *cls, double gn)
+{
+    int k, nc;
+
+    // set compression mode
+    cls->cm = 1;
+    // loop over filterbank channel
+    nc = cls->nc;
+    for (k = 0; k < nc; k++) {
+        cls->Lcs[k] = 0;
+        cls->Lcm[k] = 50;
+        cls->Lce[k] = 100;
+        cls->Lmx[k] = 120;
+        cls->Gcs[k] = (float) gn;
+        cls->Gcm[k] = (float) gn / 2;
+        cls->Gce[k] = 0;
+        cls->Gmx[k] = 90;
+    }
+}
+
 // initialize CSL prescription
 
 static void
 prescribe(void)
 {
+    double fs;
     static double sr = 24000;   // sampling rate (Hz)
+    static double gd = 4;       // target_delay (ms)
+    static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of bands per octave above 1 kHz
+    static int    po =  3;      // number of bands per octave above 1 kHz
+    static int    no =  4;      // gammatone filter order 
     static double gn = 20;      // flat suppressor gain (dB)
 
     if (args.gn) gn = args.gn;
-    target_delay = cgtfb_init(&cls, sr, nm, cpo);
-    sampling_rate = sr;
+    icmp.fd = cgtfb_init(&cls, sr, nm, po);
     compressor_init(&cls, gn);
+    icmp.sr = sr;
+    icmp.cs = cs;
+    icmp.nm = nm;
+    icmp.po = po;
+    icmp.no = no;
+    icmp.gn = gn;
+    icmp.gd = gd;
+    // report
+    fs = icmp.sr / 1000;
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "filterbank gd=%.1f ms; ", icmp.gd);
+    fprintf(stdout, "IIR + inst. compression\n");
 }
+
+/***********************************************************/
 
 int
 main(int ac, char *av[])

@@ -12,7 +12,7 @@
 //#include "cha_if_data.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;

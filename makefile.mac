@@ -27,7 +27,7 @@ HDRS=chapro.h
 
 all: $(PGMS)
 
-test: $(PGMS) test.lst
+tst: $(PGMS) test.lst
 	./tst_ffa
 	./tst_ffio
 	./tst_ffio -t

@@ -11,7 +11,7 @@
 #include "chapro.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -114,14 +114,15 @@ prepare(I_O *io, CHA_PTR cp)
     nc = CHA_IVAR[_nc];
     ns = CHA_IVAR[_ns];
     nw = CHA_IVAR[_nw];
-    fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", fs);
-    fprintf(stdout, "CFIRFB: nw=%d \n", nw);
     // initialize waveform
     io->rate = fs * 1000;
     init_wav(io);
     ns = io->nsmp;
     // output buffer
     io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
+    // report
+    fprintf(stdout, "CHA cfirfb_analyze: sampling rate=%.1f kHz, ", fs);
+    fprintf(stdout, "CFIRFB: nw=%d \n", nw);
 }
 
 // unscramble channel outputs

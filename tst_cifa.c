@@ -11,7 +11,7 @@
 #include "chapro.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -106,10 +106,10 @@ prepare_filterbank(CHA_PTR cp)
     static double sr = 24000;   // sampling rate (Hz)
     static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of bands per octave above 1 kHz
+    static int    po =  3;      // number of bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
 
-    gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
+    gd = target_delay = cgtfb_init(&cls, sr, nm, po);
     // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
@@ -129,8 +129,6 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
     gd = target_delay;
-    fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", fs);
-    fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
     // initialize waveform
     io->rate = fs * 1000;
     init_wav(io);
@@ -138,6 +136,9 @@ prepare(I_O *io, CHA_PTR cp)
     ns = io->nsmp;
     // output buffer
     io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
+    // report
+    fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
 }
 
 // unscramble channel outputs

@@ -73,14 +73,20 @@ typedef struct {
 } CHA_DSL;
 
 typedef struct {
-    double attack;               // attack time (ms)
-    double release;              // release time (ms)
-    double fs;                   // sampling rate (Hz)
-    double maxdB;                // maximum signal (dB SPL)
-    double tkgain;               // compression-start gain
-    double tk;                   // compression-start kneepoint
-    double cr;                   // compression ratio
-    double bolt;                 // broadband output limiting threshold
+    double attack;          // attack time (ms)
+    double release;         // release time (ms)
+    double fs;              // sampling rate (Hz)
+    double maxdB;           // maximum signal (dB SPL)
+    double tkgain;          // compression-start gain
+    double tk;              // compression-start kneepoint
+    double cr;              // compression ratio
+    double bolt;            // broadband output limiting threshold
+    // processing parameters
+    double td;              // target delay
+    int    cs;              // chunk size
+    int    nz;              // filter order
+    int    nw;              // window size
+    int    wt;              // window type: 0=Hamming, 1=Blackman
 } CHA_WDRC;
 
 /*****************************************************/
@@ -103,6 +109,42 @@ typedef struct {
     double Lce[CLS_MXCH];   // level at compression end
     double Lmx[CLS_MXCH];   // maximum output level
 } CHA_CLS;
+
+typedef struct {
+    // processing 
+    double sr;      // sampling rate (Hz)
+    int    cs;      // chunk size
+    // FIR
+    int    nz;      // number of  poles & zeros
+    int    nw;      // window size
+    int    wt;      // window type: 0=Hamming, 1=Blackman
+    // IIR
+    double fd;      // estimated filter delay (ms)
+    double gd;      // target delay (ms)
+    double gn;      // flat gain (dB)
+    int    nm;      // number of frequency bands below 1 kHz
+    int    po;      // number of bands per octave above 1 kHz
+    int    no;      // gammatone filter order
+} CHA_ICMP;
+
+/*****************************************************/
+
+typedef struct {
+     float *efbp, *sfbp, *wfrp, *ffrp, *qm, *merr;
+     int    iqm, nqm;
+    // AFC parameters
+    double rho;                  // forgetting factor
+    double eps;                  // power threshold
+    double  mu;                  // step size
+    int    afl;                  // adaptive filter length
+    int    wfl;                  // whitening-filter length
+    int    pfl;                  // persistent-filter length
+    int    fbl;                  // simulated feedback length
+    int    hdel;                 // output/input hardware delay
+    int    sqm;                  // save quality metric ?
+    // simulation parameters
+    double fbg;                  // simulated-feedback gain
+} CHA_AFC;
 
 /*****************************************************/
 
@@ -172,7 +214,7 @@ FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 // feedback module
 
-FUNC(int) cha_afc_prepare(CHA_PTR, double, double, double, int, int, int, int, double, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, CHA_AFC *);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 

@@ -20,30 +20,30 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
-     tst_gha gha_demo wavrep
+     tst_gha gha_demo wavrep opt_afc
 HDRS=chapro.h
 
 all: $(PGMS)
 
-test: $(PGMS) test.lst
-	tst_ffa
-	tst_ffio
-	tst_ffio -t
-	tst_ffsc
-	tst_ifa
-	tst_ifio
-	tst_ifio -t
-	tst_ifsc
-	tst_cffa
-	tst_cffio
-	tst_cffio -t
-	tst_cffsc
-	tst_cifa
-	tst_cifio
-	tst_cifio -t
-	tst_cifsc
-	tst_gha
-	gha_demo
+tst: $(PGMS) test.lst
+	.\tst_ffa
+	.\tst_ffio
+	.\tst_ffio -t
+	.\tst_ffsc
+	.\tst_ifa
+	.\tst_ifio
+	.\tst_ifio -t
+	.\tst_ifsc
+	.\tst_cffa
+	.\tst_cffio
+	.\tst_cffio -t
+	.\tst_cffsc
+	.\tst_cifa
+	.\tst_cifio
+	.\tst_cifio -t
+	.\tst_cifsc
+	.\tst_gha
+	.\gha_demo
 
 test.lst:
 	ls -l test > test.lst

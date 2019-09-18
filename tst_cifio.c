@@ -12,7 +12,7 @@
 //#include "cha_gf_data.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -200,10 +200,10 @@ prepare_filterbank(CHA_PTR cp)
     static double sr = 24000;   // sampling rate (Hz)
     static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int   cpo =  3;      // number of bands per octave above 1 kHz
+    static int    po =  3;      // number of bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order
 
-    gd = target_delay = cgtfb_init(&cls, sr, nm, cpo);
+    gd = target_delay = cgtfb_init(&cls, sr, nm, po);
     // prepare filterbank
     nc = cls.nc;
     fc = cls.fc;
@@ -227,9 +227,6 @@ prepare(I_O *io, CHA_PTR cp)
     gd = target_delay;
     if (args.ds) ds = args.ds;
     if (args.gn) gn = args.gn;
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f kHz, ", fs);
-    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
-    fprintf(stdout, "compression: gain=%.0f, ds=%d\n", gn, ds);
     // prepare compressor
     compressor_init(&cls, gn);
     cha_icmp_prepare(cp, &cls, lr, ds);
@@ -240,6 +237,10 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_gf_data.h");
+    // report
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "filterbank gd=%.1f ms; ", gd);
+    fprintf(stdout, "compression: gain=%.0f, ds=%d\n", gn, ds);
 }
 
 // process io

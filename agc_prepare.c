@@ -22,7 +22,7 @@ time_const(double atk, double rel, double fs, float *alfa, float *beta)
 /***********************************************************/
 
 FUNC(int)
-cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha)
+cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *agc)
 {
     double cltk;
     float *tk, *cr, *tkgn, *bolt, alfa, beta;
@@ -36,15 +36,15 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha)
     // allocate envelope buffer
     cha_allocate(cp, cs, sizeof(float), _xpk);
     // save WDRC parameters
-    time_const(gha->attack, gha->release, gha->fs, &alfa, &beta);
+    time_const(agc->attack, agc->release, agc->fs, &alfa, &beta);
     CHA_DVAR[_alfa]  = alfa;
     CHA_DVAR[_beta]  = beta;
-    //CHA_DVAR[_fs]   = gha->fs / 1000;
-    CHA_DVAR[_mxdb] = gha->maxdB;
-    CHA_DVAR[_tkgn] = gha->tkgain;
-    CHA_DVAR[_cr]   = gha->cr;
-    CHA_DVAR[_tk]   = gha->tk;
-    CHA_DVAR[_bolt] = gha->bolt;
+    //CHA_DVAR[_fs]   = agc->fs / 1000;
+    CHA_DVAR[_mxdb] = agc->maxdB;
+    CHA_DVAR[_tkgn] = agc->tkgain;
+    CHA_DVAR[_cr]   = agc->cr;
+    CHA_DVAR[_tk]   = agc->tk;
+    CHA_DVAR[_bolt] = agc->bolt;
     cha_allocate(cp, 2, sizeof(float), _ppk);
     // save DSL prescription
     nc = dsl->nchannel;
@@ -57,7 +57,7 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha)
     cr = (float *) cp[_gccr];
     tkgn = (float *) cp[_gctkgn];
     bolt = (float *) cp[_gcbolt];
-    time_const(dsl->attack, dsl->release, gha->fs, &alfa, &beta);
+    time_const(dsl->attack, dsl->release, agc->fs, &alfa, &beta);
     CHA_DVAR[_gcalfa] = alfa;
     CHA_DVAR[_gcbeta] = beta;
     for (i = 0; i < nc; i++) {
@@ -67,7 +67,7 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *gha)
         bolt[i] = (float) dsl->bolt[i];
     }
     // adjust BOLT
-    cltk = gha->tk;
+    cltk = agc->tk;
     for (i = 0; i < nc; i++) {
         if (bolt[i] > cltk) {
             bolt[i] = (float) cltk;

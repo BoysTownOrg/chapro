@@ -12,7 +12,7 @@
 //#include "cha_ff_data.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -159,8 +159,6 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
     nw = CHA_IVAR[_nw];
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
-    fprintf(stdout, "FIRFB: nw=%d\n", nw);
     // initialize waveform
     io->rate = fs * 1000;
     io->ifn = args.ifn;
@@ -168,6 +166,9 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_ff_data.h");
+    // report
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
+    fprintf(stdout, "FIRFB: nw=%d\n", nw);
 }
 
 // process io

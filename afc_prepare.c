@@ -9,14 +9,24 @@
 /***********************************************************/
 
 FUNC(int)
-cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl, 
-                int wfl, int pfl, int hdel, double fbg, int sqm)
+cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
 {
+    double mu, rho, eps, fbg;
+    int afl, wfl, pfl, hdel, sqm;
     double fbm = 0;
     float *sfbp, *wfrp, *ffrp;
     int i, cs, fbl, mxl = 0, nqm = 0, rsz = 32;
-
+ 
     cha_prepare(cp);
+    mu  = afc->mu;
+    rho = afc->rho;
+    eps = afc->eps;
+    fbg = afc->fbg;
+    afl = afc->afl;
+    wfl = afc->wfl;
+    pfl = afc->pfl;
+    sqm = afc->sqm;
+    hdel = afc->hdel;
     // allocate HA-output ring buffer
     cs = CHA_IVAR[_cs];
     fbl = (fbg > 0) ? FBSZ : 0;
@@ -74,6 +84,14 @@ cha_afc_prepare(CHA_PTR cp, double mu, double rho, double eps, int afl,
     CHA_IVAR[_nqm] = nqm;
     // initialize hardware delay
     CHA_IVAR[_hdel] = hdel; // should this be 38 ???
+    // copy filters info to CHA_AFC
+    afc->fbl = CHA_IVAR[_fbl];
+    afc->wfl = CHA_IVAR[_wfl];
+    afc->pfl = CHA_IVAR[_pfl];
+    afc->efbp = (float *) cp[_efbp];
+    afc->sfbp = (float *) cp[_sfbp];
+    afc->wfrp = (float *) cp[_wfrp];
+    afc->ffrp = (float *) cp[_ffrp];
 
     return (0);
 }

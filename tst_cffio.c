@@ -12,13 +12,15 @@
 //#include "cha_cf_data.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
     long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
+
+/***********************************************************/
 
 static struct {
     char *ifn, *ofn, mat, tone_io;
@@ -212,8 +214,6 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
     nw = CHA_IVAR[_nw];
-    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
-    fprintf(stdout, "CFIRFB: nw=%d\n", nw);
     // prepare compressor
     sr = fs * 1000;
     nc = cross_freq(cf, sr);
@@ -227,6 +227,9 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     // generate C code from prepared data
     cha_data_gen(cp, "cha_cf_data.h");
+    // report
+    fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
+    fprintf(stdout, "CFIRFB: nw=%d\n", nw);
 }
 
 // process io

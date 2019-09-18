@@ -14,7 +14,7 @@
 //#include "cha_cf_data.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -24,13 +24,13 @@ typedef struct {
 
 /***********************************************************/
 
-static double sampling_rate;
 static struct {
     char *ifn, *ofn, mat;
     double gn;
     int ds;
 } args;
-static CHA_CLS cls;
+static CHA_CLS cls = {0};
+static CHA_ICMP icmp = {0};
 
 /***********************************************************/
 
@@ -311,6 +311,104 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// prepare CFIR filterbank
+
+static void
+prepare_filterbank(CHA_PTR cp)
+{
+    double sr, *cf;
+    int cs, nc, nw, wt; 
+
+    // prepare CFIRFB
+    cs = icmp.cs;     // chunk size
+    nw = icmp.nw;     // window size
+    wt = icmp.wt;     // window type: 0=Hamming, 1=Blackman
+    nc = cls.nc;
+    cf = cls.fc;
+    sr = icmp.sr;
+    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
+}
+
+// prepare compressor
+
+static void
+prepare_compressor(CHA_PTR cp)
+{
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static int    ds = 24;      // downsample factor
+
+    if (args.ds) ds = args.ds;
+    cha_icmp_prepare(cp, &cls, lr, ds);
+}
+
+// prepare io
+
+static void
+prepare(I_O *io, CHA_PTR cp)
+{
+    prepare_filterbank(cp);
+    prepare_compressor(cp);
+    // initialize waveform
+    io->rate = icmp.sr;
+    io->ifn = args.ifn;
+    io->ofn = args.ofn;
+    io->mat = args.mat;
+    io->cs = icmp.cs;
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
+    // generate C code from prepared data
+    cha_data_gen(cp, "cha_cf_data.h");
+}
+
+// process io
+
+static void
+process(I_O *io, CHA_PTR cp)
+{
+    float *x, *y;
+    int i, n, cs, nk;
+    double t1, t2;
+
+    if (io->ofn) {
+        sp_tic();
+        // initialize i/o pointers
+        x = io->iwav;
+        y = io->owav;
+        n = io->nsmp;
+        cs = io->cs;        // chunk size
+        nk = n / cs;        // number of chunks
+        for (i = 0; i < nk; i++) {
+            process_chunk(cp, x + i * cs, y + i * cs, cs);
+        }
+        t1 = sp_toc();
+        t2 = io->nwav / io->rate;
+        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
+    } else {
+        while (get_aud(io)) {
+            put_aud(io, cp);
+        }
+    }
+}
+
+// clean up io
+
+static void
+cleanup(I_O *io, CHA_PTR cp)
+{
+    if (io->ofn) {
+        write_wave(io);
+    }
+    stop_wav(io);
+    cha_cleanup(cp);
+}
+
+/***********************************************************/
+
 // specify filterbank crossover frequencies
 
 static int
@@ -361,122 +459,28 @@ compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
 
 /***********************************************************/
 
-// prepare CFIR filterbank
-
-static void
-prepare_filterbank(CHA_PTR cp)
-{
-    double sr, *cf;
-    int nc; 
-    static int    nw = 256;     // window size
-    static int    cs = 32;      // chunk size
-    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
-
-    // prepare CFIRFB
-    nc = cls.nc;
-    cf = cls.fc;
-    sr = sampling_rate;
-    cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
-}
-
-// prepare compressor
-
-static void
-prepare_compressor(CHA_PTR cp)
-{
-    static double lr = 2e-5;    // signal-level reference (Pa)
-    static int    ds = 24;      // downsample factor
-
-    if (args.ds) ds = args.ds;
-    cha_icmp_prepare(cp, &cls, lr, ds);
-}
-
-// prepare io
-
-static void
-prepare(I_O *io, CHA_PTR cp)
-{
-    double fs;
-
-    prepare_filterbank(cp);
-    prepare_compressor(cp);
-    // initialize waveform
-    fs = CHA_DVAR[_fs];
-    io->rate = fs * 1000;
-    io->ifn = args.ifn;
-    io->ofn = args.ofn;
-    io->mat = args.mat;
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        init_aud(io);
-    }
-    // report
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
-    fprintf(stdout, "FIR + inst. compression\n");
-    // generate C code from prepared data
-    cha_data_gen(cp, "cha_cf_data.h");
-}
-
-// process io
-
-static void
-process(I_O *io, CHA_PTR cp)
-{
-    float *x, *y;
-    int i, n, cs, nk;
-    double t1, t2;
-
-    if (io->ofn) {
-        // initialize i/o pointers
-        x = io->iwav;
-        y = io->owav;
-        n = io->nsmp;
-        sp_tic();
-        cs = CHA_IVAR[_cs]; // chunk size
-        nk = n / cs;        // number of chunks
-        for (i = 0; i < nk; i++) {
-            process_chunk(cp, x + i * cs, y + i * cs, cs);
-        }
-        t1 = sp_toc();
-        t2 = io->nwav / io->rate;
-        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
-    } else {
-        while (get_aud(io)) {
-            put_aud(io, cp);
-        }
-    }
-}
-
-// clean up io
-
-static void
-cleanup(I_O *io, CHA_PTR cp)
-{
-    if (io->ofn) {
-        write_wave(io);
-    }
-    stop_wav(io);
-    cha_cleanup(cp);
-}
-
-/***********************************************************/
-
 // initialize CSL prescription
 
 static void
 prescribe(void)
 {
-    static double sr = 24000;   // sampling rate (Hz)
-    static double gn = 20;      // flat suppressor gain (dB)
+    double fs;
 
-    if (args.gn) gn = args.gn;
-    sampling_rate = sr;
-    cls.nc = cross_freq(cls.fc, sr);
-    compressor_init(&cls, cls.fc, sr, gn, cls.nc);
+    icmp.sr = 24000;   // sampling rate (Hz)
+    icmp.gn = 20;      // flat compressor gain (dB)
+    icmp.nw = 256;     // window size
+    icmp.cs = 32;      // chunk size
+    icmp.wt = 0;       // window type: 0=Hamming, 1=Blackman
+    if (args.gn) icmp.gn = args.gn;
+    cls.nc = cross_freq(cls.fc, icmp.sr);
+    compressor_init(&cls, cls.fc, icmp.sr, icmp.gn, cls.nc);
+    // report
+    fs = icmp.sr / 1000;
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "FIR + inst. compression\n");
 }
+
+/***********************************************************/
 
 int
 main(int ac, char *av[])

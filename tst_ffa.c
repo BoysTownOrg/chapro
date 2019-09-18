@@ -11,7 +11,7 @@
 #include "chapro.h"
 
 typedef struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -68,8 +68,8 @@ static void
 prepare_filterbank(CHA_PTR cp)
 {
     static double sr = 24000;   // sampling rate (Hz)
-    static int    nw = 256;     // window size
     static int    cs = 32;      // chunk size
+    static int    nw = 256;     // window size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
     static int    nc = 8;       // number of frequency bands
     // cross frequencies
@@ -92,14 +92,15 @@ prepare(I_O *io, CHA_PTR cp)
     fs = CHA_DVAR[_fs];
     nc = CHA_IVAR[_nc];
     nw = CHA_IVAR[_nw];
-    fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", fs);
-    fprintf(stdout, "FIRFB: nw=%d \n", nw);
     // initialize waveform
     io->rate = fs * 1000;
     init_wav(io);
     ns = io->nsmp;
     // output buffer
     io->owav = (float *) calloc(nc * ns, sizeof(float));
+    // report
+    fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", fs);
+    fprintf(stdout, "FIRFB: nw=%d \n", nw);
 }
 
 // unscramble channel outputs

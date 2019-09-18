@@ -98,11 +98,11 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
     static int    cs = 32;          // chunk size
     static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
     static void *cp[NPTR] = {0};
-    static CHA_WDRC gha = {1, 50, 24000, 119, 0, 105, 10, 105};
+    static CHA_WDRC agc = {1, 50, 24000, 119, 0, 105, 10, 105};
 
     nc = dsl->nchannel;
     cha_firfb_prepare(cp, dsl->cross_freq, nc, fs, nw, wt, cs);
-    cha_agc_prepare(cp, dsl, &gha);
+    cha_agc_prepare(cp, dsl, &agc);
     sp_tic();
     WDRC(cp, x, y, n, nc);
     return (sp_toc());
