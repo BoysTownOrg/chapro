@@ -11,7 +11,7 @@ FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
     float ye, yy, mmu, dif, dm, xx, ss, ee, uu, ef, uf;
-    int i, ih, ij, is, id, j, n, iqm;
+    int i, ih, ij, is, id, j, iqm;
     static float *rng0, *rng1, *rng2, *rng3;
     static float *efbp, *sfbp, *wfrp, *ffrp, *qm;
     static float mu, rho, eps, fbm;

@@ -3,7 +3,8 @@ EXPORTS cha_version
 cha_allocate
 cha_cleanup
 cha_data_gen
-cha_hex_patch
+cha_data_load
+cha_data_save
 cha_scale
 cha_fft_cr
 cha_fft_rc
