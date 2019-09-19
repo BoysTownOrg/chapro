@@ -9,7 +9,8 @@
 
 #include <sigpro.h>
 #include "chapro.h"
-//#include "cha_gf_data.h"
+#define DATA_HDR "tst_cifio_data.h"
+//#include DATA_HDR
 
 typedef struct {
     char *ifn, *ofn, cs, mat;
@@ -236,7 +237,7 @@ prepare(I_O *io, CHA_PTR cp)
     io->ofn = args.ofn;
     init_wav(io);
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_gf_data.h");
+    //cha_data_gen(cp, DATA_HDR);
     // report
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.0f kHz, ", fs);
     fprintf(stdout, "filterbank gd=%.1f ms; ", gd);

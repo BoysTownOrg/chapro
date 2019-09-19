@@ -11,7 +11,8 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-//#include "cha_gha_data.h"
+#define DATA_HDR "tst_gha_data.h"
+//#include DATA_HDR
 
 typedef struct {
     char *ifn, *ofn, cs, mat;
@@ -412,7 +413,7 @@ prepare(I_O *io, CHA_PTR cp)
     }
     prepare_feedback(cp, io->nsmp);
     // generate C code from prepared data
-    cha_data_gen(cp, "cha_gha_data.h");
+    //cha_data_gen(cp, DATA_HDR);
 }
 
 // process io

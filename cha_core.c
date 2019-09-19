@@ -69,19 +69,19 @@ cha_data_gen(CHA_PTR cp, char *fn)
     static int hdsz = sizeof(head) / sizeof(char *);
     static int tlsz = sizeof(tail) / sizeof(char *);
     static int ptpl = 15;
-    static int arpl = 6;
-    static int ivpl = 6;
+    static int szpl = 8;
+    static int ivpl = 8;
     static int dvpl = 4;
+    static int arpl = 6;
     static int cptr = 4; // number of cast pointers
 
+    cpsiz = (int *) cp[_size];
+    if (cpsiz == NULL) {
+        return (2);
+    }
     fp = fopen(fn, "wt");
     if (fp == NULL) {
         return (1);
-    }
-    cpsiz = (int *) cp[_size];
-    if (cpsiz == NULL) {
-        fclose(fp);
-        return (2);
     }
     // count pointers
     ptsiz = 0;
@@ -104,7 +104,8 @@ cha_data_gen(CHA_PTR cp, char *fn)
     }
     // initialize magic number
     if (ptsiz > 0) {
-        fprintf(fp, "static CHA_DATA cha_magic[4] = {0x55530,0x68131,%d,%d};\n", ptsiz, arsiz);
+        fprintf(fp, "static CHA_DATA cha_magic[4] = ");
+        fprintf(fp, "{0x55530,0x68131,%d,%d};\n", ptsiz, arsiz);
     }
     // initialize ptr arrays
     for (i = 0; i < ptsiz; i++) {
@@ -119,12 +120,12 @@ cha_data_gen(CHA_PTR cp, char *fn)
             }
             fprintf(fp, "static CHA_DATA p%02d[%8d] = { // _size\n", i, arlen);
             for (j = 0; j < arsiz; j++) {
-                if ((j % arpl) == 0) fprintf(fp, "    ");
-                fprintf(fp, "%10u", ulptr[j]);
+                if ((j % szpl) == 0) fprintf(fp, "    ");
+                fprintf(fp, "%8u", ulptr[j]);
                 if (j < (arsiz - 1)) fprintf(fp, ",");
-                if ((j % arpl) == (arpl - 1)) fprintf(fp, "\n");
+                if ((j % szpl) == (szpl - 1)) fprintf(fp, "\n");
             }
-            if ((j % arpl) != 0) fprintf(fp, "\n");
+            if ((j % szpl) != 0) fprintf(fp, "\n");
             fprintf(fp, "};\n");
         } else if (i == _ivar) {
             arlen = cpsiz[i] / sizeof(int);
@@ -135,7 +136,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
             fprintf(fp, "static CHA_DATA p%02d[%8d] = { // _ivar\n", i, arlen);
             for (j = 0; j < arsiz; j++) {
                 if ((j % ivpl) == 0) fprintf(fp, "    ");
-                fprintf(fp, "%10d", CHA_IVAR[j]);
+                fprintf(fp, "%8d", CHA_IVAR[j]);
                 if (j < (arsiz - 1)) fprintf(fp, ",");
                 if ((j % ivpl) == (ivpl - 1)) fprintf(fp, "\n");
             }
@@ -196,7 +197,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
     if (ptsiz < 1) {
         fprintf(fp, "static CHA_DATA *cha_data[1] = {cha_magic};\n");
     } else {
-        fprintf(fp, "static CHA_DATA *cha_data[NPTR+1] = {\n");
+        fprintf(fp, "static CHA_DATA *cha_data[%d] = {\n", NPTR);
         fprintf(fp, "    ");
         for (i = 0; i < cptr; i++) {
             fprintf(fp, "(CHA_DATA *)p%02d,", i);
@@ -210,11 +211,10 @@ cha_data_gen(CHA_PTR cp, char *fn)
             } else {
                 fprintf(fp, " p%02d", i);
             }
-           fprintf(fp, ",");
+           if (i < (ptsiz - 1)) fprintf(fp, ",");
            if ((j % ptpl) == (ptpl - 1)) fprintf(fp, "\n");
         }
         if ((j % ptpl) != (ptpl - 1)) fprintf(fp, "\n");
-        fprintf(fp, "    cha_magic\n");
         fprintf(fp, "};\n");
     }
     // print trailer
@@ -227,30 +227,116 @@ cha_data_gen(CHA_PTR cp, char *fn)
 };
 
 FUNC(int)
-cha_hex_patch(CHA_PTR cp, char *ifn, char *ofn)
+cha_data_save(CHA_PTR cp, char *fn)
 {
-    char s[256];
-    int count;
-    FILE *ifp, *ofp;
+    int ptsiz, arsiz, dtsiz, i, *cpsiz;
+    CHA_DATA cha_magic[4];
+    FILE *fp;
 
-    ifp = fopen(ifn, "r");
-    if (ifp == NULL) {
-        return (1);
-    }
-    ofp = fopen(ofn, "w");
-    if (ifp == NULL) {
+    cpsiz = (int *) cp[_size];
+    if (cpsiz == NULL) {
         return (2);
     }
-    count = 0;
-    while (fgets(s, 256, ifp) != NULL) {
-        count++;
+    fp = fopen(fn, "wb");
+    if (fp == NULL) {
+        return (1);
     }
-    rewind(ifp);
-    while (fgets(s, 256, ifp) != NULL) {
-        fputs(s, ofp);
+    // count pointers
+    ptsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) ptsiz = i + 1;
     }
-    fclose(ifp);
-    fclose(ofp);
+    // sum array sizes
+    arsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        arsiz += cpsiz[i];
+    }
+    if (arsiz == 0) {
+        fclose(fp);
+        return (3);
+    }
+    dtsiz = sizeof(CHA_DATA);
+    // write magic number
+    cha_magic[0] = 0x55530;
+    cha_magic[1] = 0x68131;
+    cha_magic[2] = ptsiz;
+    cha_magic[3] = arsiz;
+    fwrite(cha_magic, dtsiz, 4, fp);
+    // write ptr arrays
+    for (i = 0; i < ptsiz; i++) {
+        if (cpsiz[i]) {
+            arsiz = cpsiz[i] / dtsiz;
+            fwrite(cp[i], dtsiz, arsiz, fp);
+        }
+    }
+    fclose(fp);
+
+    return (0);
+};
+
+FUNC(int)
+cha_data_load(CHA_PTR cp, char *fn)
+{
+    int ptsiz, arsiz, dtsiz, i, *cpsiz;
+    CHA_DATA cha_magic[4], file_magic[4], *file_size, *file_data;
+    FILE *fp;
+
+    cpsiz = (int *) cp[_size];
+    if (cpsiz == NULL) {
+        return (2);
+    }
+    fp = fopen(fn, "rb");
+    if (fp == NULL) {
+        return (1);
+    }
+    // count pointers
+    ptsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) ptsiz = i + 1;
+    }
+    // sum array sizes
+    arsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        arsiz += cpsiz[i];
+    }
+    if (arsiz == 0) {
+        fclose(fp);
+        return (3);
+    }
+    dtsiz = sizeof(CHA_DATA);
+    // read magic number
+    cha_magic[0] = 0x55530;
+    cha_magic[1] = 0x68131;
+    cha_magic[2] = ptsiz;
+    cha_magic[3] = arsiz;
+    fread(file_magic, dtsiz, 4, fp);
+    // check magic number
+    for (i = 0; i < 4; i++) {
+        if (file_magic[i] != cha_magic[i]) {
+            break;
+        }
+    }
+    if (i < 4) {
+        fclose(fp);
+        return (4);
+    }
+    // read  & check size array
+    ptsiz = file_magic[2];
+    arsiz = NPTR * dtsiz;
+    file_size = (CHA_DATA *) cha_allocate(cp, NPTR, dtsiz, 0);
+    fread(file_size, NPTR, dtsiz, fp);
+    if (file_size[0] != arsiz) {
+        return (4);
+    }
+    // read data arrays
+    for (i = 1; i < ptsiz; i++) {
+        if (file_size[i]) {
+            arsiz = file_size[i] / dtsiz;
+            file_data = (CHA_DATA *) cha_allocate(cp, arsiz, dtsiz, i);
+            fread(file_data, arsiz, dtsiz, fp);
+        }
+    }
+    fclose(fp);
 
     return (0);
 };
