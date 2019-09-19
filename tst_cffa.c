@@ -53,9 +53,9 @@ write_waves(I_O *io, CHA_PTR cp, int c)
     y = io->owav;
     r[0] = (float) io->rate;
     vl = sp_var_alloc(3);
-    sp_var_set(vl + 0, "rate", r, 1, 1, "f4");
-    sp_var_set(vl + 1,    "x", x, n, 1, "f4");
-    sp_var_set(vl + 2,    "y", y, n, c, "f4c");
+    sp_var_add(vl, "rate", r, 1, 1, "f4");
+    sp_var_add(vl,    "x", x, n, 1, "f4");
+    sp_var_add(vl,    "y", y, n, c, "f4c");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
 }

@@ -20,7 +20,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
-     tst_gha gha_demo wavrep
+     tst_gha gha_demo 
 HDRS=chapro.h 
 
 all: $(PGMS)
@@ -89,9 +89,6 @@ tst_gha : tst_gha.o  libchapro.a
 
 gha_demo : gha_demo.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
-
-wavrep : wavrep.o
-	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)

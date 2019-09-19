@@ -147,8 +147,8 @@ typedef struct {
     float *wfrp;                 // whitening-feedback buffer pointer
     float *ffrp;                 // persistent-feedback buffer pointer
     // quality metric buffers & parameters
-    float *merr;                 // chunk-error buffer pointer
     float *qm;                   // quality-metric buffer pointer
+    int   *iqmp;                 // quality-metric index pointer
     int    nqm;                  // quality-metric buffer size
     int    iqm;                  // quality-metric index
     int    sqm;                  // save quality metric ?
@@ -161,7 +161,8 @@ typedef struct {
 FUNC(void *) cha_allocate(CHA_PTR, int, int, int);
 FUNC(void)   cha_cleanup(CHA_PTR);
 FUNC(int)    cha_data_gen(CHA_PTR, char *);
-FUNC(int)    cha_hex_patch(CHA_PTR, char *, char *);
+FUNC(int)    cha_data_save(CHA_PTR, char *);
+FUNC(int)    cha_data_load(CHA_PTR, char *);
 FUNC(void)   cha_fft_cr(float *, int);
 FUNC(void)   cha_fft_rc(float *, int);
 FUNC(void)   cha_fft(float *, int);
@@ -317,9 +318,10 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _rng3     _offset+17
 #define _efbp     _offset+18
 #define _sfbp     _offset+19
-#define _merr     _offset+20
-#define _wfrp     _offset+21
-#define _ffrp     _offset+22
+#define _wfrp     _offset+20
+#define _ffrp     _offset+21
+#define _qm       _offset+22
+#define _iqmp     _offset+23
 
 /*****************************************************/
 

@@ -12,7 +12,7 @@
 #include "chapro.h"
 
 typedef struct {
-    char *ifn, *ofn, cs, mat;
+    char *ifn, *ofn, cs, mat, nrep;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -22,28 +22,16 @@ typedef struct {
 
 /***********************************************************/
 
-static int    jqm = 0;
+static int    jqm = 0;   //index to begining of optimization range
 static int    prn = 0;
 static struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, mat, nrep;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
 static CHA_WDRC agc = {0};
 
 /***********************************************************/
-
-static void
-save_qm(CHA_PTR cp, int cs)
-{
-    int n;
-    float *merr;
-
-    merr = (float *) cp[_merr];
-    n = ((afc.iqm + cs) < afc.nqm) ? cs : (afc.nqm - afc.iqm);
-    if (merr) fcopy(afc.qm + afc.iqm, merr, n);
-    afc.iqm += n;
-}
 
 static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
@@ -60,8 +48,6 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     cha_iirfb_synthesize(cp, z, y, cs);
     cha_agc_output(cp, y, y, cs);
     cha_afc_output(cp, y, cs);
-    // save quality metric
-    save_qm(cp, cs);
 }
 
 /***********************************************************/
@@ -75,6 +61,7 @@ usage()
     fprintf(stdout, "options\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
+    fprintf(stdout, "-r N  number of input file repetitions\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
 }
@@ -109,12 +96,17 @@ static void
 parse_args(int ac, char *av[])
 {
     args.mat = 1;
+    args.nrep = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
+            } else if (av[1][1] == 'r') {
+                args.nrep = atoi(av[2]);
+                ac--;
+                av++;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -272,14 +264,10 @@ prepare_feedback(CHA_PTR cp, int n)
     afc.pfl  = 0;      // persistent-filter length
     afc.hdel = 0;      // output/input hardware delay
     afc.sqm  = 1;      // save quality metric ?
-    // simulation parameters
     afc.fbg = 1;       // simulated-feedback gain 
+    afc.nqm = n;       // initialize quality metric
     // prepare AFC
     cha_afc_prepare(cp, &afc);
-    // initialize quality metric
-    afc.nqm = n;
-    afc.iqm = 0;
-    if (afc.qm == NULL) afc.qm = (float *) calloc(afc.nqm, sizeof(float));
 }
 
 // prepare io
@@ -291,6 +279,7 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_compressor(cp);
     // initialize waveform
     io->rate = agc.fs;
+    io->nrep = args.nrep;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     io->cs = agc.cs;
@@ -306,7 +295,7 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
-    int i, n, cs, nk, kqm, lqm;
+    int i, j, m, n, cs, nk, iqm, kqm, lqm;
     double t1, t2, fme, xqm;
 
     sp_tic();
@@ -315,30 +304,34 @@ process(I_O *io, CHA_PTR cp)
         x = io->iwav;
         y = io->owav;
         n = io->nsmp;
-        cs = agc.cs; // chunk size
+        m = io->nrep;
+        cs = agc.cs;        // chunk size
         nk = n / cs;        // number of chunks
-        for (i = 0; i < nk; i++) {
-            process_chunk(cp, x + i * cs, y + i * cs, cs);
+        for (j = 0; j < m; j++) {
+            for (i = 0; i < nk; i++) {
+                process_chunk(cp, x + i * cs, y + i * cs, cs);
+            }
         }
     }
     if (prn) {
         jqm = 0;
         t1 = sp_toc();
-        t2 = io->nwav / io->rate;
+        t2 = (io->nwav / io->rate) * io->nrep;
         fprintf(stdout, "(wall/wave) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
-        if (afc.iqm > 0) {
-            if (afc.qm[afc.iqm - 1] > 0) {
-                fme = 10 * log10(afc.qm[afc.iqm - 1]);
+        iqm = afc.iqmp[0];
+        if (iqm > 0) {
+            if (afc.qm[iqm - 1] > 0) {
+                fme = 10 * log10(afc.qm[iqm - 1]);
                 fprintf(stdout, "final misalignment error = %.2f dB\n", fme);
             }
-            kqm = afc.iqm - 1;
-            for (i = afc.iqm - 1; i >= 0; i--) { // find min err
+            kqm = iqm - 1;
+            for (i = iqm - 1; i >= 0; i--) { // find min err
                 if (afc.qm[kqm] > afc.qm[i]) {
                     kqm = i;
                 }
             }
-            lqm = afc.iqm - 1;
-            for (i = kqm; i < afc.iqm; i++) { // find max err
+            lqm = iqm - 1;
+            for (i = kqm; i < iqm; i++) { // find max err
                 if (afc.qm[lqm] < afc.qm[i]) {
                     lqm = i;
                 }
@@ -351,7 +344,7 @@ process(I_O *io, CHA_PTR cp)
             fme = 10 * log10(afc.qm[lqm]);
             fprintf(stdout, "max error=%.2f ", fme);
             fprintf(stdout, "range=%d %d %d %d %d\n",
-                jqm, kqm, lqm, afc.iqm, afc.nqm);
+                jqm, kqm, lqm, iqm, afc.nqm);
         }
     }
 }
@@ -363,7 +356,6 @@ cleanup(I_O *io, CHA_PTR cp)
 {
     stop_wav(io);
     cha_cleanup(cp);
-    free(afc.qm);
 }
 
 /***********************************************************/
@@ -375,7 +367,7 @@ double
 afc_error(float *par)
 {
     double mxqm, err;
-    int i;
+    int i, iqm;
 
     // check parameter range
     if (par[0] < 1e-9) return (1e9);
@@ -391,7 +383,8 @@ afc_error(float *par)
     process(&io, cp);
     // report error
     mxqm = 0;
-    for (i = jqm; i < afc.iqm; i++) {
+    iqm = afc.iqmp[0];
+    for (i = jqm; i < iqm; i++) {
         if (mxqm < afc.qm[i]) {
             mxqm = afc.qm[i];
         }

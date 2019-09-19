@@ -56,9 +56,9 @@ save_mat(char *fn, float fs, float *x, float *y, int n)
         t[i] = i / fs;
     }
     vl = sp_var_alloc(3);
-    sp_var_set(vl + 0, "t", t, n, 1, "f4");
-    sp_var_set(vl + 1, "x", x, n, 1, "f4");
-    sp_var_set(vl + 2, "y", y, n, 1, "f4");
+    sp_var_add(vl, "t", t, n, 1, "f4");
+    sp_var_add(vl, "x", x, n, 1, "f4");
+    sp_var_add(vl, "y", y, n, 1, "f4");
     sp_mat_save(fn, vl);
     sp_var_clear(vl);
     free(t);

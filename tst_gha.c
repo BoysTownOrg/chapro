@@ -15,7 +15,7 @@
 //#include DATA_HDR
 
 typedef struct {
-    char *ifn, *ofn, cs, mat;
+    char *ifn, *ofn, cs, mat, nrep;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -26,25 +26,13 @@ typedef struct {
 /***********************************************************/
 
 static struct {
-    char *ifn, *ofn, mat;
+    char *ifn, *ofn, simfb, mat, nrep;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
 static CHA_WDRC agc = {0};
 
 /***********************************************************/
-
-static void
-save_qm(CHA_PTR cp, int cs)
-{
-    int n;
-    float *merr;
-
-    merr = (float *) cp[_merr];
-    n = ((afc.iqm + cs) < afc.nqm) ? cs : (afc.nqm - afc.iqm);
-    if (merr) fcopy(afc.qm + afc.iqm, merr, n);
-    afc.iqm += n;
-}
 
 static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
@@ -63,8 +51,6 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     cha_iirfb_synthesize(cp, z, y, cs);
     cha_agc_output(cp, y, y, cs);
     cha_afc_output(cp, y, cs);
-    // save quality metric
-    save_qm(cp, cs);
 }
 
 /***********************************************************/
@@ -76,26 +62,12 @@ usage()
 {
     fprintf(stdout, "usage: tst_gha [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
+    fprintf(stdout, "-d    disable simulated feedback\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
+    fprintf(stdout, "-r N  number of input file repetitions\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
-}
-
-static void
-var_string(VAR *vl, char *name, char *s)
-{
-    int i, n;
-    float *data;
-
-    n = strlen(s);
-    data = (float *) calloc(n, sizeof(float));
-    for (i = 0; i < n; i++) {
-        data[i] = s[i];
-    }
-    sp_var_set(vl, name, data, 1, n, "f4");
-    vl[0].text = 1;
-    free(data);
 }
 
 static void
@@ -128,12 +100,20 @@ static void
 parse_args(int ac, char *av[])
 {
     args.mat = 1;
+    args.nrep = 1;
+    args.simfb = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'h') {
+            if (av[1][1] == 'd') {
+                args.simfb = 0;
+            } else if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
+            } else if (av[1][1] == 'r') {
+                args.nrep = atoi(av[2]);
+                ac--;
+                av++;
             } else if (av[1][1] == 'v') {
                 version();
             }
@@ -283,7 +263,7 @@ static void
 write_wave(I_O *io)
 {
     char *ft;
-    float r[1], *w;
+    float r[1], *w, *meer;
     int   n, nbits = 16;
     static VAR *vl;
 
@@ -293,15 +273,16 @@ write_wave(I_O *io)
     n = io->nwav;
     w = io->owav;
     r[0] = (float) io->rate;
+    meer = afc.qm ? afc.qm : (float *) calloc(afc.nqm, sizeof(float));
     vl = sp_var_alloc(8);
-    sp_var_set(vl + 0, "rate",        r,       1, 1, "f4");
-    sp_var_set(vl + 1, "wave",        w,       n, 1, "f4");
-    sp_var_set(vl + 2, "merr",   afc.qm, afc.nqm, 1, "f4");
-    sp_var_set(vl + 3, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
-    sp_var_set(vl + 4, "efbp", afc.efbp, afc.fbl, 1, "f4");
-    sp_var_set(vl + 5, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
-    sp_var_set(vl + 6, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
-    var_string(vl + 7, "ifn",  io->ifn);
+    sp_var_add(vl, "rate",        r,       1, 1, "f4");
+    sp_var_add(vl, "wave",        w,       n, 1, "f4");
+    sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
+    sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
+    sp_var_add(vl, "efbp", afc.efbp, afc.fbl, 1, "f4");
+    sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
+    sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
+    sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
     } else {
@@ -309,6 +290,7 @@ write_wave(I_O *io)
         sp_wav_write(io->ofn, vl + 1, r, nbits);
     }
     sp_var_clear(vl);
+    if (afc.qm == NULL) free(meer);
 }
 
 static void
@@ -382,14 +364,11 @@ prepare_feedback(CHA_PTR cp, int n)
     afc.pfl  = 0;      // persistent-filter length
     afc.hdel = 0;      // output/input hardware delay
     afc.sqm  = 1;      // save quality metric ?
-    // simulation parameters
     afc.fbg = 1;       // simulated-feedback gain 
+    afc.nqm = n;       // initialize quality metric
+    if (!args.simfb) { afc.fbg = afc.sqm = 0; }
     // prepare AFC
     cha_afc_prepare(cp, &afc);
-    // initialize quality metric
-    afc.nqm = n;
-    afc.iqm = 0;
-    if (afc.qm == NULL) afc.qm = (float *) calloc(afc.nqm, sizeof(float));
 }
 
 // prepare io
@@ -401,9 +380,11 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_compressor(cp);
     // initialize waveform
     io->rate = agc.fs;
+    io->nrep = args.nrep;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     io->mat = args.mat;
+    io->cs = agc.cs;
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
     // prepare i/o
@@ -422,26 +403,31 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
-    int i, n, cs, nk;
+    int i, j, m, n, cs, nk, iqm;
     double t1, t2, fme;
 
     if (io->ofn) {
+        sp_tic();
         // initialize i/o pointers
         x = io->iwav;
         y = io->owav;
         n = io->nsmp;
-        sp_tic();
-        cs = agc.cs; // chunk size
+        m = io->nrep;
+        cs = io->cs;        // chunk size
         nk = n / cs;        // number of chunks
-        for (i = 0; i < nk; i++) {
-            process_chunk(cp, x + i * cs, y + i * cs, cs);
+        for (j = 0; j < m; j++) {
+            for (i = 0; i < nk; i++) {
+                process_chunk(cp, x + i * cs, y + i * cs, cs);
+            }
         }
         t1 = sp_toc();
-        t2 = io->nwav / io->rate;
-        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
-        if (afc.iqm > 0) {
-            if (afc.qm[afc.iqm - 1] > 0) {
-                fme = 10 * log10(afc.qm[afc.iqm - 1]);
+        t2 = (io->nwav / io->rate) * io->nrep;
+        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n",
+            t1, t2, t1/t2);
+        iqm = afc.iqmp[0];
+        if (iqm > 0) {
+            if (afc.qm[iqm - 1] > 0) {
+                fme = 10 * log10(afc.qm[iqm - 1]);
                 fprintf(stdout, "final misalignment error = %.2f dB\n", fme);
             }
         }
@@ -466,7 +452,6 @@ cleanup(I_O *io, CHA_PTR cp)
     }
     stop_wav(io);
     cha_cleanup(cp);
-    free(afc.qm);
 }
 
 /***********************************************************/
@@ -476,7 +461,9 @@ cleanup(I_O *io, CHA_PTR cp)
 static void
 prescribe(void)
 {
+    char *en;
     double fs;
+    int nc, nr;
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -497,8 +484,12 @@ prescribe(void)
     agc.td = td;
     // report
     fs = agc.fs / 1000;
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
-    fprintf(stdout, "IIR+AGC+AFC: nc=%d nz=%d\n", dsl.nchannel, nz);
+    en = args.simfb ? "en" : "dis";
+    nc = dsl.nchannel;
+    nr = args.nrep;
+    fprintf(stdout, "CHA simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "Feedback simulation %sabled.\n", en);
+    fprintf(stdout, "IIR+AGC+AFC: nc=%d nz=%d nrep=%d\n", nc, nz, nr);
 }
 
 int

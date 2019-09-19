@@ -17,29 +17,22 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
 	afc_prepare.o afc_process.o \
 	icmp_prepare.o icmp_process.o
-PGMS=tst_bbb wavrep
-PROF=test/carrots80.wav
+PGMS=tst_bbb 
 
-profile : $(PGMS) $(PROF)
+profile : $(PGMS) 
 	# profiling...
-	./tst_bbb # feedback simulation enabled
+	./tst_bbb -r 80 # feedback simulation enabled
 	gprof tst_bbb > gprof1.txt
 	head gprof1.txt
 
 fast : $(PGMS) $(PROF)
 	# profiling...
-	./tst_bbb -d # feedback simulation disabled
+	./tst_bbb -r 80 -d # feedback simulation disabled
 	gprof tst_bbb > gprof2.txt
 	head gprof2.txt
 
 tst_bbb : tst_bbb.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
-
-wavrep : wavrep.o  libchapro.a
-	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
-
-$(PROF) : test/carrots.wav
-	./wavrep -n 80 $^ $@
 
 libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)

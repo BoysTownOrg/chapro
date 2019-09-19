@@ -269,8 +269,8 @@ write_wave(I_O *io)
     w = io->owav;
     r[0] = (float) io->rate;
     vl = sp_var_alloc(2);
-    sp_var_set(vl + 0, "rate", r, 1, 1, "f4");
-    sp_var_set(vl + 1, "wave", w, n, 1, "f4");
+    sp_var_add(vl, "rate", r, 1, 1, "f4");
+    sp_var_add(vl, "wave", w, n, 1, "f4");
     if (io->mat) {
         sp_mat_save(io->ofn, vl);
     } else {
@@ -373,7 +373,7 @@ process(I_O *io, CHA_PTR cp)
         y = io->owav;
         n = io->nsmp;
         sp_tic();
-        cs = agc.cs;        // chunk size
+        cs = io->cs;        // chunk size
         nk = n / cs;        // number of chunks
         for (i = 0; i < nk; i++) {
             process_chunk(cp, x + i * cs, y + i * cs, cs);

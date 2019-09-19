@@ -15,7 +15,7 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     int afl, wfl, pfl, hdel, sqm;
     double fbm = 0;
     float *sfbp, *wfrp, *ffrp;
-    int i, cs, fbl, mxl = 0, nqm = 0, rsz = 32;
+    int i, cs, fbl, mxl = 0, nqm, rsz = 32;
  
     cha_prepare(cp);
     mu  = afc->mu;
@@ -26,6 +26,7 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     wfl = afc->wfl;
     pfl = afc->pfl;
     sqm = afc->sqm;
+    nqm = afc->nqm;
     hdel = afc->hdel;
     // allocate HA-output ring buffer
     cs = CHA_IVAR[_cs];
@@ -77,11 +78,17 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     CHA_IVAR[_fbl] = fbl;
     CHA_DVAR[_fbm] = fbm;
     // initialize quality metrics
-    if (sqm && (afl > 0) && (fbl > 0)) {
-        nqm = (fbl < afl) ? fbl : afl;
-        cha_allocate(cp,  cs, sizeof(float), _merr);
+    if (sqm && (afl > 0) && (fbl >= afl)) {
+        cha_allocate(cp, nqm, sizeof(float), _qm);
+        cha_allocate(cp, 1, sizeof(int), _iqmp);
+        afc->qm = (float *) cp[_qm];
+        afc->iqm = 0;
+        afc->iqmp = (int *) cp[_iqmp];
+        CHA_IVAR[_nqm] = nqm;
+    } else {
+        CHA_IVAR[_nqm] = 0;
     }
-    CHA_IVAR[_nqm] = nqm;
+    afc->iqm = 0;
     // initialize hardware delay
     CHA_IVAR[_hdel] = hdel; // should this be 38 ???
     // copy filters info to CHA_AFC
