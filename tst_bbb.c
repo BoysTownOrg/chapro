@@ -98,8 +98,8 @@ mat_file(char *fn)
 static void
 parse_args(int ac, char *av[])
 {
-    args.mat = 0;
     args.afc = 1;
+    args.mat = 0;
     args.nrep = 1;
     args.simfb = 1;
     while (ac > 1) {

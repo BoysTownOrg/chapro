@@ -100,8 +100,8 @@ mat_file(char *fn)
 static void
 parse_args(int ac, char *av[])
 {
-    args.mat = 1;
     args.afc = 1;
+    args.mat = 1;
     args.nrep = 1;
     args.simfb = 1;
     while (ac > 1) {
@@ -363,7 +363,7 @@ prepare_feedback(CHA_PTR cp, int n)
     afc.rho  = 0.3000; // forgetting factor
     afc.eps  = 0.0008; // power threshold
     afc.mu   = 0.0002; // step size
-    afc.afl  = 0;    // adaptive filter length
+    afc.afl  = 100;    // adaptive filter length
     afc.wfl  = 0;      // whitening-filter length
     afc.pfl  = 0;      // persistent-filter length
     afc.hdel = 0;      // output/input hardware delay

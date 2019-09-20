@@ -28,9 +28,6 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     sqm = afc->sqm;
     nqm = afc->nqm;
     hdel = afc->hdel;
-    if (nqm <= 0) {
-        CHA_IVAR[_mxl] = 0;
-    }
     // allocate HA-output ring buffer
     cs = CHA_IVAR[_cs];
     fbl = (fbg > 0) ? FBSZ : 0;
