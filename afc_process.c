@@ -110,7 +110,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
             }
         }
         // save quality metrics
-        if (nqm > 0) {
+        if (nqm) {
             dm = 0;
             for (j = 0; j < afl; j++) {
                 dif = sfbp[j] - efbp[j];
@@ -122,6 +122,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         y[i] = ee;
     }
     iqmp[0] = iqm;
+    if ((iqm + cs) > nqm) nqm = 0;
 }
 
 FUNC(void)
