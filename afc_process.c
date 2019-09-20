@@ -135,6 +135,9 @@ cha_afc_output(CHA_PTR cp, float *x, int cs)
     static int rsz, mask;
     static int rtl = 0;
 
+    if (CHA_IVAR[_mxl] == 0) { // if no AFC, do nothing
+        return;
+    }
     if (CHA_IVAR[_in1] == 0) {
         rng0 = (float *) cp[_rng0];
         rsz = CHA_IVAR[_rsz];
