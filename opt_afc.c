@@ -104,7 +104,7 @@ parse_args(int ac, char *av[])
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
             } else if (av[1][1] == 'r') {
-                args.nrep = atoi(av[2]);
+                if (ac > 2) args.nrep = atoi(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'v') {
@@ -286,7 +286,7 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     // prepare i/o
     io->pseg = io->mseg;
-    prepare_feedback(cp, io->nsmp);
+    prepare_feedback(cp, io->nsmp * io->nrep);
 }
 
 // process io

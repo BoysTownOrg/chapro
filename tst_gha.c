@@ -111,7 +111,7 @@ parse_args(int ac, char *av[])
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
             } else if (av[1][1] == 'r') {
-                args.nrep = atoi(av[2]);
+                if (ac > 2) args.nrep = atoi(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'v') {
@@ -386,13 +386,12 @@ prepare(I_O *io, CHA_PTR cp)
     io->mat = args.mat;
     io->cs = agc.cs;
     init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
     // prepare i/o
     io->pseg = io->mseg;
     if (!io->ofn) {
         init_aud(io);
     }
-    prepare_feedback(cp, io->nsmp);
+    prepare_feedback(cp, io->nsmp * io->nrep);
     // generate C code from prepared data
     //cha_data_gen(cp, DATA_HDR);
 }

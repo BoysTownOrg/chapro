@@ -109,7 +109,7 @@ parse_args(int ac, char *av[])
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
             } else if (av[1][1] == 'r') {
-                args.nrep = atoi(av[2]);
+                if (ac > 2) args.nrep = atoi(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'v') {
