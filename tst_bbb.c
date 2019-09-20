@@ -428,7 +428,7 @@ process(I_O *io, CHA_PTR cp)
         t2 = (io->nwav / io->rate) * io->nrep;
         fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n",
             t1, t2, t1/t2);
-        iqm = afc.iqmp[0];
+        iqm = afc.iqmp ? afc.iqmp[0] : 0;
         if (iqm > 0) {
             if (afc.qm[iqm - 1] > 0) {
                 fme = 10 * log10(afc.qm[iqm - 1]);

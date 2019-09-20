@@ -318,7 +318,7 @@ process(I_O *io, CHA_PTR cp)
         t1 = sp_toc();
         t2 = (io->nwav / io->rate) * io->nrep;
         fprintf(stdout, "(wall/wave) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
-        iqm = afc.iqmp[0];
+        iqm = afc.iqmp ? afc.iqmp[0] : 0;
         if (iqm > 0) {
             if (afc.qm[iqm - 1] > 0) {
                 fme = 10 * log10(afc.qm[iqm - 1]);
@@ -383,7 +383,7 @@ afc_error(float *par)
     process(&io, cp);
     // report error
     mxqm = 0;
-    iqm = afc.iqmp[0];
+    iqm = afc.iqmp ? afc.iqmp[0] : 0;
     for (i = jqm; i < iqm; i++) {
         if (mxqm < afc.qm[i]) {
             mxqm = afc.qm[i];

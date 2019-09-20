@@ -52,7 +52,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     // uf -> rng2
     // ee -> rng3
     rhd = CHA_IVAR[_rhd];
-    iqm = iqmp[0];
+    if (nqm) iqm = iqmp[0];
     // subtract estimated feedback signal
     for (i = 0; i < cs; i++) {
         xx = x[i];
@@ -121,8 +121,10 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // copy AFC signal to output
         y[i] = ee;
     }
-    iqmp[0] = iqm;
-    if ((iqm + cs) > nqm) nqm = 0;
+    if (nqm) {
+        iqmp[0] = iqm;
+        if ((iqm + cs) > nqm) nqm = 0;
+    }
 }
 
 FUNC(void)
