@@ -498,7 +498,7 @@ prescribe(void)
     nc = dsl.nchannel;
     nr = args.nrep;
     fprintf(stdout, "CHA simulation: sampling rate=%.0f kHz, ", fs);
-    fprintf(stdout, "Feedback simulation %sabled.\n", en);
+    fprintf(stdout, "feedback simulation %sabled.\n", en);
     fprintf(stdout, "IIR+AGC%s: nc=%d nz=%d nrep=%d\n", fc, nc, nz, nr);
 }
 
