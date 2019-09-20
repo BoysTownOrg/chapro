@@ -376,7 +376,8 @@ prepare_feedback(CHA_PTR cp, int n)
     afc.sqm  = 1;      // save quality metric ?
     afc.fbg = 1;       // simulated-feedback gain 
     afc.nqm = n;       // initialize quality metric
-    if (!args.simfb) { afc.fbg = afc.sqm = 0; }
+    if (!args.afc) afc.afl = 0;
+    if (!args.simfb) afc.fbg = afc.sqm = 0;
     // prepare AFC
     cha_afc_prepare(cp, &afc);
 }
