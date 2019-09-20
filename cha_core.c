@@ -277,7 +277,7 @@ cha_data_save(CHA_PTR cp, char *fn)
 FUNC(int)
 cha_data_load(CHA_PTR cp, char *fn)
 {
-    int ptsiz, arsiz, dtsiz, i, *cpsiz;
+    int ptsiz, arsiz, dtsiz, i, rv, *cpsiz;
     CHA_DATA cha_magic[4], file_magic[4], *file_size, *file_data;
     FILE *fp;
 
@@ -304,12 +304,13 @@ cha_data_load(CHA_PTR cp, char *fn)
         return (3);
     }
     dtsiz = sizeof(CHA_DATA);
+    rv = 0; // default return value
     // read magic number
     cha_magic[0] = 0x55530;
     cha_magic[1] = 0x68131;
     cha_magic[2] = ptsiz;
     cha_magic[3] = arsiz;
-    fread(file_magic, dtsiz, 4, fp);
+    rv = fread(file_magic, dtsiz, 4, fp);
     // check magic number
     for (i = 0; i < 4; i++) {
         if (file_magic[i] != cha_magic[i]) {
@@ -324,7 +325,7 @@ cha_data_load(CHA_PTR cp, char *fn)
     ptsiz = file_magic[2];
     arsiz = NPTR * dtsiz;
     file_size = (CHA_DATA *) cha_allocate(cp, NPTR, dtsiz, 0);
-    fread(file_size, NPTR, dtsiz, fp);
+    rv = fread(file_size, NPTR, dtsiz, fp);
     if (file_size[0] != arsiz) {
         return (4);
     }
@@ -333,10 +334,10 @@ cha_data_load(CHA_PTR cp, char *fn)
         if (file_size[i]) {
             arsiz = file_size[i] / dtsiz;
             file_data = (CHA_DATA *) cha_allocate(cp, arsiz, dtsiz, i);
-            fread(file_data, arsiz, dtsiz, fp);
+            rv = fread(file_data, arsiz, dtsiz, fp);
         }
     }
     fclose(fp);
 
-    return (0);
+    return (rv);
 };
