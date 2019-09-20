@@ -26,7 +26,7 @@ typedef struct {
 /***********************************************************/
 
 static struct {
-    char *ifn, *ofn, simfb, mat, nrep;
+    char *ifn, *ofn, simfb, afc, mat, nrep;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -62,6 +62,7 @@ usage()
 {
     fprintf(stdout, "usage: tst_gha [-options] [input_file] [output_file]\n");
     fprintf(stdout, "options\n");
+    fprintf(stdout, "-a    disable feedback cancelation\n");
     fprintf(stdout, "-d    disable simulated feedback\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
@@ -100,11 +101,14 @@ static void
 parse_args(int ac, char *av[])
 {
     args.mat = 1;
+    args.afc = 1;
     args.nrep = 1;
     args.simfb = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'd') {
+            if (av[1][1] == 'a') {
+                args.afc = 0;
+            } if (av[1][1] == 'd') {
                 args.simfb = 0;
             } else if (av[1][1] == 'h') {
                 usage();
@@ -273,13 +277,13 @@ write_wave(I_O *io)
     n = io->nwav;
     w = io->owav;
     r[0] = (float) io->rate;
-    meer = afc.qm ? afc.qm : (float *) calloc(afc.nqm, sizeof(float));
+    meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
     vl = sp_var_alloc(8);
     sp_var_add(vl, "rate",        r,       1, 1, "f4");
     sp_var_add(vl, "wave",        w,       n, 1, "f4");
     sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
     sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
-    sp_var_add(vl, "efbp", afc.efbp, afc.fbl, 1, "f4");
+    sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
     sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
     sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
     sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
@@ -359,7 +363,7 @@ prepare_feedback(CHA_PTR cp, int n)
     afc.rho  = 0.3000; // forgetting factor
     afc.eps  = 0.0008; // power threshold
     afc.mu   = 0.0002; // step size
-    afc.afl  = 100;    // adaptive filter length
+    afc.afl  = 0;    // adaptive filter length
     afc.wfl  = 0;      // whitening-filter length
     afc.pfl  = 0;      // persistent-filter length
     afc.hdel = 0;      // output/input hardware delay
@@ -460,7 +464,7 @@ cleanup(I_O *io, CHA_PTR cp)
 static void
 prescribe(void)
 {
-    char *en;
+    char *en, *fc;
     double fs;
     int nc, nr;
     // DSL prescription example
@@ -483,12 +487,13 @@ prescribe(void)
     agc.td = td;
     // report
     fs = agc.fs / 1000;
+    fc = args.afc ? "+AFC" : "";
     en = args.simfb ? "en" : "dis";
     nc = dsl.nchannel;
     nr = args.nrep;
     fprintf(stdout, "CHA simulation: sampling rate=%.0f kHz, ", fs);
     fprintf(stdout, "Feedback simulation %sabled.\n", en);
-    fprintf(stdout, "IIR+AGC+AFC: nc=%d nz=%d nrep=%d\n", nc, nz, nr);
+    fprintf(stdout, "IIR+AGC%s: nc=%d nz=%d nrep=%d\n", fc, nc, nz, nr);
 }
 
 int
