@@ -98,15 +98,6 @@ opt_afc : opt_afc.o  libchapro.a
 gha_demo : gha_demo.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
-mha : mha.o  libchapro.a $(LIBDIR)/mha_agc.so
-	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
-
-mha_agc.so : mha_agc.c  libchapro.a
-	$(CC) $(LFLAGS) -shared -o $@ $^ $(LIBS) $(SCLIB)
-
-$(LIBDIR)/mha_agc.so : mha_agc.so
-	cp -f $^ $@
-
 libchapro.a: $(CHAPRO)
 	$(AR) rus libchapro.a $(CHAPRO)
 
@@ -175,4 +166,3 @@ tst_gha.o: tst_gha.c chapro.h
 tst_ifa.o: tst_ifa.c chapro.h 
 tst_ifio.o: tst_ifio.c chapro.h 
 tst_ifsc.o: tst_ifsc.c chapro.h 
-mha.o: mha.c chapro.h 
