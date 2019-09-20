@@ -94,10 +94,10 @@ libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)
 
 install: libchapro.a
-	sudo mkdir -p $(LIBDIR)
-	sudo mkdir -p $(INCDIR)
-	sudo cp -f libchapro.a $(LIBDIR)
-	sudo cp -f $(HDRS) $(INCDIR)
+	mkdir -p $(LIBDIR)
+	mkdir -p $(INCDIR)
+	cp -f libchapro.a $(LIBDIR)
+	cp -f $(HDRS) $(INCDIR)
 
 zipsrc:
 	zip chaprosc *.mgw *.lnx *.mac
