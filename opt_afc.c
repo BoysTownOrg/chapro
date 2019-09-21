@@ -256,9 +256,9 @@ static void
 prepare_feedback(CHA_PTR cp, int n)
 {
     // AFC parameters
-    afc.rho  = 0.28000; // forgetting factor
-    afc.eps  = 0.00087; // power threshold
-    afc.mu   = 0.00018; // step size
+    afc.rho  = 0.38000; // forgetting factor
+    afc.eps  = 0.00100; // power threshold
+    afc.mu   = 0.00015; // step size
     afc.afl  = 100;     // adaptive filter length
     afc.wfl  = 0;       // whitening-filter length
     afc.pfl  = 0;       // persistent-filter length
@@ -442,9 +442,9 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     // AFC parameters
-    afc.rho  = 0.28000; // forgetting factor
-    afc.eps  = 0.00087; // power threshold
-    afc.mu   = 0.00018; // step size
+    afc.rho  = 0.38000; // forgetting factor
+    afc.eps  = 0.00100; // power threshold
+    afc.mu   = 0.00015; // step size
     par[0] = p[0] = afc.rho;
     par[1] = p[1] = afc.eps;
     par[2] = p[2] = afc.mu ;
