@@ -256,16 +256,16 @@ static void
 prepare_feedback(CHA_PTR cp, int n)
 {
     // AFC parameters
-    afc.rho  = 0.3000; // forgetting factor
-    afc.eps  = 0.0008; // power threshold
-    afc.mu   = 0.0002; // step size
-    afc.afl  = 100;    // adaptive filter length
-    afc.wfl  = 0;      // whitening-filter length
-    afc.pfl  = 0;      // persistent-filter length
-    afc.hdel = 0;      // output/input hardware delay
-    afc.sqm  = 1;      // save quality metric ?
-    afc.fbg = 1;       // simulated-feedback gain 
-    afc.nqm = n;       // initialize quality metric
+    afc.rho  = 0.28000; // forgetting factor
+    afc.eps  = 0.00087; // power threshold
+    afc.mu   = 0.00018; // step size
+    afc.afl  = 100;     // adaptive filter length
+    afc.wfl  = 0;       // whitening-filter length
+    afc.pfl  = 0;       // persistent-filter length
+    afc.hdel = 0;       // output/input hardware delay
+    afc.sqm  = 1;       // save quality metric ?
+    afc.fbg = 1;        // simulated-feedback gain 
+    afc.nqm = n;        // initialize quality metric
     // prepare AFC
     cha_afc_prepare(cp, &afc);
 }
@@ -396,21 +396,12 @@ afc_error(float *par)
 }
 
 void
-print_par(float *par, int tst_gha)
+print_par(float *par)
 {
-    char *s;
-
-    if (tst_gha) {
-        s = "    static double";
-        fprintf(stderr, "%s rho = %9.7f;\n", s, par[0]);
-        fprintf(stderr, "%s eps = %9.7f;\n", s, par[1]);
-        fprintf(stderr, "%s mu  = %9.7f;\n", s, par[2]);
-    } else {
-        s = "        ";
-        fprintf(stderr, "%s%9.7f, // rho\n", s, par[0]);
-        fprintf(stderr, "%s%9.7f, // eps\n", s, par[1]);
-        fprintf(stderr, "%s%9.7f  // mu \n", s, par[2]);
-    }
+    fprintf(stdout, "    // AFC parameters\n");
+    fprintf(stdout, "    afc.rho  = %9.7f; // forgetting factor\n", par[0]);
+    fprintf(stdout, "    afc.eps  = %9.7f; // power threshold\n",   par[1]);
+    fprintf(stdout, "    afc.mu   = %9.7f; // step size\n",         par[2]);
 }
 
 /***********************************************************/
@@ -447,26 +438,29 @@ prescribe(void)
 int
 main(int ac, char *av[])
 {
-    float par[3];
-    static float p0[] = {
-        0.3000, // rho
-        0.0008, // eps
-        0.0002  // mu 
-    };
+    float p[3], par[3];
 
     parse_args(ac, av);
+    // AFC parameters
+    afc.rho  = 0.28000; // forgetting factor
+    afc.eps  = 0.00087; // power threshold
+    afc.mu   = 0.00018; // step size
+    par[0] = p[0] = afc.rho;
+    par[1] = p[1] = afc.eps;
+    par[2] = p[2] = afc.mu ;
+    // optimize
     prescribe();
-    fcopy(par, p0, 3);
     prn = 1;
     afc_error(par);
     prn = 0;
     sp_fmins(par, 3, &afc_error, NULL);
     sp_fmins(par, 3, &afc_error, NULL);
+    // report
     prn = 1;
-    afc_error(p0);
+    print_par(p);
+    afc_error(p);
+    print_par(par);
     afc_error(par);
-    print_par(par, 0);
-    print_par(par, 1);
     cleanup(&io, cp);
     return (0);
 }

@@ -36,7 +36,7 @@ if (exist('sfbp','var'))
     plot(ty,sfbp,ty,efbp)
     xlim(tlim)
     xlabel('time (ms)')
-    title('fedback path')
+    title('feedback path')
     legend('simulated','estimated')
     grid on
     drawnow

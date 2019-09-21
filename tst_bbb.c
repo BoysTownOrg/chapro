@@ -366,18 +366,16 @@ static void
 prepare_feedback(CHA_PTR cp, int n)
 {
     // AFC parameters
-    afc.rho  = 0.3000; // forgetting factor
-    afc.eps  = 0.0008; // power threshold
-    afc.mu   = 0.0002; // step size
-    afc.afl  = 100;    // adaptive filter length
-    afc.wfl  = 0;      // whitening-filter length
-    afc.pfl  = 0;      // persistent-filter length
-    afc.hdel = 0;      // output/input hardware delay
-    afc.sqm  = 1;      // save quality metric ?
-    afc.fbg = 1;       // simulated-feedback gain 
-    afc.nqm = n;       // initialize quality metric
-    if (!args.afc) afc.afl = 0;
-    if (!args.simfb) afc.fbg = afc.sqm = 0;
+    afc.rho  = 0.28000; // forgetting factor
+    afc.eps  = 0.00087; // power threshold
+    afc.mu   = 0.00018; // step size
+    afc.afl  = 100;     // adaptive filter length
+    afc.wfl  = 0;       // whitening-filter length
+    afc.pfl  = 0;       // persistent-filter length
+    afc.hdel = 0;       // output/input hardware delay
+    afc.sqm  = 1;       // save quality metric ?
+    afc.fbg = 1;        // simulated-feedback gain 
+    afc.nqm = n;        // initialize quality metric
     // prepare AFC
     cha_afc_prepare(cp, &afc);
 }
