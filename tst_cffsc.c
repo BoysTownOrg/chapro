@@ -463,7 +463,7 @@ compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
 // initialize CSL prescription
 
 static void
-prescribe(void)
+configure(void)
 {
     double fs;
 
@@ -490,7 +490,7 @@ main(int ac, char *av[])
     static void *cp[NPTR] = {0};
 
     parse_args(ac, av);
-    prescribe();
+    configure();
     prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);

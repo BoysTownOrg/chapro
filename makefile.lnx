@@ -1,15 +1,19 @@
 # makefile for CHAPRO under Linux
+# Library requirement: sigpro
+# Package requirement: gcc-arm-linux-gnueabihf
 
 LIBS=-lsigpro -lm -lz
 SCLIB=-larsc -lasound $(LIBS)
 CC=gcc 
 AR=ar
+
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O2
+LFLAGS=-L$(LIBDIR)
+
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O2
-LFLAGS=-L$(LIBDIR)
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
 	cfirfb_prepare.o cfirfb_process.o \
@@ -159,7 +163,7 @@ tst_cifsc.o: tst_cifsc.c chapro.h
 tst_ffa.o: tst_ffa.c chapro.h 
 tst_ffio.o: tst_ffio.c chapro.h 
 tst_ffsc.o: tst_ffsc.c chapro.h 
-tst_gha.o: tst_gha.c cha_gha_data.h chapro.h 
+tst_gha.o: tst_gha.c chapro.h 
 tst_ifa.o: tst_ifa.c chapro.h 
 tst_ifio.o: tst_ifio.c chapro.h 
 tst_ifsc.o: tst_ifsc.c chapro.h 

@@ -466,7 +466,7 @@ compressor_init(CHA_CLS *cls, double gn)
 // initialize CSL prescription
 
 static void
-prescribe(void)
+configure(void)
 {
     double fs;
     static double sr = 24000;   // sampling rate (Hz)
@@ -503,7 +503,7 @@ main(int ac, char *av[])
     static void *cp[NPTR] = {0};
 
     parse_args(ac, av);
-    prescribe();
+    configure();
     prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);

@@ -1,14 +1,19 @@
 # makefile for CHAPRO under Linux with profiling
+# Library requirement: sigpro
+# Package requirement: gcc-arm-linux-gnueabihf
 
 LIBS=-lsigpro -lm -lz -pg
+SCLIB=
 CC=gcc 
 AR=ar
+
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -pg
+LFLAGS=-L$(LIBDIR)
+
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -pg
-LFLAGS=-L$(LIBDIR)
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
 	cfirfb_prepare.o cfirfb_process.o \
@@ -32,7 +37,7 @@ fast : $(PGMS) $(PROF)
 	head gprof2.txt
 
 tst_bbb : tst_bbb.o  libchapro.a
-	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)

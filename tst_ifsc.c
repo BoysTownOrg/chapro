@@ -401,7 +401,7 @@ cleanup(I_O *io, CHA_PTR cp)
 // initialize DSL prescription
 
 static void
-prescribe(void)
+configure(void)
 {
     double fs;
     int nc;
@@ -438,7 +438,7 @@ main(int ac, char *av[])
     static void *cp[NPTR] = {0};
 
     parse_args(ac, av);
-    prescribe();
+    configure();
     prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);

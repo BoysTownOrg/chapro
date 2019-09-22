@@ -13,7 +13,7 @@
 0.24 - 18-Sep-19
 > Replaced most afc_prepare args with CHA_AFC struct
 > Eliminated use of CHA_DVAR & CHA_IVAR in tst_*sc.c
-> Moved config specification to prescribe function in tst_*sc.c
+> Moved config specification to configure function in tst_*sc.c
 0.23 - 22-Aug-19
 > Merge module headers into chapro.h
 0.23 - 22-Aug-19

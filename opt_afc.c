@@ -409,7 +409,7 @@ print_par(float *par)
 // initialize DSL prescription
 
 static void
-prescribe(void)
+configure(void)
 {
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
@@ -449,7 +449,7 @@ main(int ac, char *av[])
     par[1] = p[1] = afc.eps;
     par[2] = p[2] = afc.mu ;
     // optimize
-    prescribe();
+    configure();
     prn = 1;
     afc_error(par);
     prn = 0;
