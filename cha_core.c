@@ -79,10 +79,6 @@ cha_data_gen(CHA_PTR cp, char *fn)
     if (cpsiz == NULL) {
         return (2);
     }
-    fp = fopen(fn, "wt");
-    if (fp == NULL) {
-        return (1);
-    }
     // count pointers
     ptsiz = 0;
     for (i = 0; i < NPTR; i++) {
@@ -94,8 +90,12 @@ cha_data_gen(CHA_PTR cp, char *fn)
         arsiz += cpsiz[i];
     }
     if (arsiz == 0) {
-        fclose(fp);
         return (3);
+    }
+    // open file
+    fp = fopen(fn, "wt");
+    if (fp == NULL) {
+        return (1);
     }
     // print header
     fprintf(fp, "// cha_data.h - data size = %d bytes\n", arsiz);
@@ -237,10 +237,6 @@ cha_data_save(CHA_PTR cp, char *fn)
     if (cpsiz == NULL) {
         return (2);
     }
-    fp = fopen(fn, "wb");
-    if (fp == NULL) {
-        return (1);
-    }
     // count pointers
     ptsiz = 0;
     for (i = 0; i < NPTR; i++) {
@@ -252,8 +248,12 @@ cha_data_save(CHA_PTR cp, char *fn)
         arsiz += cpsiz[i];
     }
     if (arsiz == 0) {
-        fclose(fp);
         return (3);
+    }
+    // open file
+    fp = fopen(fn, "wb");
+    if (fp == NULL) {
+        return (1);
     }
     dtsiz = sizeof(CHA_DATA);
     // write magic number
@@ -285,10 +285,6 @@ cha_data_load(CHA_PTR cp, char *fn)
     if (cpsiz == NULL) {
         return (2);
     }
-    fp = fopen(fn, "rb");
-    if (fp == NULL) {
-        return (1);
-    }
     // count pointers
     ptsiz = 0;
     for (i = 0; i < NPTR; i++) {
@@ -300,8 +296,12 @@ cha_data_load(CHA_PTR cp, char *fn)
         arsiz += cpsiz[i];
     }
     if (arsiz == 0) {
-        fclose(fp);
         return (3);
+    }
+    // open file
+    fp = fopen(fn, "rb");
+    if (fp == NULL) {
+        return (1);
     }
     dtsiz = sizeof(CHA_DATA);
     rv = 0; // default return value
@@ -340,4 +340,46 @@ cha_data_load(CHA_PTR cp, char *fn)
     fclose(fp);
 
     return (rv);
+};
+
+FUNC(int)
+cha_state(CHA_PTR cp, CHA_STA *state)
+{
+    int ptsiz, arsiz, dtsiz, i, *cpsiz;
+    CHA_DATA *data;
+    CHA_PTR scp;
+
+    cpsiz = (int *) cp[_size];
+    if (cpsiz == NULL) {
+        return (2);
+    }
+    // count pointers
+    ptsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) ptsiz = i + 1;
+    }
+    // sum array sizes
+    arsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        arsiz += cpsiz[i];
+    }
+    if (arsiz == 0) {
+        return (3);
+    }
+    // allocate memory
+    dtsiz = sizeof(CHA_DATA);
+    scp = (CHA_PTR) calloc(dtsiz, ptsiz);
+    data = (CHA_DATA *) calloc(1, arsiz);
+    // copy data
+    for (i = 0; i < ptsiz; i++) {
+        scp[i] = data + i * (cpsiz[i] / dtsiz);
+        //memcpy(scp[i], cp[i], cpsiz[i]);
+    }
+    // return state
+    state->ptsiz = ptsiz;
+    state->arsiz = arsiz;
+    state->cp = scp;
+    state->data = data;
+
+    return (0);
 };

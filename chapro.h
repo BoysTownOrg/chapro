@@ -52,6 +52,7 @@
 
 typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
+typedef struct {int arsiz, ptsiz; CHA_PTR cp; void *data;} CHA_STA;
 
 /*****************************************************/
 
@@ -163,6 +164,7 @@ FUNC(void)   cha_cleanup(CHA_PTR);
 FUNC(int)    cha_data_gen(CHA_PTR, char *);
 FUNC(int)    cha_data_save(CHA_PTR, char *);
 FUNC(int)    cha_data_load(CHA_PTR, char *);
+FUNC(int)    cha_state(CHA_PTR, CHA_STA *);
 FUNC(void)   cha_fft_cr(float *, int);
 FUNC(void)   cha_fft_rc(float *, int);
 FUNC(void)   cha_fft(float *, int);
@@ -224,6 +226,7 @@ FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 // feedback module
 
 FUNC(int) cha_afc_prepare(CHA_PTR, CHA_AFC *);
+FUNC(int) cha_afc_filters(CHA_PTR, CHA_AFC *);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
@@ -368,6 +371,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _in1      13
 #define _in2      14
 #define _rhd      15
+#define _afc      16
 
 /*****************************************************/
 

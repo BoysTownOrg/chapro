@@ -1,15 +1,17 @@
 /* version.h */
 
-#define VER     "CHApro version 0.26, 19-Sep-19"
+#define VER     "CHApro version 0.27, 23-Sep-19"
 #define NOTICE	"Copyright 2016-2019 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.27 - 23-Sep-19
+> Added functions state & afc_filters
 0.26 - 19-Sep-19
 > Moved "save quality metric" code into library
 0.25 - 18-Sep-19
-> Removed hex_patch function 
-> Added data_save & data_load functions
+> Removed function hex_patch
+> Added functions data_save & data_load
 0.24 - 18-Sep-19
 > Replaced most afc_prepare args with CHA_AFC struct
 > Eliminated use of CHA_DVAR & CHA_IVAR in tst_*sc.c

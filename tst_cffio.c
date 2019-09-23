@@ -227,7 +227,7 @@ prepare(I_O *io, CHA_PTR cp)
     io->mat = args.mat;
     init_wav(io);
     // generate C code from prepared data
-    cha_data_gen(cp, DATA_HDR);
+    //cha_data_gen(cp, DATA_HDR);
     // report
     fprintf(stdout, "CHA I/O simulation: sampling rate=%.1f kHz, ", fs);
     fprintf(stdout, "CFIRFB: nw=%d\n", nw);

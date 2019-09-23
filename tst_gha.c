@@ -38,9 +38,14 @@ static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
+    static int first_chunk = 1;
 
     // next line switches to compiled data
     //cp = (CHA_PTR) cha_data; 
+    if (first_chunk) {
+        cha_afc_filters(cp, &afc);
+        first_chunk = 0;
+    }
     // initialize data pointers
     z = (float *) cp[_cc];
     // process IIR+AGC+AFC

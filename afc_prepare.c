@@ -81,17 +81,26 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     if (sqm && (afl > 0) && (fbl >= afl)) {
         cha_allocate(cp, nqm, sizeof(float), _qm);
         cha_allocate(cp, 1, sizeof(int), _iqmp);
-        afc->qm = (float *) cp[_qm];
-        afc->iqm = 0;
-        afc->iqmp = (int *) cp[_iqmp];
         CHA_IVAR[_nqm] = nqm;
     } else {
         CHA_IVAR[_iqmp] = 0;
         CHA_IVAR[_nqm] = 0;
     }
-    afc->iqm = 0;
     // initialize hardware delay
     CHA_IVAR[_hdel] = hdel; // should this be 38 ???
+    // copy filters info to CHA_AFC
+    cha_afc_filters(cp, afc);
+
+    return (0);
+}
+
+FUNC(int)
+cha_afc_filters(CHA_PTR cp, CHA_AFC *afc)
+{
+    // copy quality-metric info info to CHA_AFC
+    afc->qm = (float *) cp[_qm];
+    afc->iqm = 0;
+    afc->iqmp = (int *) cp[_iqmp];
     // copy filters info to CHA_AFC
     afc->fbl = CHA_IVAR[_fbl];
     afc->wfl = CHA_IVAR[_wfl];
@@ -100,6 +109,8 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     afc->sfbp = (float *) cp[_sfbp];
     afc->wfrp = (float *) cp[_wfrp];
     afc->ffrp = (float *) cp[_ffrp];
+    // initialize afc_process
+    CHA_IVAR[_in1] = 0;
 
     return (0);
 }
