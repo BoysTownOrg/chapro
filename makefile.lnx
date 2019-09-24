@@ -20,7 +20,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	firfb_prepare.o firfb_process.o \
 	iirfb_design.o iirfb_prepare.o iirfb_process.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
-	afc_prepare.o afc_process.o \
+	afc_prepare.o afc_filters.o afc_process.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
@@ -127,6 +127,7 @@ clean_test:
 
 # dependencies
 afc_prepare.o: afc_prepare.c chapro.h ite_fb.h 
+afc_filters.o: afc_filters.c chapro.h 
 afc_process.o: afc_process.c chapro.h 
 agc_prepare.o: agc_prepare.c chapro.h 
 agc_process.o: agc_process.c chapro.h

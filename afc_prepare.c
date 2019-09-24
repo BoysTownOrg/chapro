@@ -8,10 +8,6 @@
 
 /***********************************************************/
 
-CHA_PTR pcp = NULL;
-
-/***********************************************************/
-
 FUNC(int)
 cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
 {
@@ -93,32 +89,8 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
     // initialize hardware delay
     CHA_IVAR[_hdel] = hdel; // should this be 38 ???
     // copy filter info back to CHA_AFC
-    pcp = NULL;
+    afc->pcp = NULL;
     cha_afc_filters(cp, afc);
-
-    return (0);
-}
-
-FUNC(int)
-cha_afc_filters(CHA_PTR cp, CHA_AFC *afc)
-{
-    if (pcp != cp) {
-        // copy quality-metric info info to CHA_AFC
-        afc->qm = (float *) cp[_qm];
-        afc->iqm = 0;
-        afc->iqmp = (int *) cp[_iqmp];
-        // copy filters info to CHA_AFC
-        afc->fbl = CHA_IVAR[_fbl];
-        afc->wfl = CHA_IVAR[_wfl];
-        afc->pfl = CHA_IVAR[_pfl];
-        afc->efbp = (float *) cp[_efbp];
-        afc->sfbp = (float *) cp[_sfbp];
-        afc->wfrp = (float *) cp[_wfrp];
-        afc->ffrp = (float *) cp[_ffrp];
-        // initialize afc_process
-        CHA_IVAR[_in1] = 0;
-        pcp = cp;
-   }
 
     return (0);
 }

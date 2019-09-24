@@ -153,6 +153,7 @@ typedef struct {
     int    nqm;                  // quality-metric buffer size
     int    iqm;                  // quality-metric index
     int    sqm;                  // save quality metric ?
+    CHA_PTR pcp;                 // previous CHA_PTR
 } CHA_AFC;
 
 /*****************************************************/
