@@ -149,7 +149,7 @@ prepare_filterbank(CHA_PTR cp)
     cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
 prepare(I_O *io, CHA_PTR cp)
@@ -172,7 +172,7 @@ prepare(I_O *io, CHA_PTR cp)
     fprintf(stdout, "FIRFB: nw=%d\n", nw);
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)

@@ -25,6 +25,7 @@ typedef struct {
 
 /***********************************************************/
 
+static int    prepared = 0;
 static struct {
     char *ifn, *ofn, mat;
     int nw;
@@ -39,16 +40,18 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
 
-    // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
-    // initialize data pointers
-    z = (float *) cp[_cc];
-    // process FIR+AGC
-    cha_agc_input(cp, x, x, cs);
-    cha_firfb_analyze(cp, x, z, cs);
-    cha_agc_channel(cp, z, z, cs);
-    cha_firfb_synthesize(cp, z, y, cs);
-    cha_agc_output(cp, y, y, cs);
+    if (prepared) {
+        // next line switches to compiled data
+        //cp = (CHA_PTR) cha_data; 
+        // initialize data pointers
+        z = (float *) cp[_cc];
+        // process FIR+AGC
+        cha_agc_input(cp, x, x, cs);
+        cha_firfb_analyze(cp, x, z, cs);
+        cha_agc_channel(cp, z, z, cs);
+        cha_firfb_synthesize(cp, z, y, cs);
+        cha_agc_output(cp, y, y, cs);
+    }
 }
 
 /***********************************************************/
@@ -306,19 +309,37 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// prepare input/output
+
+static void
+prepare_io(I_O *io, double sr, int cs)
+{
+    // initialize waveform
+    io->rate = sr;
+    io->cs   = cs;
+    io->ifn  = args.ifn;
+    io->ofn  = args.ofn;
+    io->mat  = args.mat;
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
+}
+
 // prepare FIR filterbank
 
 static void
-prepare_filterbank(CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp, double sr, int cs)
 {
-    double sr, *cf;
-    int cs, nc, nw, wt;
+    double *cf;
+    int nc, nw, wt;
 
     // prepare FIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
-    sr = agc.fs;
-    cs = agc.cs;
     nw = agc.nw;
     wt = agc.wt;
     if (args.nw) nw = args.nw;
@@ -334,31 +355,20 @@ prepare_compressor(CHA_PTR cp)
     cha_agc_prepare(cp, &dsl, &agc);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare(I_O *io, CHA_PTR cp, double sr, int cs)
 {
-    prepare_filterbank(cp);
+    prepare_io(io, sr, cs);
+    prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    // initialize waveform
-    io->rate = agc.fs;
-    io->ifn = args.ifn;
-    io->ofn = args.ofn;
-    io->mat = args.mat;
-    io->cs = agc.cs;
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        init_aud(io);
-    }
     // generate C code from prepared data
     //cha_data_gen(cp, DATA_HDR);
+    prepared++;
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)
@@ -419,13 +429,11 @@ configure(void)
     };
     static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
     // FIR
-    static int    cs = 32;      // chunk size
     static int    nw = 256;     // window size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
 
     memcpy(&dsl, &dsl_ex, sizeof(CHA_DSL));
     memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
-    agc.cs = cs;
     agc.nw = nw;
     agc.wt = wt;
     // report
@@ -438,12 +446,14 @@ configure(void)
 int
 main(int ac, char *av[])
 {
-    static I_O io;
+    static double sr = 24000;
+    static int    cs = 32;
     static void *cp[NPTR] = {0};
+    static I_O io;
 
     parse_args(ac, av);
     configure();
-    prepare(&io, cp);
+    prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

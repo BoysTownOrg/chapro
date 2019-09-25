@@ -213,7 +213,7 @@ prepare_filterbank(CHA_PTR cp)
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
 prepare(I_O *io, CHA_PTR cp)
@@ -244,7 +244,7 @@ prepare(I_O *io, CHA_PTR cp)
     fprintf(stdout, "compression: gain=%.0f, ds=%d\n", gn, ds);
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)

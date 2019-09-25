@@ -143,7 +143,7 @@ prepare_filterbank(CHA_PTR cp)
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
 prepare(I_O *io, CHA_PTR cp)
@@ -166,7 +166,7 @@ prepare(I_O *io, CHA_PTR cp)
     //cha_data_gen(cp, DATA_HDR);
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)

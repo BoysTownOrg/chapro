@@ -25,6 +25,7 @@ typedef struct {
 
 /***********************************************************/
 
+static int    prepared = 0;
 static struct {
     char *ifn, *ofn, mat;
     double gn;
@@ -40,14 +41,16 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
 
-    // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
-    // initialize data pointers
-    z = (float *) cp[_cc];
-    // process filterbank+compressor
-    cha_cfirfb_analyze(cp, x, z, cs);
-    cha_icmp_process(cp, z, z, cs);
-    cha_cfirfb_synthesize(cp, z, y, cs);
+    if (prepared) {
+        // next line switches to compiled data
+        //cp = (CHA_PTR) cha_data; 
+        // initialize data pointers
+        z = (float *) cp[_cc];
+        // process filterbank+compressor
+        cha_cfirfb_analyze(cp, x, z, cs);
+        cha_icmp_process(cp, z, z, cs);
+        cha_cfirfb_synthesize(cp, z, y, cs);
+    }
 }
 
 /***********************************************************/
@@ -312,21 +315,39 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// prepare input/output
+
+static void
+prepare_io(I_O *io, double sr, int cs)
+{
+    // initialize waveform
+    io->rate = sr;
+    io->cs   = cs;
+    io->ifn  = args.ifn;
+    io->ofn  = args.ofn;
+    io->mat  = args.mat;
+    init_wav(io);
+    fcopy(io->owav, io->iwav, io->nsmp);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
+}
+
 // prepare CFIR filterbank
 
 static void
-prepare_filterbank(CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp, double sr, int cs)
 {
-    double sr, *cf;
-    int cs, nc, nw, wt; 
+    double *cf;
+    int nc, nw, wt; 
 
     // prepare CFIRFB
-    cs = icmp.cs;     // chunk size
-    nw = icmp.nw;     // window size
-    wt = icmp.wt;     // window type: 0=Hamming, 1=Blackman
+    nw = icmp.nw;      // window size
+    wt = icmp.wt;      // window type: 0=Hamming, 1=Blackman
     nc = cls.nc;
     cf = cls.fc;
-    sr = icmp.sr;
     cha_cfirfb_prepare(cp, cf, nc, sr, nw, wt, cs);
 }
 
@@ -342,31 +363,20 @@ prepare_compressor(CHA_PTR cp)
     cha_icmp_prepare(cp, &cls, lr, ds);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare(I_O *io, CHA_PTR cp, double sr, int cs)
 {
-    prepare_filterbank(cp);
+    prepare_io(io, sr, cs);
+    prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    // initialize waveform
-    io->rate = icmp.sr;
-    io->ifn = args.ifn;
-    io->ofn = args.ofn;
-    io->mat = args.mat;
-    io->cs = icmp.cs;
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        init_aud(io);
-    }
     // generate C code from prepared data
     //cha_data_gen(cp, DATA_HDR);
+    prepared++;
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)
@@ -486,12 +496,14 @@ configure(void)
 int
 main(int ac, char *av[])
 {
-    static I_O io;
+    static double sr = 24000;
+    static int    cs = 32;
     static void *cp[NPTR] = {0};
+    static I_O io;
 
     parse_args(ac, av);
     configure();
-    prepare(&io, cp);
+    prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

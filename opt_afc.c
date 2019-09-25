@@ -22,6 +22,7 @@ typedef struct {
 
 /***********************************************************/
 
+static int    prepared = 0;
 static int    prn = 0;
 static struct {
     char *ifn, *ofn, mat, nrep;
@@ -38,16 +39,18 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
 
-    // initialize data pointers
-    z = (float *) cp[_cc];
-    // process IIR+AGC+AFC
-    cha_afc_input(cp, x, x, cs);
-    cha_agc_input(cp, x, x, cs);
-    cha_iirfb_analyze(cp, x, z, cs);
-    cha_agc_channel(cp, z, z, cs);
-    cha_iirfb_synthesize(cp, z, y, cs);
-    cha_agc_output(cp, y, y, cs);
-    cha_afc_output(cp, y, cs);
+    if (prepared) {
+        // initialize data pointers
+        z = (float *) cp[_cc];
+        // process IIR+AGC+AFC
+        cha_afc_input(cp, x, x, cs);
+        cha_agc_input(cp, x, x, cs);
+        cha_iirfb_analyze(cp, x, z, cs);
+        cha_agc_channel(cp, z, z, cs);
+        cha_iirfb_synthesize(cp, z, y, cs);
+        cha_agc_output(cp, y, y, cs);
+        cha_afc_output(cp, y, cs);
+    }
 }
 
 /***********************************************************/
@@ -223,13 +226,30 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// prepare input/output
+
+static void
+prepare_io(I_O *io, double sr, int cs)
+{
+    // initialize waveform
+    io->rate = sr;
+    io->cs   = cs;
+    io->ifn  = args.ifn;
+    io->ofn  = args.ofn;
+    io->mat  = args.mat;
+    io->nrep = args.nrep;
+    init_wav(io);
+    // prepare i/o
+    io->pseg = io->mseg;
+}
+
 // prepare IIR filterbank
 
 static void
-prepare_filterbank(CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp, double sr, int cs)
 {
-    double sr, td, *cf;
-    int cs, nc, nz;
+    double td, *cf;
+    int nc, nz;
     // PERSISTENT zeros, poles, gains, & delays
     static float   z[64], p[64], g[8];
     static int     d[8];
@@ -237,8 +257,6 @@ prepare_filterbank(CHA_PTR cp)
     // prepare IIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
-    sr = agc.fs;
-    cs = agc.cs;
     nz = agc.nz;
     td = agc.td;
     if (afc.qm == NULL) { // design ONCE when optimizing
@@ -262,9 +280,9 @@ static void
 prepare_feedback(CHA_PTR cp, int n)
 {
     // AFC parameters
-    afc.rho  = 0.0011907; // forgetting factor
-    afc.eps  = 0.0010123; // power threshold
-    afc.mu   = 0.0001504; // step size
+    afc.rho  = 0.0014388; // forgetting factor
+    afc.eps  = 0.0010148; // power threshold
+    afc.mu   = 0.0001507; // step size
     afc.afl  = 100;     // adaptive filter length
     afc.wfl  = 0;       // whitening-filter length
     afc.pfl  = 0;       // persistent-filter length
@@ -276,26 +294,19 @@ prepare_feedback(CHA_PTR cp, int n)
     cha_afc_prepare(cp, &afc);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare(I_O *io, CHA_PTR cp, double sr, int cs)
 {
-    prepare_filterbank(cp);
+    prepare_io(io, sr, cs);
+    prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    // initialize waveform
-    io->rate = agc.fs;
-    io->nrep = args.nrep;
-    io->ifn = args.ifn;
-    io->ofn = args.ofn;
-    io->cs = agc.cs;
-    init_wav(io);
-    // prepare i/o
-    io->pseg = io->mseg;
     prepare_feedback(cp, io->nsmp * io->nrep);
+    prepared++;
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)
@@ -311,7 +322,7 @@ process(I_O *io, CHA_PTR cp)
         y = io->owav;
         n = io->nsmp;
         m = io->nrep;
-        cs = agc.cs;        // chunk size
+        cs = io->cs;        // chunk size
         nk = n / cs;        // number of chunks
         for (j = 0; j < m; j++) {
             for (i = 0; i < nk; i++) {
@@ -361,8 +372,10 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-static I_O io;
+static double sr = 24000;
+static int    cs = 32;
 static void *cp[NPTR] = {0};
+static I_O io;
 
 double
 afc_error(float *par)
@@ -375,7 +388,7 @@ afc_error(float *par)
     if (par[1] < 1e-9) return (1e9);
     if (par[2] < 1e-9) return (1e9);
     // set AFC parameters
-    prepare(&io, cp);
+    prepare(&io, cp, sr, cs);
     CHA_IVAR[_in1] = 0;
     CHA_DVAR[_rho] = par[0];
     CHA_DVAR[_eps] = par[1];
@@ -423,13 +436,11 @@ configure(void)
     };
     static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
     // filterbank parameters
-    static int    cs = 32;      // chunk size
     static int    nz = 4;
     static double td = 2.5;
 
     memcpy(&dsl, &dsl_ex, sizeof(CHA_DSL));
     memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
-    agc.cs = cs;
     agc.nz = nz;
     agc.td = td;
     fprintf(stdout, "CHA IIR+AGC: AFC optimization\n");
@@ -444,9 +455,9 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     // AFC parameters
-    afc.rho  = 0.0011907; // forgetting factor
-    afc.eps  = 0.0010123; // power threshold
-    afc.mu   = 0.0001504; // step size
+    afc.rho  = 0.0014388; // forgetting factor
+    afc.eps  = 0.0010148; // power threshold
+    afc.mu   = 0.0001507; // step size
     par[0] = p[0] = afc.rho;
     par[1] = p[1] = afc.eps;
     par[2] = p[2] = afc.mu ;

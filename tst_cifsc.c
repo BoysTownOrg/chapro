@@ -25,6 +25,7 @@ typedef struct {
 
 /***********************************************************/
 
+static int    prepared = 0;
 static struct {
     char *ifn, *ofn, mat;
     double gn;
@@ -40,14 +41,16 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
 
-    // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
-    // initialize data pointers
-    z = (float *) cp[_cc];
-    // process filterbank+compressor
-    cha_ciirfb_analyze(cp, x, z, cs);
-    cha_icmp_process(cp, z, z, cs);
-    cha_ciirfb_synthesize(cp, z, y, cs);
+    if (prepared) {
+        // next line switches to compiled data
+        //cp = (CHA_PTR) cha_data; 
+        // initialize data pointers
+        z = (float *) cp[_cc];
+        // process filterbank+compressor
+        cha_ciirfb_analyze(cp, x, z, cs);
+        cha_icmp_process(cp, z, z, cs);
+        cha_ciirfb_synthesize(cp, z, y, cs);
+    }
 }
 
 /***********************************************************/
@@ -312,18 +315,73 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// specify filterbank center frequecies and bandwidths
+
+static double
+cgtfb_init(CHA_CLS *cls, double sr)
+{
+    float lfbw, fmid = 1000;
+    int i, nh, nc, nm, po;
+
+    nm = icmp.nm;
+    po = icmp.po;
+    lfbw = fmid / nm;
+    nh = (int) floor(log2(sr / 2000) * po);
+    nc = nh + nm;
+    cls->nc = nc;
+    for (i = 0; i < (nm - 1); i++) {
+        cls->fc[i] = lfbw * (i + 1);
+        cls->bw[i] = lfbw;
+    }
+    cls->fc[nm - 1] = fmid;
+    cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / po) - (nm - 0.5) / nm);
+    for (i = nm; i < nc; i++) {
+        cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / po);
+        cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / po)
+                           - pow(2.0, (i - nm + 0.5) / po));
+    }
+
+    return (400 / lfbw);
+}
+
+// CSL prescription
+
+static void
+compressor_init(CHA_CLS *cls)
+{
+    double gn;
+    int k, nc;
+
+    gn = icmp.gn;
+    // set compression mode
+    cls->cm = 1;
+    // loop over filterbank channel
+    nc = cls->nc;
+    for (k = 0; k < nc; k++) {
+        cls->Lcs[k] = 0;
+        cls->Lcm[k] = 50;
+        cls->Lce[k] = 100;
+        cls->Lmx[k] = 120;
+        cls->Gcs[k] = (float) gn;
+        cls->Gcm[k] = (float) gn / 2;
+        cls->Gce[k] = 0;
+        cls->Gmx[k] = 90;
+    }
+}
+
+/***********************************************************/
+
 // prepare filterbank
 
 static void
-prepare_filterbank(CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp, double sr, int cs)
 {
-    double gd, sr, *fc, *bw;
+    double gd, *fc, *bw;
     float z[256], p[256], g[64]; 
-    int cs, nc, no, d[32];
+    int nc, no, d[32];
 
+    cgtfb_init(&cls, sr);
     // prepare filterbank
-    sr = icmp.sr;      // sampling rate (Hz)
-    cs = icmp.cs;      // chunk size
     no = icmp.no;      // gammatone filter order
     gd = icmp.gd;      // target delay (ms) 
     nc = cls.nc;
@@ -336,28 +394,27 @@ prepare_filterbank(CHA_PTR cp)
 // prepare compressor
 
 static void
-prepare_compressor(CHA_PTR cp)
+prepare_compressor(CHA_PTR cp, double sr)
 {
     static double lr = 2e-5;    // signal-level reference (Pa)
     static int    ds = 24;      // downsample factor
 
+    compressor_init(&cls);
     if (args.ds) ds = args.ds;
     cha_icmp_prepare(cp, &cls, lr, ds);
 }
 
-// prepare io
+// prepare input/output
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare_io(I_O *io, double sr, int cs)
 {
-    prepare_filterbank(cp);
-    prepare_compressor(cp);
     // initialize waveform
-    io->rate = icmp.sr;
-    io->ifn = args.ifn;
-    io->ofn = args.ofn;
-    io->mat = args.mat;
-    io->cs = icmp.cs;
+    io->rate = sr;
+    io->cs   = cs;
+    io->ifn  = args.ifn;
+    io->ofn  = args.ofn;
+    io->mat  = args.mat;
     init_wav(io);
     fcopy(io->owav, io->iwav, io->nsmp);
     // prepare i/o
@@ -365,11 +422,22 @@ prepare(I_O *io, CHA_PTR cp)
     if (!io->ofn) {
         init_aud(io);
     }
-    // generate C code from prepared data
-    //cha_data_gen(cp, DATA_HDR);
 }
 
-// process io
+// prepare signal processing
+
+static void
+prepare(I_O *io, CHA_PTR cp, double sr, int cs)
+{
+    prepare_io(io, sr, cs);
+    prepare_filterbank(cp, sr, cs);
+    prepare_compressor(cp, sr);
+    // generate C code from prepared data
+    //cha_data_gen(cp, DATA_HDR);
+    prepared++;
+}
+
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)
@@ -413,75 +481,19 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-// specify filterbank center frequecies and bandwidths
-
-static double
-cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
-{
-    float lfbw, fmid = 1000;
-    int i, nh, nc;
-
-    lfbw = fmid / nm;
-    nh = (int) floor(log2(sr / 2000) * cpo);
-    nc = nh + nm;
-    cls->nc = nc;
-    for (i = 0; i < (nm - 1); i++) {
-        cls->fc[i] = lfbw * (i + 1);
-        cls->bw[i] = lfbw;
-    }
-    cls->fc[nm - 1] = fmid;
-    cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
-    for (i = nm; i < nc; i++) {
-        cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
-        cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo)
-                           - pow(2.0, (i - nm + 0.5) / cpo));
-    }
-
-    return (400 / lfbw);
-}
-
-// CSL prescription
-
-static void
-compressor_init(CHA_CLS *cls, double gn)
-{
-    int k, nc;
-
-    // set compression mode
-    cls->cm = 1;
-    // loop over filterbank channel
-    nc = cls->nc;
-    for (k = 0; k < nc; k++) {
-        cls->Lcs[k] = 0;
-        cls->Lcm[k] = 50;
-        cls->Lce[k] = 100;
-        cls->Lmx[k] = 120;
-        cls->Gcs[k] = (float) gn;
-        cls->Gcm[k] = (float) gn / 2;
-        cls->Gce[k] = 0;
-        cls->Gmx[k] = 90;
-    }
-}
-
 // initialize CSL prescription
 
 static void
 configure(void)
 {
     double fs;
-    static double sr = 24000;   // sampling rate (Hz)
     static double gd = 4;       // target_delay (ms)
-    static int    cs = 32;      // chunk size
     static int    nm =  5;      // number of frequency bands below 1 kHz
     static int    po =  3;      // number of bands per octave above 1 kHz
     static int    no =  4;      // gammatone filter order 
     static double gn = 20;      // flat suppressor gain (dB)
 
     if (args.gn) gn = args.gn;
-    icmp.fd = cgtfb_init(&cls, sr, nm, po);
-    compressor_init(&cls, gn);
-    icmp.sr = sr;
-    icmp.cs = cs;
     icmp.nm = nm;
     icmp.po = po;
     icmp.no = no;
@@ -499,12 +511,14 @@ configure(void)
 int
 main(int ac, char *av[])
 {
-    static I_O io;
+    static double sr = 24000;
+    static int    cs = 32;
     static void *cp[NPTR] = {0};
+    static I_O io;
 
     parse_args(ac, av);
     configure();
-    prepare(&io, cp);
+    prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

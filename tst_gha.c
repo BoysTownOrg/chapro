@@ -25,6 +25,7 @@ typedef struct {
 
 /***********************************************************/
 
+static int    prepared = 0;
 static struct {
     char *ifn, *ofn, simfb, afc, mat, nrep;
 } args;
@@ -39,19 +40,21 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *z;
 
-    // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
-    cha_afc_filters(cp, &afc);
-    // initialize data pointers
-    z = (float *) cp[_cc];
-    // process IIR+AGC+AFC
-    cha_afc_input(cp, x, x, cs);
-    cha_agc_input(cp, x, x, cs);
-    cha_iirfb_analyze(cp, x, z, cs);
-    cha_agc_channel(cp, z, z, cs);
-    cha_iirfb_synthesize(cp, z, y, cs);
-    cha_agc_output(cp, y, y, cs);
-    cha_afc_output(cp, y, cs);
+    if (prepared) {
+        // next line switches to compiled data
+        //cp = (CHA_PTR) cha_data; 
+        cha_afc_filters(cp, &afc);
+        // initialize data pointers
+        z = (float *) cp[_cc];
+        // process IIR+AGC+AFC
+        cha_afc_input(cp, x, x, cs);
+        cha_agc_input(cp, x, x, cs);
+        cha_iirfb_analyze(cp, x, z, cs);
+        cha_agc_channel(cp, z, z, cs);
+        cha_iirfb_synthesize(cp, z, y, cs);
+        cha_agc_output(cp, y, y, cs);
+        cha_afc_output(cp, y, cs);
+    }
 }
 
 /***********************************************************/
@@ -324,13 +327,33 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// prepare input/output
+
+static void
+prepare_io(I_O *io, double sr, int cs)
+{
+    // initialize waveform
+    io->rate = sr;
+    io->cs   = cs;
+    io->ifn  = args.ifn;
+    io->ofn  = args.ofn;
+    io->mat  = args.mat;
+    io->nrep = args.nrep;
+    init_wav(io);
+    // prepare i/o
+    io->pseg = io->mseg;
+    if (!io->ofn) {
+        init_aud(io);
+    }
+}
+
 // prepare IIR filterbank
 
 static void
-prepare_filterbank(CHA_PTR cp)
+prepare_filterbank(CHA_PTR cp, double sr, int cs)
 {
-    double sr, td, *cf;
-    int cs, nc, nz;
+    double td, *cf;
+    int nc, nz;
     // zeros, poles, gains, & delays
     float   z[64], p[64], g[8];
     int     d[8];
@@ -338,8 +361,6 @@ prepare_filterbank(CHA_PTR cp)
     // prepare IIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
-    sr = agc.fs;
-    cs = agc.cs;
     nz = agc.nz;
     td = agc.td;
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
@@ -361,9 +382,9 @@ static void
 prepare_feedback(CHA_PTR cp, int n)
 {
     // AFC parameters
-    afc.rho  = 0.0011907; // forgetting factor
-    afc.eps  = 0.0010123; // power threshold
-    afc.mu   = 0.0001504; // step size
+    afc.rho  = 0.0014388; // forgetting factor
+    afc.eps  = 0.0010148; // power threshold
+    afc.mu   = 0.0001507; // step size
     afc.afl  = 100;       // adaptive filter length
     afc.wfl  = 0;         // whitening-filter length
     afc.pfl  = 0;         // persistent-filter length
@@ -375,32 +396,22 @@ prepare_feedback(CHA_PTR cp, int n)
     cha_afc_prepare(cp, &afc);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
-prepare(I_O *io, CHA_PTR cp)
+prepare(I_O *io, CHA_PTR cp, double sr, int cs)
 {
-    prepare_filterbank(cp);
+    prepare_io(io, sr, cs);
+    // prepare processing
+    prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    // initialize waveform
-    io->rate = agc.fs;
-    io->nrep = args.nrep;
-    io->ifn = args.ifn;
-    io->ofn = args.ofn;
-    io->mat = args.mat;
-    io->cs = agc.cs;
-    init_wav(io);
-    // prepare i/o
-    io->pseg = io->mseg;
-    if (!io->ofn) {
-        init_aud(io);
-    }
     prepare_feedback(cp, io->nsmp * io->nrep);
     // generate C code from prepared data
     //cha_data_gen(cp, DATA_HDR);
+    prepared++;
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)
@@ -476,13 +487,11 @@ configure(void)
         {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
     };
     static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
-    static int    cs = 32;      // chunk size
     static int    nz = 4;
     static double td = 2.5;
 
     memcpy(&dsl, &dsl_ex, sizeof(CHA_DSL));
     memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
-    agc.cs = cs;
     agc.nz = nz;
     agc.td = td;
     // report
@@ -499,12 +508,14 @@ configure(void)
 int
 main(int ac, char *av[])
 {
-    static I_O io;
+    static double sr = 24000;
+    static int    cs = 32;
     static void *cp[NPTR] = {0};
+    static I_O io;
 
     parse_args(ac, av);
     configure();
-    prepare(&io, cp);
+    prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

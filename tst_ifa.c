@@ -82,7 +82,7 @@ prepare_filterbank(CHA_PTR cp)
     cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
 }
 
-// prepare io
+// prepare signal processing
 
 static void
 prepare(I_O *io, CHA_PTR cp)
@@ -115,7 +115,7 @@ unscramble_out(float *y, float *z, int nc, int ns, int cs, int j)
     }
 }
 
-// process io
+// process signal
 
 static void
 process(I_O *io, CHA_PTR cp)
