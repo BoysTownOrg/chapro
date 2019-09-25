@@ -480,7 +480,6 @@ configure(void)
     icmp.sr = 24000;   // sampling rate (Hz)
     icmp.gn = 20;      // flat compressor gain (dB)
     icmp.nw = 256;     // window size
-    icmp.cs = 32;      // chunk size
     icmp.wt = 0;       // window type: 0=Hamming, 1=Blackman
     if (args.gn) icmp.gn = args.gn;
     cls.nc = cross_freq(cls.fc, icmp.sr);

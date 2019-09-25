@@ -84,7 +84,6 @@ typedef struct {
     double bolt;            // broadband output limiting threshold
     // processing parameters
     double td;              // target delay
-    int    cs;              // chunk size
     int    nz;              // filter order
     int    nw;              // window size
     int    wt;              // window type: 0=Hamming, 1=Blackman
@@ -114,7 +113,6 @@ typedef struct {
 typedef struct {
     // processing 
     double sr;      // sampling rate (Hz)
-    int    cs;      // chunk size
     // FIR
     int    nz;      // number of  poles & zeros
     int    nw;      // window size
