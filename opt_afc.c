@@ -22,10 +22,10 @@ typedef struct {
 
 /***********************************************************/
 
-static int    jqm = 0;   //index to begining of optimization range
 static int    prn = 0;
 static struct {
     char *ifn, *ofn, mat, nrep;
+    double tqm;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -62,6 +62,7 @@ usage()
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
     fprintf(stdout, "-r N  number of input file repetitions\n");
+    fprintf(stdout, "-t N  AFC optimize time = N\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
 }
@@ -97,6 +98,7 @@ parse_args(int ac, char *av[])
 {
     args.mat = 1;
     args.nrep = 1;
+    args.tqm = 8;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'h') {
@@ -105,6 +107,10 @@ parse_args(int ac, char *av[])
                 args.mat = 1;
             } else if (av[1][1] == 'r') {
                 if (ac > 2) args.nrep = atoi(av[2]);
+                ac--;
+                av++;
+            } else if (av[1][1] == 't') {
+                if (ac > 2) args.tqm = atof(av[2]);
                 ac--;
                 av++;
             } else if (av[1][1] == 'v') {
@@ -256,9 +262,9 @@ static void
 prepare_feedback(CHA_PTR cp, int n)
 {
     // AFC parameters
-    afc.rho  = 0.38000; // forgetting factor
-    afc.eps  = 0.00100; // power threshold
-    afc.mu   = 0.00015; // step size
+    afc.rho  = 0.0011907; // forgetting factor
+    afc.eps  = 0.0010123; // power threshold
+    afc.mu   = 0.0001504; // step size
     afc.afl  = 100;     // adaptive filter length
     afc.wfl  = 0;       // whitening-filter length
     afc.pfl  = 0;       // persistent-filter length
@@ -295,8 +301,8 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
-    int i, j, m, n, cs, nk, iqm, kqm, lqm;
-    double t1, t2, fme, xqm;
+    int i, j, m, n, cs, nk, iqm, jqm, kqm, lqm;
+    double t1, t2, fme;
 
     sp_tic();
     if (io->ofn) {
@@ -314,11 +320,11 @@ process(I_O *io, CHA_PTR cp)
         }
     }
     if (prn) {
-        jqm = 0;
         t1 = sp_toc();
         t2 = (io->nwav / io->rate) * io->nrep;
         fprintf(stdout, "(wall/wave) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
-        iqm = afc.iqmp ? afc.iqmp[0] : 0;
+        iqm = (afc.iqmp) ? afc.iqmp[0] : 0;
+        jqm = agc.fs * args.tqm;
         if (iqm > 0) {
             if (afc.qm[iqm - 1] > 0) {
                 fme = 10 * log10(afc.qm[iqm - 1]);
@@ -335,11 +341,6 @@ process(I_O *io, CHA_PTR cp)
                 if (afc.qm[lqm] < afc.qm[i]) {
                     lqm = i;
                 }
-            }
-            jqm = kqm;
-            xqm = afc.qm[lqm] * 0.9;
-            while ((jqm > 0) && (afc.qm[jqm - 1] < xqm)) {
-                jqm--;
             }
             fme = 10 * log10(afc.qm[lqm]);
             fprintf(stdout, "max error=%.2f ", fme);
@@ -367,7 +368,7 @@ double
 afc_error(float *par)
 {
     double mxqm, err;
-    int i, iqm;
+    int i, iqm, jqm;
 
     // check parameter range
     if (par[0] < 1e-9) return (1e9);
@@ -382,15 +383,16 @@ afc_error(float *par)
     // process waveform
     process(&io, cp);
     // report error
+    iqm = (afc.iqmp) ? afc.iqmp[0] : 0;
+    jqm = agc.fs * args.tqm;
     mxqm = 0;
-    iqm = afc.iqmp ? afc.iqmp[0] : 0;
     for (i = jqm; i < iqm; i++) {
         if (mxqm < afc.qm[i]) {
             mxqm = afc.qm[i];
         }
     }
     err = 10 * log10(mxqm);
-    fprintf(stdout, "afc: %5.3f %7.5f %7.5f %6.2f\n", 
+    fprintf(stdout, "afc: %8.6f %8.6f %8.6f %6.2f\n", 
         par[0], par[1], par[2], err);
     return (err);
 }
@@ -442,9 +444,9 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     // AFC parameters
-    afc.rho  = 0.38000; // forgetting factor
-    afc.eps  = 0.00100; // power threshold
-    afc.mu   = 0.00015; // step size
+    afc.rho  = 0.0011907; // forgetting factor
+    afc.eps  = 0.0010123; // power threshold
+    afc.mu   = 0.0001504; // step size
     par[0] = p[0] = afc.rho;
     par[1] = p[1] = afc.eps;
     par[2] = p[2] = afc.mu ;
