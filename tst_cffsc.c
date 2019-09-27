@@ -315,6 +315,56 @@ stop_wav(I_O *io)
 
 /***********************************************************/
 
+// specify filterbank crossover frequencies
+
+static int
+cross_freq(double *cf, double sr)
+{
+    int i, nh, nc, nm = 5;
+    double fmin = 250, fmid = 1000, bpo = 3;
+
+    nh = (int) floor(log2(sr / 2000) * bpo);
+    nc = nh + nm;
+    for (i = 0; i < nm; i++) {
+        cf[i] = fmin + i * (fmid - fmin)  / (nm - 0.5);
+    }
+    for (i = 0; i < nh; i++) {
+        cf[i + nm] = fmid * pow(2.0, (i + 0.5) / bpo);
+    }
+
+    return (nc + 1); // return number of channels = crossovers + 1
+}
+
+// CSL prescription
+
+static void
+compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
+{
+    double f1, f2;
+    int k, n;
+
+    // set compression mode
+    cls->cm = 1;
+    // loop over filterbank channel
+    cls->nc = nc;
+    n = nc - 1;
+    for (k = 0; k < nc; k++) {
+        cls->Lcs[k] = 0;
+        cls->Lcm[k] = 50;
+        cls->Lce[k] = 100;
+        cls->Lmx[k] = 120;
+        cls->Gcs[k] = (float) gn;
+        cls->Gcm[k] = (float) gn / 2;
+        cls->Gce[k] = 0;
+        cls->Gmx[k] = 90;
+        f1 = (k > 0) ? cf[k - 1] : 0;
+        f2 = (k < n) ? cf[k] : sr / 2;
+        cls->bw[k] = f2 - f1;
+    }
+}
+
+/***********************************************************/
+
 // prepare input/output
 
 static void
@@ -343,6 +393,8 @@ prepare_filterbank(CHA_PTR cp, double sr, int cs)
     double *cf;
     int nc, nw, wt; 
 
+    icmp.sr = sr;      // sampling rate (Hz)
+    cls.nc = cross_freq(cls.fc, icmp.sr);
     // prepare CFIRFB
     nw = icmp.nw;      // window size
     wt = icmp.wt;      // window type: 0=Hamming, 1=Blackman
@@ -359,6 +411,7 @@ prepare_compressor(CHA_PTR cp)
     static double lr = 2e-5;    // signal-level reference (Pa)
     static int    ds = 24;      // downsample factor
 
+    compressor_init(&cls, cls.fc, icmp.sr, icmp.gn, cls.nc);
     if (args.ds) ds = args.ds;
     cha_icmp_prepare(cp, &cls, lr, ds);
 }
@@ -420,73 +473,27 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-// specify filterbank crossover frequencies
-
-static int
-cross_freq(double *cf, double sr)
-{
-    int i, nh, nc, nm = 5;
-    double fmin = 250, fmid = 1000, bpo = 3;
-
-    nh = (int) floor(log2(sr / 2000) * bpo);
-    nc = nh + nm;
-    for (i = 0; i < nm; i++) {
-        cf[i] = fmin + i * (fmid - fmin)  / (nm - 0.5);
-    }
-    for (i = 0; i < nh; i++) {
-        cf[i + nm] = fmid * pow(2.0, (i + 0.5) / bpo);
-    }
-
-    return (nc + 1); // return number of channels = crossovers + 1
-}
-
-// CSL prescription
-
 static void
-compressor_init(CHA_CLS *cls, double *cf, double sr, double gn, int nc)
+configure_compressor()
 {
-    double f1, f2;
-    int k, n;
-
-    // set compression mode
-    cls->cm = 1;
-    // loop over filterbank channel
-    cls->nc = nc;
-    n = nc - 1;
-    for (k = 0; k < nc; k++) {
-        cls->Lcs[k] = 0;
-        cls->Lcm[k] = 50;
-        cls->Lce[k] = 100;
-        cls->Lmx[k] = 120;
-        cls->Gcs[k] = (float) gn;
-        cls->Gcm[k] = (float) gn / 2;
-        cls->Gce[k] = 0;
-        cls->Gmx[k] = 90;
-        f1 = (k > 0) ? cf[k - 1] : 0;
-        f2 = (k < n) ? cf[k] : sr / 2;
-        cls->bw[k] = f2 - f1;
-    }
-}
-
-/***********************************************************/
-
-// initialize CSL prescription
-
-static void
-configure(void)
-{
-    double fs;
-
-    icmp.sr = 24000;   // sampling rate (Hz)
+    // Example of instantaneous compression with FIR filterbank
     icmp.gn = 20;      // flat compressor gain (dB)
     icmp.nw = 256;     // window size
     icmp.wt = 0;       // window type: 0=Hamming, 1=Blackman
     if (args.gn) icmp.gn = args.gn;
-    cls.nc = cross_freq(cls.fc, icmp.sr);
-    compressor_init(&cls, cls.fc, icmp.sr, icmp.gn, cls.nc);
+}
+
+static void
+configure()
+{
+    configure_compressor();
+}
+
+static void
+report(double sr)
+{
     // report
-    fs = icmp.sr / 1000;
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f Hz, ", sr);
     fprintf(stdout, "FIR + inst. compression\n");
 }
 
@@ -502,6 +509,7 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     configure();
+    report(sr);
     prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);

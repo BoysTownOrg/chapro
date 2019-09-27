@@ -277,19 +277,8 @@ prepare_compressor(CHA_PTR cp)
 // prepare feedback
 
 static void
-prepare_feedback(CHA_PTR cp, int n)
+prepare_feedback(CHA_PTR cp)
 {
-    // AFC parameters
-    afc.rho  = 0.0014388; // forgetting factor
-    afc.eps  = 0.0010148; // power threshold
-    afc.mu   = 0.0001507; // step size
-    afc.afl  = 100;     // adaptive filter length
-    afc.wfl  = 0;       // whitening-filter length
-    afc.pfl  = 0;       // persistent-filter length
-    afc.hdel = 0;       // output/input hardware delay
-    afc.sqm  = 1;       // save quality metric ?
-    afc.fbg = 1;        // simulated-feedback gain 
-    afc.nqm = n;        // initialize quality metric
     // prepare AFC
     cha_afc_prepare(cp, &afc);
 }
@@ -302,7 +291,8 @@ prepare(I_O *io, CHA_PTR cp, double sr, int cs)
     prepare_io(io, sr, cs);
     prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    prepare_feedback(cp, io->nsmp * io->nrep);
+    if (afc.sqm) afc.nqm = io->nsmp * io->nrep;
+    prepare_feedback(cp);
     prepared++;
 }
 
@@ -421,10 +411,8 @@ print_par(float *par)
 
 /***********************************************************/
 
-// initialize DSL prescription
-
 static void
-configure(void)
+configure_compressor()
 {
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
@@ -435,7 +423,6 @@ configure(void)
         {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
     };
     static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
-    // filterbank parameters
     static int    nz = 4;
     static double td = 2.5;
 
@@ -443,10 +430,41 @@ configure(void)
     memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
     agc.nz = nz;
     agc.td = td;
-    fprintf(stdout, "CHA IIR+AGC: AFC optimization\n");
-    fprintf(stdout, "sampling_rate=%.0f kHz ", agc.fs);
+}
+
+static void
+configure_feedback()
+{
+    // AFC parameters
+    afc.rho  = 0.0014388; // forgetting factor
+    afc.eps  = 0.0010148; // power threshold
+    afc.mu   = 0.0001507; // step size
+    afc.afl  = 100;     // adaptive filter length
+    afc.wfl  = 0;       // whitening-filter length
+    afc.pfl  = 0;       // persistent-filter length
+    afc.hdel = 0;       // output/input hardware delay
+    afc.sqm  = 1;       // save quality metric ?
+    afc.fbg = 1;        // simulated-feedback gain 
+    afc.nqm = 0;        // initialize quality-metric length
+}
+
+static void
+configure()
+{
+    // initialize local variables
+    configure_compressor();
+    configure_feedback();
+}
+
+static void
+report(double sr)
+{
+    fprintf(stdout, "CHA IIR+AGC+AFC with AFC optimization\n");
+    fprintf(stdout, "sampling_rate=%.0f Hz ", sr);
     fprintf(stdout, "nchannel=%d nz=%d\n", dsl.nchannel, agc.nz);
 }
+
+/***********************************************************/
 
 int
 main(int ac, char *av[])
@@ -463,6 +481,7 @@ main(int ac, char *av[])
     par[2] = p[2] = afc.mu ;
     // optimize
     configure();
+    report(sr);
     prn = 1;
     afc_error(par);
     prn = 0;

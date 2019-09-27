@@ -379,19 +379,8 @@ prepare_compressor(CHA_PTR cp)
 // prepare feedback
 
 static void
-prepare_feedback(CHA_PTR cp, int n)
+prepare_feedback(CHA_PTR cp)
 {
-    // AFC parameters
-    afc.rho  = 0.0014388; // forgetting factor
-    afc.eps  = 0.0010148; // power threshold
-    afc.mu   = 0.0001507; // step size
-    afc.afl  = 100;       // adaptive filter length
-    afc.wfl  = 0;         // whitening-filter length
-    afc.pfl  = 0;         // persistent-filter length
-    afc.hdel = 0;         // output/input hardware delay
-    afc.sqm  = 1;         // save quality metric ?
-    afc.fbg = 1;          // simulated-feedback gain 
-    afc.nqm = n;          // initialize quality metric
     // prepare AFC
     cha_afc_prepare(cp, &afc);
 }
@@ -402,13 +391,13 @@ static void
 prepare(I_O *io, CHA_PTR cp, double sr, int cs)
 {
     prepare_io(io, sr, cs);
-    // prepare processing
     prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    prepare_feedback(cp, io->nsmp * io->nrep);
+    if (afc.sqm) afc.nqm = io->nsmp * io->nrep;
+    prepare_feedback(cp);
+    prepared++;
     // generate C code from prepared data
     //cha_data_gen(cp, DATA_HDR);
-    prepared++;
 }
 
 // process signal
@@ -470,14 +459,9 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-// initialize DSL prescription
-
 static void
-configure(void)
+configure_compressor()
 {
-    char *en, *fc;
-    double fs;
-    int nc, nr;
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -494,16 +478,50 @@ configure(void)
     memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
     agc.nz = nz;
     agc.td = td;
+}
+
+static void
+configure_feedback()
+{
+    // AFC parameters
+    afc.rho  = 0.0014388; // forgetting factor
+    afc.eps  = 0.0010148; // power threshold
+    afc.mu   = 0.0001507; // step size
+    afc.afl  = 100;     // adaptive filter length
+    afc.wfl  = 0;       // whitening-filter length
+    afc.pfl  = 0;       // persistent-filter length
+    afc.hdel = 0;       // output/input hardware delay
+    afc.sqm  = 1;       // save quality metric ?
+    afc.fbg = 1;        // simulated-feedback gain 
+    afc.nqm = 0;        // initialize quality-metric length
+}
+
+static void
+configure()
+{
+    // initialize local variables
+    configure_compressor();
+    configure_feedback();
+}
+
+static void
+report(double sr)
+{
+    char *en, *fc;
+    int nc, nr, nz;
+
     // report
-    fs = agc.fs / 1000;
     fc = args.afc ? "+AFC" : "";
     en = args.simfb ? "en" : "dis";
     nc = dsl.nchannel;
     nr = args.nrep;
-    fprintf(stdout, "CHA simulation: sampling rate=%.0f kHz, ", fs);
+    nz = agc.nz;
+    fprintf(stdout, "CHA simulation: sampling rate=%.0f Hz, ", sr);
     fprintf(stdout, "feedback simulation %sabled.\n", en);
     fprintf(stdout, "IIR+AGC%s: nc=%d nz=%d nrep=%d\n", fc, nc, nz, nr);
 }
+
+/***********************************************************/
 
 int
 main(int ac, char *av[])
@@ -515,6 +533,7 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     configure();
+    report(sr);
     prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);

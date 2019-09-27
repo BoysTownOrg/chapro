@@ -375,11 +375,13 @@ cha_state(CHA_PTR cp, CHA_STA *state)
         scp[i] = data + i * (cpsiz[i] / dtsiz);
         //memcpy(scp[i], cp[i], cpsiz[i]);
     }
-    // return state
+    // return state variables
     state->ptsiz = ptsiz;
     state->arsiz = arsiz;
-    state->cp = scp;
-    state->data = data;
+    state->cp    = scp;
+    state->data  = data;
+    state->sr    = CHA_DVAR[_fs];
+    state->cs    = CHA_IVAR[_cs];
 
     return (0);
 };

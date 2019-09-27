@@ -408,13 +408,9 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-// initialize DSL prescription
-
 static void
-configure(void)
+configure_compressor()
 {
-    double fs;
-    int nc;
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -432,12 +428,27 @@ configure(void)
     memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
     agc.nz = nz;
     agc.td = td;
+}
+
+static void
+configure()
+{
+    configure_compressor();
+}
+
+static void
+report(double sr)
+{
+    int nc, nz;
+
     // report
-    fs = agc.fs / 1000;
     nc = dsl.nchannel;
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    nz = agc.nz;
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f Hz, ", sr);
     fprintf(stdout, "IIR+AGC: nc=%d nz=%d\n", nc, nz);
 }
+
+/***********************************************************/
 
 int
 main(int ac, char *av[])
@@ -449,6 +460,7 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     configure();
+    report(sr);
     prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);

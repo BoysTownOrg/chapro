@@ -52,7 +52,7 @@
 
 typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
-typedef struct {int arsiz, ptsiz; CHA_PTR cp; void *data;} CHA_STA;
+typedef struct {int arsiz, ptsiz; CHA_PTR cp; void *data; double sr; int cs;} CHA_STA;
 
 /*****************************************************/
 

@@ -481,27 +481,29 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-// initialize CSL prescription
+static void
+configure_compressor()
+{
+    // Example of instantaneous compression with IIR filterbank
+    icmp.gn = 20;      // flat suppressor gain (dB)
+    icmp.gd =  4;      // target_delay (ms)
+    icmp.nm =  5;      // number of frequency bands below 1 kHz
+    icmp.po =  3;      // number of bands per octave above 1 kHz
+    icmp.no =  4;      // gammatone filter order 
+    if (args.gn) icmp.gn = args.gn;
+}
 
 static void
-configure(void)
+configure()
 {
-    double fs;
-    static double gd = 4;       // target_delay (ms)
-    static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int    po =  3;      // number of bands per octave above 1 kHz
-    static int    no =  4;      // gammatone filter order 
-    static double gn = 20;      // flat suppressor gain (dB)
+    configure_compressor();
+}
 
-    if (args.gn) gn = args.gn;
-    icmp.nm = nm;
-    icmp.po = po;
-    icmp.no = no;
-    icmp.gn = gn;
-    icmp.gd = gd;
+static void
+report(double sr)
+{
     // report
-    fs = icmp.sr / 1000;
-    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f kHz, ", fs);
+    fprintf(stdout, "CHA ARSC simulation: sampling rate=%.0f Hz, ", sr);
     fprintf(stdout, "filterbank gd=%.1f ms; ", icmp.gd);
     fprintf(stdout, "IIR + inst. compression\n");
 }
@@ -518,6 +520,7 @@ main(int ac, char *av[])
 
     parse_args(ac, av);
     configure();
+    report(sr);
     prepare(&io, cp, sr, cs);
     process(&io, cp);
     cleanup(&io, cp);
