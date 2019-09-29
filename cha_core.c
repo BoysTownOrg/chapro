@@ -15,7 +15,7 @@ FUNC(char *)
 cha_version(void)
 {
     return (VER);                  
-};
+}
 
 FUNC(void) 
 cha_prepare(CHA_PTR cp)
@@ -28,7 +28,7 @@ cha_prepare(CHA_PTR cp)
         ((int *)cp[_size])[_ivar] = NVAR * sizeof(int);
         ((int *)cp[_size])[_dvar] = NVAR * sizeof(double);
     }
-};
+}
 
 FUNC(void *) 
 cha_allocate(CHA_PTR cp, int cnt, int siz, int idx)
@@ -40,7 +40,7 @@ cha_allocate(CHA_PTR cp, int cnt, int siz, int idx)
     ((int *)cp[_size])[idx] = cnt * siz;
 
     return (cp[idx]);
-};
+}
 
 FUNC(void) 
 cha_cleanup(CHA_PTR cp)
@@ -50,7 +50,7 @@ cha_cleanup(CHA_PTR cp)
     for (i = 0; i < NPTR; i++) {
         free_null(cp[i]);
     }
-};
+}
 
 FUNC(int)
 cha_data_gen(CHA_PTR cp, char *fn)
@@ -225,7 +225,7 @@ cha_data_gen(CHA_PTR cp, char *fn)
     fclose(fp);
 
     return (0);
-};
+}
 
 FUNC(int)
 cha_data_save(CHA_PTR cp, char *fn)
@@ -273,7 +273,7 @@ cha_data_save(CHA_PTR cp, char *fn)
     fclose(fp);
 
     return (0);
-};
+}
 
 FUNC(int)
 cha_data_load(CHA_PTR cp, char *fn)
@@ -341,10 +341,10 @@ cha_data_load(CHA_PTR cp, char *fn)
     fclose(fp);
 
     return (rv);
-};
+}
 
 FUNC(int)
-cha_state(CHA_PTR cp, CHA_STA *state)
+cha_state_save(CHA_PTR cp, CHA_STA *state)
 {
     char *data;
     int ptsiz, arsiz, i, *cpsiz;
@@ -389,4 +389,25 @@ cha_state(CHA_PTR cp, CHA_STA *state)
     state->cs    = CHA_IVAR[_cs];
 
     return (0);
-};
+}
+
+FUNC(int)
+cha_state_copy(CHA_STA *new_state, CHA_STA *old_state)
+{
+    new_state->cp = (CHA_PTR) calloc(old_state->ptsiz, sizeof(void *));
+    new_state->data = malloc(old_state->arsiz);
+    memcpy(new_state->cp, old_state->cp, old_state->ptsiz * sizeof(void *));
+    memcpy(new_state->data, old_state->data, old_state->arsiz);
+    return (0);
+}
+
+FUNC(int)
+cha_state_free(CHA_STA *state)
+{
+    free(state->cp);
+    free(state->data);
+    state->cp = NULL;
+    state->data = NULL;
+    return (0);
+}
+
