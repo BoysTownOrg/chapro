@@ -1,7 +1,8 @@
 // cha_core.c - CHAPRO core functions
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "chapro.h"
 #include "version.h"
@@ -345,8 +346,9 @@ cha_data_load(CHA_PTR cp, char *fn)
 FUNC(int)
 cha_state(CHA_PTR cp, CHA_STA *state)
 {
-    int ptsiz, arsiz, dtsiz, i, *cpsiz;
-    CHA_DATA *data;
+    char *data;
+    int ptsiz, arsiz, i, *cpsiz;
+    void *sdata;
     CHA_PTR scp;
 
     cpsiz = (int *) cp[_size];
@@ -367,19 +369,22 @@ cha_state(CHA_PTR cp, CHA_STA *state)
         return (3);
     }
     // allocate memory
-    dtsiz = sizeof(CHA_DATA);
-    scp = (CHA_PTR) calloc(dtsiz, ptsiz);
-    data = (CHA_DATA *) calloc(1, arsiz);
+    scp = (CHA_PTR) calloc(NPTR, sizeof(void *));
+    sdata = malloc(arsiz);
     // copy data
-    for (i = 0; i < ptsiz; i++) {
-        scp[i] = data + i * (cpsiz[i] / dtsiz);
-        //memcpy(scp[i], cp[i], cpsiz[i]);
+    data = (char *)sdata;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) {
+            scp[i] = data;
+            memcpy(scp[i], cp[i], cpsiz[i]);
+            data += cpsiz[i];
+        }
     }
     // return state variables
     state->ptsiz = ptsiz;
     state->arsiz = arsiz;
     state->cp    = scp;
-    state->data  = data;
+    state->data  = sdata;
     state->sr    = CHA_DVAR[_fs];
     state->cs    = CHA_IVAR[_cs];
 

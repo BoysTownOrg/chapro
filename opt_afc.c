@@ -363,10 +363,20 @@ cleanup(I_O *io, CHA_PTR cp)
 /***********************************************************/
 
 static double sr = 24000;
-int    ipar[3], npar = 3;
-static int    cs = 32;
+static double *dopt[4];
+static int oopt[4];
+static int nopt = 0;
+static int cs = 32;
 static void *cp[NPTR] = {0};
 static I_O io;
+
+void
+opt_add(double *d, int o)
+{
+    dopt[nopt] = d;
+    oopt[nopt] = o;
+    nopt++;
+}
 
 double
 afc_error(float *par)
@@ -376,9 +386,8 @@ afc_error(float *par)
 
     prepare(&io, cp, sr, cs);
     // modify AFC parameters
-    for (i = 0; i < npar; i++) {
-        if (par[i] < 1e-9) return (1e9);
-        CHA_DVAR[ipar[i]] = par[i];
+    for (i = 0; i < nopt; i++) {
+        CHA_DVAR[oopt[i]] = par[i];
     }
     // process waveform
     process(&io, cp);
@@ -467,17 +476,18 @@ int
 main(int ac, char *av[])
 {
     float par0[3], par[3];
+    int i;
 
     parse_args(ac, av);
     configure();
     report(sr);
     // optimize
-    ipar[0] = _rho;
-    ipar[1] = _eps;
-    ipar[2] = _mu;
-    par0[0] = par[0] = (float)afc.rho;
-    par0[1] = par[1] = (float)afc.eps;
-    par0[2] = par[2] = (float)afc.mu ;
+    opt_add(&afc.rho, _rho);
+    opt_add(&afc.eps, _eps);
+    opt_add(&afc.mu , _mu );
+    for (i = 0; i < nopt; i++) {
+        par0[i] = par[i] = (float)(*dopt[i]);
+    }
     prn = 1;
     afc_error(par);
     prn = 0;
