@@ -472,16 +472,12 @@ main(int ac, char *av[])
     float p[3], par[3];
 
     parse_args(ac, av);
-    // AFC parameters
-    afc.rho  = 0.0014388; // forgetting factor
-    afc.eps  = 0.0010148; // power threshold
-    afc.mu   = 0.0001507; // step size
+    configure();
+    report(sr);
+    // optimize
     par[0] = p[0] = afc.rho;
     par[1] = p[1] = afc.eps;
     par[2] = p[2] = afc.mu ;
-    // optimize
-    configure();
-    report(sr);
     prn = 1;
     afc_error(par);
     prn = 0;
