@@ -375,8 +375,8 @@ cha_state(CHA_PTR cp, CHA_STA *state)
     data = (char *)sdata;
     for (i = 0; i < NPTR; i++) {
         if (cp[i]) {
+            memcpy(data, cp[i], cpsiz[i]);
             scp[i] = data;
-            memcpy(scp[i], cp[i], cpsiz[i]);
             data += cpsiz[i];
         }
     }
