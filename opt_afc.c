@@ -363,6 +363,7 @@ cleanup(I_O *io, CHA_PTR cp)
 /***********************************************************/
 
 static double sr = 24000;
+int    ipar[3], npar = 3;
 static int    cs = 32;
 static void *cp[NPTR] = {0};
 static I_O io;
@@ -373,16 +374,12 @@ afc_error(float *par)
     double mxqm, err;
     int i, iqm, jqm;
 
-    // check parameter range
-    if (par[0] < 1e-9) return (1e9);
-    if (par[1] < 1e-9) return (1e9);
-    if (par[2] < 1e-9) return (1e9);
-    // set AFC parameters
     prepare(&io, cp, sr, cs);
-    CHA_IVAR[_in1] = 0;
-    CHA_DVAR[_rho] = par[0];
-    CHA_DVAR[_eps] = par[1];
-    CHA_DVAR[_mu]  = par[2];
+    // modify AFC parameters
+    for (i = 0; i < npar; i++) {
+        if (par[i] < 1e-9) return (1e9);
+        CHA_DVAR[ipar[i]] = par[i];
+    }
     // process waveform
     process(&io, cp);
     // report error
@@ -469,24 +466,27 @@ report(double sr)
 int
 main(int ac, char *av[])
 {
-    float p[3], par[3];
+    float par0[3], par[3];
 
     parse_args(ac, av);
     configure();
     report(sr);
     // optimize
-    par[0] = p[0] = afc.rho;
-    par[1] = p[1] = afc.eps;
-    par[2] = p[2] = afc.mu ;
+    ipar[0] = _rho;
+    ipar[1] = _eps;
+    ipar[2] = _mu;
+    par0[0] = par[0] = (float)afc.rho;
+    par0[1] = par[1] = (float)afc.eps;
+    par0[2] = par[2] = (float)afc.mu ;
     prn = 1;
     afc_error(par);
     prn = 0;
     sp_fmins(par, 3, &afc_error, NULL);
     sp_fmins(par, 3, &afc_error, NULL);
-    // report
     prn = 1;
-    print_par(p);
-    afc_error(p);
+    // report
+    print_par(par0);
+    afc_error(par0);
     print_par(par);
     afc_error(par);
     cleanup(&io, cp);
