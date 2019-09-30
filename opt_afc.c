@@ -291,7 +291,7 @@ prepare(I_O *io, CHA_PTR cp, double sr, int cs)
     prepare_io(io, sr, cs);
     prepare_filterbank(cp, sr, cs);
     prepare_compressor(cp);
-    if (afc.sqm) afc.nqm = io->nsmp * io->nrep;
+    afc.nqm = afc.sqm ? io->nsmp * io->nrep : 0;
     prepare_feedback(cp);
     prepared++;
 }
