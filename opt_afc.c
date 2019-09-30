@@ -498,7 +498,7 @@ main(int ac, char *av[])
     for (i = 0; i < nopt; i++) {
         par0[i] = par[i] = (float)(*dopt[i]);
     }
-    sp_fminsearch(par, 3, &afc_error, NULL, &sta);
+    sp_fminsearch(par, nopt, &afc_error, NULL, &sta);
     // report
     prn = 1;
     print_par(par0);
