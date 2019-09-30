@@ -52,6 +52,62 @@ cha_cleanup(CHA_PTR cp)
     }
 }
 
+/***********************************************************/
+
+static int *
+data_plan(CHA_PTR cp, int *psz, int *asz)
+{
+    int i, ptsiz, arsiz, *cpsiz;
+
+    // count pointers
+    ptsiz = 0;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) ptsiz = i + 1;
+    }
+    // sum array sizes
+    cpsiz = (int *) cp[_size];
+    arsiz = 0;
+    if (cpsiz) {
+        for (i = 0; i < NPTR; i++) {
+            arsiz += cpsiz[i];
+        }
+    }
+    *psz = ptsiz;
+    *asz = arsiz;
+    return(cpsiz);
+}
+
+static void
+state_make(CHA_STA *state, int *cpsiz, void **cp, int ptsiz, int arsiz)
+{
+    char *data;
+    int i;
+    void *mkdata;
+    void **mkcp;
+
+    // allocate memory
+    mkcp = (void **)calloc(NPTR, sizeof(void *));
+    mkdata = malloc(arsiz);
+    // copy data
+    data = (char *)mkdata;
+    for (i = 0; i < NPTR; i++) {
+        if (cp[i]) {
+            memcpy(data, cp[i], cpsiz[i]);
+            mkcp[i] = data;
+            data += cpsiz[i];
+        }
+    }
+    // return state variables
+    state->ptsiz = ptsiz;
+    state->arsiz = arsiz;
+    state->cp    = mkcp;
+    state->data  = mkdata;
+    state->sr    = CHA_DVAR[_fs] * 1000;
+    state->cs    = CHA_IVAR[_cs];
+}
+
+/***********************************************************/
+
 FUNC(int)
 cha_data_gen(CHA_PTR cp, char *fn)
 {
@@ -76,27 +132,14 @@ cha_data_gen(CHA_PTR cp, char *fn)
     static int arpl = 6;
     static int cptr = 4; // number of cast pointers
 
-    cpsiz = (int *) cp[_size];
-    if (cpsiz == NULL) {
-        return (2);
-    }
-    // count pointers
-    ptsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        if (cp[i]) ptsiz = i + 1;
-    }
-    // sum array sizes
-    arsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        arsiz += cpsiz[i];
-    }
+    cpsiz = data_plan(cp, &ptsiz, &arsiz);
     if (arsiz == 0) {
-        return (3);
+        return (1);
     }
     // open file
     fp = fopen(fn, "wt");
     if (fp == NULL) {
-        return (1);
+        return (2);
     }
     // print header
     fprintf(fp, "// cha_data.h - data size = %d bytes\n", arsiz);
@@ -234,27 +277,14 @@ cha_data_save(CHA_PTR cp, char *fn)
     CHA_DATA cha_magic[4];
     FILE *fp;
 
-    cpsiz = (int *) cp[_size];
-    if (cpsiz == NULL) {
-        return (2);
-    }
-    // count pointers
-    ptsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        if (cp[i]) ptsiz = i + 1;
-    }
-    // sum array sizes
-    arsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        arsiz += cpsiz[i];
-    }
+    cpsiz = data_plan(cp, &ptsiz, &arsiz);
     if (arsiz == 0) {
-        return (3);
+        return (1);
     }
     // open file
     fp = fopen(fn, "wb");
     if (fp == NULL) {
-        return (1);
+        return (2);
     }
     dtsiz = sizeof(CHA_DATA);
     // write magic number
@@ -282,27 +312,14 @@ cha_data_load(CHA_PTR cp, char *fn)
     CHA_DATA cha_magic[4], file_magic[4], *file_size, *file_data;
     FILE *fp;
 
-    cpsiz = (int *) cp[_size];
-    if (cpsiz == NULL) {
-        return (2);
-    }
-    // count pointers
-    ptsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        if (cp[i]) ptsiz = i + 1;
-    }
-    // sum array sizes
-    arsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        arsiz += cpsiz[i];
-    }
+    cpsiz = data_plan(cp, &ptsiz, &arsiz);
     if (arsiz == 0) {
-        return (3);
+        return (1);
     }
     // open file
     fp = fopen(fn, "rb");
     if (fp == NULL) {
-        return (1);
+        return (2);
     }
     dtsiz = sizeof(CHA_DATA);
     rv = 0; // default return value
@@ -346,47 +363,13 @@ cha_data_load(CHA_PTR cp, char *fn)
 FUNC(int)
 cha_state_save(CHA_PTR cp, CHA_STA *state)
 {
-    char *data;
-    int ptsiz, arsiz, i, *cpsiz;
-    void *sdata;
-    CHA_PTR scp;
+    int ptsiz, arsiz, *cpsiz;
 
-    cpsiz = (int *) cp[_size];
-    if (cpsiz == NULL) {
-        return (2);
-    }
-    // count pointers
-    ptsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        if (cp[i]) ptsiz = i + 1;
-    }
-    // sum array sizes
-    arsiz = 0;
-    for (i = 0; i < NPTR; i++) {
-        arsiz += cpsiz[i];
-    }
+    cpsiz = data_plan(cp, &ptsiz, &arsiz);
     if (arsiz == 0) {
-        return (3);
+        return (1);
     }
-    // allocate memory
-    scp = (CHA_PTR) calloc(NPTR, sizeof(void *));
-    sdata = malloc(arsiz);
-    // copy data
-    data = (char *)sdata;
-    for (i = 0; i < NPTR; i++) {
-        if (cp[i]) {
-            memcpy(data, cp[i], cpsiz[i]);
-            scp[i] = data;
-            data += cpsiz[i];
-        }
-    }
-    // return state variables
-    state->ptsiz = ptsiz;
-    state->arsiz = arsiz;
-    state->cp    = scp;
-    state->data  = sdata;
-    state->sr    = CHA_DVAR[_fs];
-    state->cs    = CHA_IVAR[_cs];
+    state_make(state, cpsiz, cp, ptsiz, arsiz);
 
     return (0);
 }
@@ -394,10 +377,14 @@ cha_state_save(CHA_PTR cp, CHA_STA *state)
 FUNC(int)
 cha_state_copy(CHA_STA *new_state, CHA_STA *old_state)
 {
-    new_state->cp = (CHA_PTR) calloc(old_state->ptsiz, sizeof(void *));
-    new_state->data = malloc(old_state->arsiz);
-    memcpy(new_state->cp, old_state->cp, old_state->ptsiz * sizeof(void *));
-    memcpy(new_state->data, old_state->data, old_state->arsiz);
+    int ptsiz, arsiz, *cpsiz;
+    void **cp;
+
+    cp = old_state->cp;
+    cpsiz = (int *) cp[_size];
+    ptsiz = old_state->ptsiz;
+    arsiz = old_state->arsiz;
+    state_make(new_state, cpsiz, cp, ptsiz, arsiz);
     return (0);
 }
 

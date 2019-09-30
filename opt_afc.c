@@ -362,12 +362,9 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-static double sr = 24000;
 static double *dopt[4];
 static int oopt[4];
 static int nopt = 0;
-static int cs = 32;
-static void *cp[NPTR] = {0};
 static I_O io;
 
 void
@@ -379,12 +376,19 @@ opt_add(double *d, int o)
 }
 
 double
-afc_error(float *par)
+afc_error(float *par, void *v)
 {
-    double mxqm, err;
-    int i, iqm, jqm;
+    double mxqm, err, sr;
+    int i, iqm, jqm, cs;
+    CHA_STA st;
+    CHA_PTR cp;
 
-    prepare(&io, cp, sr, cs);
+    cha_state_copy(&st, (CHA_STA *)v);
+    cp = st.cp;
+    sr = st.sr;
+    cs = st.cs;
+    cha_afc_filters(cp, &afc);
+    prepare_io(&io, sr, cs);
     // modify AFC parameters
     for (i = 0; i < nopt; i++) {
         CHA_DVAR[oopt[i]] = par[i];
@@ -403,6 +407,7 @@ afc_error(float *par)
     err = 10 * log10(mxqm);
     fprintf(stdout, "afc: %8.6f %8.6f %8.6f %6.2f\n", 
         par[0], par[1], par[2], err);
+    cha_state_free(&st);
     return (err);
 }
 
@@ -475,12 +480,17 @@ report(double sr)
 int
 main(int ac, char *av[])
 {
+    double sr = 24000;
     float par0[3], par[3];
-    int i;
+    int i, cs = 32;
+    static void *cp[NPTR];
+    static CHA_STA sta;
 
     parse_args(ac, av);
     configure();
     report(sr);
+    prepare(&io, cp, sr, cs);
+    cha_state_save(cp, &sta);
     // optimize
     opt_add(&afc.rho, _rho);
     opt_add(&afc.eps, _eps);
@@ -489,16 +499,16 @@ main(int ac, char *av[])
         par0[i] = par[i] = (float)(*dopt[i]);
     }
     prn = 1;
-    afc_error(par);
+    afc_error(par, &sta);
     prn = 0;
-    sp_fmins(par, 3, &afc_error, NULL);
-    sp_fmins(par, 3, &afc_error, NULL);
+    sp_fminsearch(par, 3, &afc_error, NULL, &sta);
     prn = 1;
     // report
     print_par(par0);
-    afc_error(par0);
+    afc_error(par0, &sta);
     print_par(par);
-    afc_error(par);
+    afc_error(par, &sta);
     cleanup(&io, cp);
+    cha_state_free(&sta);
     return (0);
 }
