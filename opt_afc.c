@@ -393,11 +393,11 @@ afc_error(float *par, void *v)
     for (i = 0; i < nopt; i++) {
         CHA_DVAR[oopt[i]] = par[i];
     }
-    // process waveform
+    // process signal
     process(&io, cp);
     // report error
     iqm = (afc.iqmp) ? afc.iqmp[0] : 0;
-    jqm = agc.fs * args.tqm;
+    jqm = sr * args.tqm;
     mxqm = 0;
     for (i = jqm; i < iqm; i++) {
         if (mxqm < afc.qm[i]) {
@@ -498,12 +498,9 @@ main(int ac, char *av[])
     for (i = 0; i < nopt; i++) {
         par0[i] = par[i] = (float)(*dopt[i]);
     }
-    prn = 1;
-    afc_error(par, &sta);
-    prn = 0;
     sp_fminsearch(par, 3, &afc_error, NULL, &sta);
-    prn = 1;
     // report
+    prn = 1;
     print_par(par0);
     afc_error(par0, &sta);
     print_par(par);
