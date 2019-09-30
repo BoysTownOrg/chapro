@@ -39,13 +39,10 @@ static CHA_ICMP icmp = {0};
 static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float *z;
-
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
-        // initialize data pointers
-        z = (float *) cp[_cc];
+        float *z = (float *) cp[_cc];
         // process filterbank+compressor
         cha_ciirfb_analyze(cp, x, z, cs);
         cha_icmp_process(cp, z, z, cs);

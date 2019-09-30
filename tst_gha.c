@@ -38,14 +38,11 @@ static CHA_WDRC agc = {0};
 static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float *z;
-
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
+        float *z = (float *) cp[_cc];
         cha_afc_filters(cp, &afc);
-        // initialize data pointers
-        z = (float *) cp[_cc];
         // process IIR+AGC+AFC
         cha_afc_input(cp, x, x, cs);
         cha_agc_input(cp, x, x, cs);
