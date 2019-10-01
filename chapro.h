@@ -64,8 +64,8 @@ typedef struct {
     double attack;               // attack time (ms)
     double release;              // release time (ms)
     double maxdB;                // maximum signal (dB SPL)
-    int ear;                     // 0=left, 1=right
-    int nchannel;                // number of channels
+    int32_t ear;                 // 0=left, 1=right
+    int32_t nchannel;            // number of channels
     double cross_freq[DSL_MXCH]; // cross frequencies (Hz)
     double tkgain[DSL_MXCH];     // compression-start gain
     double cr[DSL_MXCH];         // compression ratio
@@ -84,9 +84,9 @@ typedef struct {
     double bolt;            // broadband output limiting threshold
     // processing parameters
     double td;              // target delay
-    int    nz;              // filter order
-    int    nw;              // window size
-    int    wt;              // window type: 0=Hamming, 1=Blackman
+    int32_t nz;             // filter order
+    int32_t nw;             // window size
+    int32_t wt;             // window type: 0=Hamming, 1=Blackman
 } CHA_WDRC;
 
 /*****************************************************/

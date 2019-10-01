@@ -374,7 +374,7 @@ process(I_O *io, CHA_PTR cp)
         // initialize i/o pointers
         x = io->iwav;
         y = io->owav;
-        n = io->nsmp;
+        n = io->nwav;
         sp_tic();
         cs = io->cs;        // chunk size
         nk = n / cs;        // number of chunks

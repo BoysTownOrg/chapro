@@ -247,7 +247,7 @@ process(I_O *io, CHA_PTR cp)
     x = io->iwav;
     y = io->owav;
     z = (float *) cp[_cc];
-    n = io->nsmp;
+    n = io->nwav;
     // process CFIRFB
     cs = CHA_IVAR[_cs]; // chunk size
     nk = n / cs;        // number of chunks
