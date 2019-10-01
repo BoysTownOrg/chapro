@@ -210,7 +210,7 @@ init_aud(I_O *io)
     ar_dev_name(io->iod, name, 80);
     fmt[0] = ARSC_DATA_F4;
     fmt[1] = 0;
-    ar_set_fmt(io->iod, (SINT4 *)fmt);
+    ar_set_fmt(io->iod, (int32_t *)fmt);
     io->siz = (long *) calloc(io->mseg, sizeof(long));
     io->out = (void **) calloc(io->mseg * nchn, sizeof(void *));
     for (i = 0; i < io->mseg; i++) {
@@ -220,7 +220,7 @@ init_aud(I_O *io)
             io->out[i * nchn + j] = NULL;
         }
     }
-    ar_out_prepare(io->iod, io->out, (SINT4 *)io->siz, io->mseg, 0);
+    ar_out_prepare(io->iod, io->out, (uint32_t *)io->siz, io->mseg, 0);
     fprintf(stdout, "audio output: %s", name);
     ar_io_start(io->iod);
 #endif // ARSC_LIB

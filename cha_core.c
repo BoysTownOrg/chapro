@@ -111,7 +111,7 @@ state_make(CHA_STA *state, int *cpsiz, void **cp, int ptsiz, int arsiz)
 FUNC(int)
 cha_data_gen(CHA_PTR cp, char *fn)
 {
-    int ptsiz, arsiz, arlen, i, j, *cpsiz;
+    int ptsiz, arsiz, arlen, i, j = 0, *cpsiz;
     uint32_t *ulptr;
     FILE *fp;
     static char *head[] = {
@@ -308,11 +308,11 @@ cha_data_save(CHA_PTR cp, char *fn)
 FUNC(int)
 cha_data_load(CHA_PTR cp, char *fn)
 {
-    int ptsiz, arsiz, dtsiz, i, rv, *cpsiz;
+    int ptsiz, arsiz, dtsiz, i, rv;
     CHA_DATA cha_magic[4], file_magic[4], *file_size, *file_data;
     FILE *fp;
 
-    cpsiz = data_plan(cp, &ptsiz, &arsiz);
+    (void) data_plan(cp, &ptsiz, &arsiz);
     if (arsiz == 0) {
         return (1);
     }

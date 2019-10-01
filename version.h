@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHApro version 0.27, 23-Sep-19"
+#define VER     "CHApro version 0.28, 30-Sep-19"
 #define NOTICE	"Copyright 2016-2019 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.28 - 30-Sep-19
+> Changed old ARSC typedef SINT4 to uint32_t
 0.27 - 23-Sep-19
 > Added functions state & afc_filters
 0.26 - 19-Sep-19
