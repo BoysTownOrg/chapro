@@ -13,6 +13,7 @@ cha_ifft
 cha_prepare
 cha_version
 cha_afc_prepare
+cha_afc_filters
 cha_afc_input
 cha_afc_output
 cha_agc_prepare
