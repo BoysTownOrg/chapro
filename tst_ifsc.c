@@ -15,7 +15,7 @@
 //#include DATA_HDR
 
 typedef struct {
-    char *ifn, *ofn, cs, mat;
+    char *ifn, *ofn, *dfn, cs, mat;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -168,7 +168,8 @@ init_wav(I_O *io)
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
     }
-    io->ofn = io->mat ? mfn : wfn; 
+    io->ofn = wfn;
+    io->dfn = mfn;
     if (io->ofn) {
         io->nsmp = io->nwav;
         io->nseg = 1;

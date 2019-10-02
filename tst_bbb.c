@@ -182,7 +182,8 @@ init_wav(I_O *io)
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
     }
-    if (!io->ofn) io->ofn = io->mat ? mfn : wfn; 
+    io->ofn = wfn; 
+    io->dfn = mfn; 
     if (io->ofn) {
         io->nsmp = io->nwav;
         io->nseg = 1;
@@ -270,35 +271,39 @@ put_aud(I_O *io, CHA_PTR cp)
 static void
 write_wave(I_O *io)
 {
-    char *ft;
     float r[1], *w, *meer;
     int   n, nbits = 16;
     static VAR *vl;
 
-    ft = io->mat ? "MAT" : "WAV";
-    fprintf(stdout, "%s output: %s", ft, io->ofn);
-    remove(io->ofn);
-    n = io->nwav;
-    w = io->owav;
-    r[0] = (float) io->rate;
-    meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
-    vl = sp_var_alloc(8);
-    sp_var_add(vl, "rate",        r,       1, 1, "f4");
-    sp_var_add(vl, "wave",        w,       n, 1, "f4");
-    sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
-    sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
-    sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
-    sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
-    sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
-    sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
-    if (io->mat) {
-        sp_mat_save(io->ofn, vl);
-    } else {
-        vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
-        sp_wav_write(io->ofn, vl + 1, r, nbits);
+    if (io->dfn) {
+        fprintf(stdout, "MAT output: %s\n", io->dfn);
+        meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
+        vl = sp_var_alloc(8);
+        sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
+        sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
+        sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
+        sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
+        sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
+        sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
+        sp_var_add(vl, "ofn",   io->ofn,       1, 1, "f4str");
+        remove(io->dfn);
+        sp_mat_save(io->dfn, vl);
+        sp_var_clear(vl);
+        if (!afc.qm && meer) free(meer);
     }
-    sp_var_clear(vl);
-    if (afc.qm == NULL) free(meer);
+    if (io->ofn) {
+        fprintf(stdout, "WAV output: %s\n", io->ofn);
+        r[0] = (float) io->rate;
+        n = io->nwav;
+        w = io->owav;
+        vl = sp_var_alloc(2);
+        sp_var_add(vl, "rate",        r,       1, 1, "f4");
+        sp_var_add(vl, "wave",        w,       n, 1, "f4");
+        vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
+        remove(io->ofn);
+        sp_wav_write(io->ofn, vl + 1, r, nbits);
+        sp_var_clear(vl);
+    }
 }
 
 static void

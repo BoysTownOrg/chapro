@@ -15,7 +15,7 @@
 //#include DATA_HDR
 
 typedef struct {
-    char *ifn, *ofn, cs, mat, nrep;
+    char *ifn, *ofn, *dfn, cs, mat, nrep;
     double rate;
     float *iwav, *owav;
     long *siz;
@@ -175,7 +175,7 @@ init_wav(I_O *io)
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
             exit(2);
         }
-        fprintf(stdout, "WAV input: %s...\n", io->ifn);
+        fprintf(stdout, "WAV input: %s sr=%.0f cs=%d\n", io->ifn, io->rate, io->cs);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
         set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
@@ -185,7 +185,8 @@ init_wav(I_O *io)
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         io->iwav[0] = 1;
     }
-    io->ofn = io->mat ? mfn : wfn; 
+    io->ofn = wfn; 
+    io->dfn = mfn; 
     if (io->ofn) {
         io->nsmp = io->nwav;
         io->nseg = 1;
@@ -267,35 +268,39 @@ put_aud(I_O *io, CHA_PTR cp)
 static void
 write_wave(I_O *io)
 {
-    char *ft;
     float r[1], *w, *meer;
     int   n, nbits = 16;
     static VAR *vl;
 
-    ft = io->mat ? "MAT" : "WAV";
-    fprintf(stdout, "%s output: %s", ft, io->ofn);
-    remove(io->ofn);
-    n = io->nwav;
-    w = io->owav;
-    r[0] = (float) io->rate;
-    meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
-    vl = sp_var_alloc(8);
-    sp_var_add(vl, "rate",        r,       1, 1, "f4");
-    sp_var_add(vl, "wave",        w,       n, 1, "f4");
-    sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
-    sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
-    sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
-    sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
-    sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
-    sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
-    if (io->mat) {
-        sp_mat_save(io->ofn, vl);
-    } else {
-        vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
-        sp_wav_write(io->ofn, vl + 1, r, nbits);
+    if (io->dfn) {
+        fprintf(stdout, "MAT output: %s\n", io->dfn);
+        meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
+        vl = sp_var_alloc(8);
+        sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
+        sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
+        sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
+        sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
+        sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
+        sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
+        sp_var_add(vl, "ofn",   io->ofn,       1, 1, "f4str");
+        remove(io->dfn);
+        sp_mat_save(io->dfn, vl);
+        sp_var_clear(vl);
+        if (!afc.qm && meer) free(meer);
     }
-    sp_var_clear(vl);
-    if (afc.qm == NULL) free(meer);
+    if (io->ofn) {
+        fprintf(stdout, "WAV output: %s\n", io->ofn);
+        r[0] = (float) io->rate;
+        n = io->nwav;
+        w = io->owav;
+        vl = sp_var_alloc(2);
+        sp_var_add(vl, "rate",        r,       1, 1, "f4");
+        sp_var_add(vl, "wave",        w,       n, 1, "f4");
+        vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
+        remove(io->ofn);
+        sp_wav_write(io->ofn, vl + 1, r, nbits);
+        sp_var_clear(vl);
+    }
 }
 
 static void
@@ -484,13 +489,14 @@ configure_feedback()
     afc.rho  = 0.0014388; // forgetting factor
     afc.eps  = 0.0010148; // power threshold
     afc.mu   = 0.0001507; // step size
-    afc.afl  = 100;     // adaptive filter length
-    afc.wfl  = 0;       // whitening-filter length
-    afc.pfl  = 0;       // persistent-filter length
-    afc.hdel = 0;       // output/input hardware delay
-    afc.sqm  = 1;       // save quality metric ?
-    afc.fbg = 1;        // simulated-feedback gain 
-    afc.nqm = 0;        // initialize quality-metric length
+    afc.afl  = 100;       // adaptive filter length
+    afc.wfl  = 0;         // whitening-filter length
+    afc.pfl  = 0;         // persistent-filter length
+    afc.hdel = 0;         // output/input hardware delay
+    afc.sqm  = 1;         // save quality metric ?
+    afc.fbg = 1;          // simulated-feedback gain 
+    afc.nqm = 0;          // initialize quality-metric length
+    if (!args.simfb) afc.fbg = 0;
 }
 
 static void
@@ -513,8 +519,7 @@ report(double sr)
     nc = dsl.nchannel;
     nr = args.nrep;
     nz = agc.nz;
-    fprintf(stdout, "CHA simulation: sampling rate=%.0f Hz, ", sr);
-    fprintf(stdout, "feedback simulation %sabled.\n", en);
+    fprintf(stdout, "CHA simulation: feedback simulation %sabled.\n", en);
     fprintf(stdout, "IIR+AGC%s: nc=%d nz=%d nrep=%d\n", fc, nc, nz, nr);
 }
 
