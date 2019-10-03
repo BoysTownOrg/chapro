@@ -251,27 +251,23 @@ put_aud(I_O *io, CHA_PTR cp)
 static void
 write_wave(I_O *io)
 {
-    char *ft;
     float r[1], *w;
     int   n, nbits = 16;
     static VAR *vl;
 
-    ft = io->mat ? "MAT" : "WAV";
-    fprintf(stdout, "%s output: %s", ft, io->ofn);
-    remove(io->ofn);
-    n = io->nwav;
-    w = io->owav;
-    r[0] = (float) io->rate;
-    vl = sp_var_alloc(2);
-    sp_var_add(vl, "rate", r, 1, 1, "f4");
-    sp_var_add(vl, "wave", w, n, 1, "f4");
-    if (io->mat) {
-        sp_mat_save(io->ofn, vl);
-    } else {
+    if (io->ofn) {
+        fprintf(stdout, "WAV output: %s\n", io->ofn);
+        r[0] = (float) io->rate;
+        n = io->nwav;
+        w = io->owav;
+        vl = sp_var_alloc(2);
+        sp_var_add(vl, "rate",        r,       1, 1, "f4");
+        sp_var_add(vl, "wave",        w,       n, 1, "f4");
         vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
+        remove(io->ofn);
         sp_wav_write(io->ofn, vl + 1, r, nbits);
+        sp_var_clear(vl);
     }
-    sp_var_clear(vl);
 }
 
 static void
