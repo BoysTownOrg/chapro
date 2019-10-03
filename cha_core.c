@@ -54,10 +54,11 @@ cha_cleanup(CHA_PTR cp)
 
 /***********************************************************/
 
-static int *
+static int32_t *
 data_plan(CHA_PTR cp, int *psz, int *asz)
 {
-    int i, ptsiz, arsiz, *cpsiz;
+    int i, ptsiz, arsiz;
+    int32_t *cpsiz;
 
     // count pointers
     ptsiz = 0;
@@ -78,7 +79,7 @@ data_plan(CHA_PTR cp, int *psz, int *asz)
 }
 
 static void
-state_make(CHA_STA *state, int *cpsiz, void **cp, int ptsiz, int arsiz)
+state_make(CHA_STA *state, int32_t *cpsiz, void **cp, int ptsiz, int arsiz)
 {
     char *data;
     int i;
@@ -111,7 +112,8 @@ state_make(CHA_STA *state, int *cpsiz, void **cp, int ptsiz, int arsiz)
 FUNC(int)
 cha_data_gen(CHA_PTR cp, char *fn)
 {
-    int ptsiz, arsiz, arlen, i, j = 0, *cpsiz;
+    int ptsiz, arsiz, arlen, i, j = 0;
+    int32_t *cpsiz;
     uint32_t *ulptr;
     FILE *fp;
     static char *head[] = {
@@ -273,7 +275,8 @@ cha_data_gen(CHA_PTR cp, char *fn)
 FUNC(int)
 cha_data_save(CHA_PTR cp, char *fn)
 {
-    int ptsiz, arsiz, dtsiz, i, *cpsiz;
+    int ptsiz, arsiz, dtsiz, i;
+    int32_t *cpsiz;
     CHA_DATA cha_magic[4];
     FILE *fp;
 
@@ -363,7 +366,8 @@ cha_data_load(CHA_PTR cp, char *fn)
 FUNC(int)
 cha_state_save(CHA_PTR cp, CHA_STA *state)
 {
-    int ptsiz, arsiz, *cpsiz;
+    int ptsiz, arsiz;
+    int32_t *cpsiz;
 
     cpsiz = data_plan(cp, &ptsiz, &arsiz);
     if (arsiz == 0) {
@@ -377,7 +381,8 @@ cha_state_save(CHA_PTR cp, CHA_STA *state)
 FUNC(int)
 cha_state_copy(CHA_STA *new_state, CHA_STA *old_state)
 {
-    int ptsiz, arsiz, *cpsiz;
+    int ptsiz, arsiz;
+    int32_t *cpsiz;
     void **cp;
 
     cp = old_state->cp;
