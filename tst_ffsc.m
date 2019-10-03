@@ -1,13 +1,12 @@
 % tst_ffsc - CHAPRO demonstration of GHA processing
 function tst_ffsc
 x=audioread('test/cat.wav')/5;
-load('test/tst_ffsc')
-y=wave;
+[y,sr]=audioread('test/tst_ffsc.wav');
 figure(1); clf
 nx=length(x);
 ny=length(y);
-tx=linspace(0,(nx - 1) / rate, nx);
-ty=linspace(0,(ny - 1) / rate, ny);
+tx=linspace(0,(nx - 1) / sr, nx);
+ty=linspace(0,(ny - 1) / sr, ny);
 plot(ty,y,'r',tx,x,'b')
 xlabel('time (s)')
 tlim=[min(ty) max(ty)]*1.05;
