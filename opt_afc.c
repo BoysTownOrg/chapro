@@ -22,6 +22,7 @@ typedef struct {
 
 /***********************************************************/
 
+static float *iwav, *owav;
 static int    prepared = 0;
 static int    prn = 0;
 static struct {
@@ -305,8 +306,8 @@ process(I_O *io, CHA_PTR cp)
     sp_tic();
     if (io->ofn) {
         // initialize i/o pointers
-        x = io->iwav;
-        y = io->owav;
+        x = iwav;
+        y = owav;
         n = io->nwav;
         m = io->nrep;
         cs = io->cs;        // chunk size
@@ -385,7 +386,8 @@ afc_error(float *par, void *v)
     sr = st.sr;
     cs = st.cs;
     cha_afc_filters(cp, &afc);
-    prepare_io(&io, sr, cs);
+    memcpy(iwav, io.iwav, io.nwav * sizeof(float));
+    memcpy(owav, io.owav, io.nwav * sizeof(float));
     // modify AFC parameters
     for (i = 0; i < nopt; i++) {
         CHA_DVAR[oopt[i]] = par[i];
@@ -488,6 +490,8 @@ main(int ac, char *av[])
     report(sr);
     prepare(&io, cp, sr, cs);
     cha_state_save(cp, &sta);
+    iwav = (float *) calloc(io.nwav, sizeof(float));
+    owav = (float *) calloc(io.nwav, sizeof(float));
     // optimize
     opt_add(&afc.rho, _rho);
     opt_add(&afc.eps, _eps);
@@ -504,5 +508,7 @@ main(int ac, char *av[])
     afc_error(par, &sta);
     cleanup(&io, cp);
     cha_state_free(&sta);
+    free(iwav);
+    free(owav);
     return (0);
 }
