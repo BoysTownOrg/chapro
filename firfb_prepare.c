@@ -84,7 +84,7 @@ fir_transform_sc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
     }
 }
 
-// Fourier-transform FIR coefficients for long chunk (cs >= nw)
+// Fourier-transform FIR coefficients for int32_t chunk (cs >= nw)
 static __inline void
 fir_transform_lc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
 {

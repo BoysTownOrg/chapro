@@ -15,8 +15,8 @@ typedef struct {
     char *ifn, *ofn, cs, mat, nrep;
     double rate;
     float *iwav, *owav;
-    long *siz;
-    long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
+    int32_t *siz;
+    int32_t iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
 

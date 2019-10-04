@@ -18,8 +18,8 @@ typedef struct {
     char *ifn, *ofn, cs, mat, nrep;
     double rate;
     float *iwav, *owav;
-    long *siz;
-    long iod, nwav, nsmp, mseg, nseg, oseg, pseg;
+    int32_t *siz;
+    int32_t iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
 } I_O;
 
@@ -203,7 +203,7 @@ init_aud(I_O *io)
 #ifdef ARSC_LIB
     char name[80];
     int i, j;
-    long fmt[2];
+    int32_t fmt[2];
     static int nchn = 2;        // number of channels
 
     io->iod = ar_find_dev(0);
@@ -212,7 +212,7 @@ init_aud(I_O *io)
     fmt[0] = ARSC_DATA_F4;
     fmt[1] = 0;
     ar_set_fmt(io->iod, (int32_t *)fmt);
-    io->siz = (long *) calloc(io->mseg, sizeof(long));
+    io->siz = (int32_t *) calloc(io->mseg, sizeof(int32_t));
     io->out = (void **) calloc(io->mseg * nchn, sizeof(void *));
     for (i = 0; i < io->mseg; i++) {
         io->siz[i] = io->nsmp;
@@ -455,7 +455,7 @@ cleanup(I_O *io, CHA_PTR cp)
         if (io->nsmp < 1234567) {
             write_wave(io);
         } else {
-            fprintf(stdout, "Too large to write: nsmp=%ld\n", io->nsmp);
+            fprintf(stdout, "Too large to write: nsmp=%d\n", io->nsmp);
         }
     }
     stop_wav(io);
