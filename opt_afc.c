@@ -401,7 +401,7 @@ afc_error(float *par, void *v)
             mxqm = afc.qm[i];
         }
     }
-    err = 10 * log10(mxqm);
+    err = (mxqm < 1e-9) ? -900 : 10 * log10(mxqm);
     fprintf(stdout, "afc: %8.6f %8.6f %8.6f %6.2f\n", 
         par[0], par[1], par[2], err);
     cha_state_free(&st);
