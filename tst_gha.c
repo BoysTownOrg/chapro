@@ -198,6 +198,7 @@ init_wav(I_O *io)
         io->nseg = (io->nwav + io->nsmp - 1) / io->nsmp;
         io->owav = (float *) calloc(io->nsmp * io->mseg, sizeof(float));
     }
+    io->oseg = io->pseg = 0;
 }
 
 static void

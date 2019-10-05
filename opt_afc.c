@@ -377,14 +377,13 @@ double
 afc_error(float *par, void *v)
 {
     double mxqm, err, sr;
-    int i, iqm, jqm, cs;
+    int i, iqm, jqm;
     CHA_STA st;
     CHA_PTR cp;
 
     cha_state_copy(&st, (CHA_STA *)v);
     cp = st.cp;
     sr = st.sr;
-    cs = st.cs;
     cha_afc_filters(cp, &afc);
     memcpy(iwav, io.iwav, io.nwav * sizeof(float));
     memcpy(owav, io.owav, io.nwav * sizeof(float));
