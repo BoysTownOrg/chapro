@@ -28,6 +28,9 @@
 #ifndef M_SQRT2
 #define M_SQRT2         1.41421356237309504880 
 #endif
+#ifdef MGW
+#undef WIN32
+#endif
 #ifndef WIN32
 #define _hypot          hypot
 #define _strdup         strdup
