@@ -62,7 +62,7 @@ usage()
     fprintf(stdout, "options\n");
     fprintf(stdout, "-h    print help\n");
     fprintf(stdout, "-m    output MAT file\n");
-    fprintf(stdout, "-r N  number of input file repetitions\n");
+    fprintf(stdout, "-rN   number of input file repetitions = N\n");
     fprintf(stdout, "-t N  AFC optimize time = N\n");
     fprintf(stdout, "-v    print version\n");
     exit(0);
@@ -107,9 +107,7 @@ parse_args(int ac, char *av[])
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
             } else if (av[1][1] == 'r') {
-                if (ac > 2) args.nrep = atoi(av[2]);
-                ac--;
-                av++;
+                args.nrep = atoi(av[1] + 2);
             } else if (av[1][1] == 't') {
                 if (ac > 2) args.tqm = atof(av[2]);
                 ac--;
