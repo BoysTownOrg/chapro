@@ -201,7 +201,7 @@ init_wav(I_O *io, char *msg)
             return (1);
         }
         if (io->rate != fs) {
-            fprintf(stderr, "ERROR: %s rate mismatch: ", io->ifn);
+            fprintf(stderr, "WARNING: %s rate mismatch: ", io->ifn);
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
             io->rate = fs;
         }
