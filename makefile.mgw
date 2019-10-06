@@ -7,7 +7,7 @@ SCLIB=$(LIBS) -larsc -lwinmm -lkernel32 -luser32 -lgdi32
 CC=gcc
 AR=ar
 
-CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O2
+CFLAGS=-Wall -Wno-unknown-pragmas -DMGW -I$(INCDIR) -fPIC -O2
 LFLAGS=-L$(LIBDIR)
 
 LIBDIR=c:/usr/lib
