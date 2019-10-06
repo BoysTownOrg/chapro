@@ -192,10 +192,10 @@ init_wav(I_O *io, char *msg)
             fprintf(stderr, "can't open %s\n", io->ifn);
             return (1);
         }
-        if (fs != io->rate) {
+        if (io->rate != fs) {
             fprintf(stderr, "ERROR: %s rate mismatch: ", io->ifn);
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
-            return (2);
+            io->rate = fs;
         }
         if (msg) sprintf(msg, "WAV input : %s repeat=%d\n", io->ifn, io->nrep);
         io->nwav = vl[0].rows * vl[0].cols;
@@ -438,8 +438,8 @@ process(I_O *io, CHA_PTR cp)
         printf("(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
     } else {
         while (get_aud(io)) {
-            msleep(io_wait); // wait time
             put_aud(io, cp);
+            msleep(io_wait); // wait time
         }
     }
 }
