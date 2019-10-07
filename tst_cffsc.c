@@ -50,7 +50,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
-        float *z = (float *) cp[_cc];
+        float *z = CHA_CB;
         // process filterbank+compressor
         cha_cfirfb_analyze(cp, x, z, cs);
         cha_icmp_process(cp, z, z, cs);

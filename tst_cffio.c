@@ -246,7 +246,7 @@ process(I_O *io, CHA_PTR cp)
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;
-    z = (float *) cp[_cc];
+    z = CHA_CB;
     n = io->nwav;
     // process CFIRFB
     cs = CHA_IVAR[_cs]; // chunk size

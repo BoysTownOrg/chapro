@@ -49,7 +49,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
-        float *z = (float *) cp[_cc];
+        float *z = CHA_CB;
         // process FIR+AGC
         cha_agc_input(cp, x, x, cs);
         cha_firfb_analyze(cp, x, z, cs);

@@ -15,6 +15,7 @@
 #define NVAR       32
 #define CHA_IVAR   ((int *)cp[_ivar])
 #define CHA_DVAR   ((double *)cp[_dvar])
+#define CHA_CB     ((float *)cp[_cc])
 
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
@@ -55,7 +56,7 @@
 
 typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
-typedef struct {int arsiz, ptsiz; CHA_PTR cp; void *data; double sr; int cs;} CHA_STA;
+typedef struct {int32_t arsiz, ptsiz; CHA_PTR cp; void *data; double sr; int32_t cs, depth, type;} CHA_STA;
 
 /*****************************************************/
 

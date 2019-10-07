@@ -39,7 +39,7 @@ static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     if (prepared) {
-        float *z = (float *) cp[_cc];
+        float *z = CHA_CB;
         // process IIR+AGC+AFC
         cha_afc_input(cp, x, x, cs);
         cha_agc_input(cp, x, x, cs);
