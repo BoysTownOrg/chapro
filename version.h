@@ -1,13 +1,15 @@
 /* version.h */
 
-#define VER     "ARSC version 0.58, 6-Oct-19"
+#define VER     "ARSC version 0.58, 8-Oct-19"
 #define NOTICE	"Copyright 2005-2019 Boys Town National Research Hospital"
 #define RIGHTS	"Redistribution permitted under General Public License v2.0."
 
 /**************************** change log **********************************
-0.58 - 6-Oct-19
+0.58 - 8-Oct-19
 > Undefine Win32 for MinGW in chapro.h
 > Fixed audio output in test programs
+> Changed int in CHA_STA to int32_t;
+> Added type to CHA_STA
 0.57 - 30-Sep-19
 > Removed typedefs SINT2, SINT4, UINT4
 0.56 - 25-Aug-19
