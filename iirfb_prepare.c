@@ -113,7 +113,7 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
     CHA_IVAR[_nn] = nn;
     cha_allocate(cp, nc * nn, sizeof(float), _yd);
     // allocate chunk buffer
-    cha_allocate(cp, nc * cs * 2, sizeof(float), _cc);
+    cha_allocate(cp, nc * cs, sizeof(float), _cc);
 
     return (0);
 }

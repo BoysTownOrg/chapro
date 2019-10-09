@@ -179,7 +179,7 @@ cha_cfirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
     }
 }
 
-// FIR-filterbank synthesis
+// CFIR-filterbank synthesis
 FUNC(void)
 cha_cfirfb_synthesize(CHA_PTR cp, float *x, float *y, int cs)
 {

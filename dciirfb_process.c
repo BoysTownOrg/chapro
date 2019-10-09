@@ -85,6 +85,7 @@ cha_dciirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
     }
 }
 
+// double CIIR-filterbank synthesis
 FUNC(void)
 cha_dciirfb_synthesize(CHA_PTR cp, float *x, float *y, int cs)
 {
