@@ -64,7 +64,7 @@ typedef void **CHA_PTR;
 typedef struct {
     int32_t arsiz;               // total size of data (bytes)
     int32_t ptsiz;               // number of data pointers
-    CHA_PTR cp;                  // array of data pointers
+    void **cp;                   // array of data pointers
     void *data;                  // pointer to data
     double sr;                   // sampling rate (kHz)
     int32_t cs;                  // chunk size
