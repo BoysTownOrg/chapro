@@ -56,7 +56,22 @@
 
 typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
-typedef struct {int32_t arsiz, ptsiz; CHA_PTR cp; void *data; double sr; int32_t cs, type;} CHA_STA;
+
+/*****************************************************/
+
+// CHAPRO state
+
+typedef struct {
+    int32_t arsiz;               // total size of data (bytes)
+    int32_t ptsiz;               // number of data pointers
+    CHA_PTR cp;                  // array of data pointers
+    void *data;                  // pointer to data
+    double sr;                   // sampling rate (kHz)
+    int32_t cs;                  // chunk size
+    int32_t type;                // type of state
+    void *proc;                  // pointer to process function
+    void *rprt;                  // pointer to report function
+} CHA_STA;
 
 /*****************************************************/
 
