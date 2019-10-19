@@ -70,7 +70,8 @@ typedef struct {
     int32_t cs;                  // chunk size
     int32_t type;                // type of state
     void *rprt;                  // pointer to report function
-    void *proc[4];               // list of process function pointers
+    void *proc;                  // pointer to process function
+    void *plst[4];               // list of process function pointers
 } CHA_STA;
 
 /*****************************************************/
