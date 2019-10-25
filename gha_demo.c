@@ -25,7 +25,7 @@ audio_read(char *fn, float *fs, int *nwav)
 }
 
 static void
-set_spl(float *x, int n, double speech_lev, double spl_ref)
+set_spl(float *x, int n, double rms_lev, double spl_ref)
 {
     float scl;
     double xx, rms, smsq, lev;
@@ -38,7 +38,7 @@ set_spl(float *x, int n, double speech_lev, double spl_ref)
     }
     rms = sqrt(smsq / n);
     lev = 20 * log10(rms / spl_ref);
-    scl = (float) pow(10,(speech_lev - lev) / 20);
+    scl = (float) pow(10,(rms_lev - lev) / 20);
     for (i = 0; i < n; i++) {
         x[i] *= scl;
     }
@@ -119,7 +119,7 @@ main(int ac, char *av[])
     static char *ifn = "test/cat.wav";
     static char *ofn = "test/gha_demo.mat";
     static double spl_ref = 1.1219e-6;
-    static double speech_lev = 65;
+    static double rms_lev = 65;
     // DSL prescription - (first subject, left ear) from LD_RX.mat
     static CHA_DSL dsl = {5, 50, 119, 0, 8,
         {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
@@ -131,7 +131,7 @@ main(int ac, char *av[])
 
     x = audio_read(ifn, &fs, &n);
     y = (float *) calloc(n, sizeof(float));
-    set_spl(x, n, speech_lev, spl_ref);
+    set_spl(x, n, rms_lev, spl_ref);
     t1 = amplify(x, y, n, fs, &dsl);
     save_mat(ofn, fs, x, y, n);
     t2 = n / fs;

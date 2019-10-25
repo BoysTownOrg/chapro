@@ -162,7 +162,7 @@ msleep(uint32_t msec)
 /***********************************************************/
 
 static void
-set_spl(float *x, int n, double speech_lev, double spl_ref)
+set_spl(float *x, int n, double rms_lev, double spl_ref)
 {
     float scl;
     double xx, rms, smsq, lev;
@@ -175,7 +175,7 @@ set_spl(float *x, int n, double speech_lev, double spl_ref)
     }
     rms = sqrt(smsq / n);
     lev = 20 * log10(rms / spl_ref);
-    scl = (float) pow(10,(speech_lev - lev) / 20);
+    scl = (float) pow(10,(rms_lev - lev) / 20);
     for (i = 0; i < n; i++) {
         x[i] *= scl;
     }
@@ -187,7 +187,7 @@ init_wav(I_O *io, char *msg)
     float fs;
     VAR *vl;
     static double spl_ref = 1.1219e-6;
-    static double speech_lev = 65;
+    static double rms_lev = 65;
 
     if (io->iwav) free(io->iwav);
     if (io->owav) free(io->owav);
@@ -207,7 +207,7 @@ init_wav(I_O *io, char *msg)
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         fcopy(io->iwav, vl[0].data, io->nwav);
-        set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
+        set_spl(io->iwav, io->nwav, rms_lev, spl_ref);
         sp_var_clear(vl);
     } else {    /* ADC input */
         io->nwav = 0;

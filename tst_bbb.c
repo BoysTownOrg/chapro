@@ -129,7 +129,7 @@ parse_args(int ac, char *av[])
 }
 
 static void
-set_spl(float *x, int n, double speech_lev, double spl_ref)
+set_spl(float *x, int n, double rms_lev, double spl_ref)
 {
     float scl;
     double xx, rms, smsq, lev;
@@ -142,7 +142,7 @@ set_spl(float *x, int n, double speech_lev, double spl_ref)
     }
     rms = sqrt(smsq / n);
     lev = 20 * log10(rms / spl_ref);
-    scl = (float) pow(10,(speech_lev - lev) / 20);
+    scl = (float) pow(10,(rms_lev - lev) / 20);
     for (i = 0; i < n; i++) {
         x[i] *= scl;
     }
@@ -156,7 +156,7 @@ init_wav(I_O *io)
     static char *mfn = "test/tst_bbb.mat";
     static VAR *vl;
     static double spl_ref = 1.1219e-6;
-    static double speech_lev = 65;
+    static double rms_lev = 65;
 
     if (io->ifn) {
         // get WAV file info
@@ -173,7 +173,7 @@ init_wav(I_O *io)
         fprintf(stdout, "WAV input: %s...\n", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
-        set_spl(io->iwav, io->nwav, speech_lev, spl_ref);
+        set_spl(io->iwav, io->nwav, rms_lev, spl_ref);
     } else {    /* 8-second impulse input */
         fprintf(stdout, "impulse response...\n");
         io->nwav = round(io->rate * 8);
