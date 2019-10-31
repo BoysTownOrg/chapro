@@ -69,9 +69,9 @@ typedef struct {
     double sr;                   // sampling rate (kHz)
     int32_t cs;                  // chunk size
     int32_t type;                // type of state
+    int32_t entry;               // entry point index
     void *rprt;                  // pointer to report function
     void *proc;                  // pointer to process function
-    void *plst[4];               // list of process function pointers
 } CHA_STA;
 
 /*****************************************************/
