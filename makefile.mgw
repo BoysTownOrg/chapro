@@ -146,7 +146,6 @@ firfb_process.o: firfb_process.c chapro.h
 gha_demo.o: gha_demo.c chapro.h 
 icmp_prepare.o: icmp_prepare.c chapro.h 
 icmp_process.o: icmp_process.c chapro.h 
-iirfb.o: iirfb.c 
 iirfb_design.o: iirfb_design.c chapro.h 
 iirfb_prepare.o: iirfb_prepare.c chapro.h 
 iirfb_process.o: iirfb_process.c chapro.h 

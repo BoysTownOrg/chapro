@@ -112,7 +112,8 @@ cha_iirfb_prepare(CHA_PTR cp, float *z, float *p, float *g, int *d, int nc, int 
     nn = iir_filterbank(cp, z, p, g, d, nc, nz, sr);
     CHA_IVAR[_nn] = nn;
     cha_allocate(cp, nc * nn, sizeof(float), _yd);
-    // allocate chunk buffer
+    // allocate input & chunk buffers
+    cha_allocate(cp, nc * cs, sizeof(float), _xx);
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
 
     return (0);

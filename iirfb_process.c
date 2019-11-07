@@ -51,25 +51,27 @@ filter_sos(float *x, float *y, int cs, float *coef, float *hist, int nsos)
 FUNC(void)
 cha_iirfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float   *bb, *zz, *yk, *yd, *bk, *zk;
+    float   *bb, *xx, *yk, *yd, *bk, *zk, *zz;
     int     dk, i, k, m, nc, nn, nz, op, ncoef, nhist, *dd;
 
     bb = (float *) cp[_bb];
     dd = (int *) cp[_dd];
     zz = (float *) cp[_zz];
     yd = (float *) cp[_yd];
+    xx = (float *) cp[_xx];
     nc = CHA_IVAR[_nc];
     op = CHA_IVAR[_op];
     nn = CHA_IVAR[_nn];
     nz = op - 1;
     nhist = 2 * nz;
     ncoef = 5 * (nz / 2);
+    memcpy(xx, x, cs * sizeof(float)); // input buffer
     /* loop over filterbank channel */
     for (k = 0; k < nc; k++) {
         yk = y + k * cs;
         bk = bb + k * ncoef;
         zk = zz + k * nhist;
-        filter_sos(x, yk, cs, bk, zk, nz / 2);
+        filter_sos(xx, yk, cs, bk, zk, nz / 2);
         /* delay */
         m = k * nn;
         dk = dd[k];

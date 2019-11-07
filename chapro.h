@@ -284,6 +284,7 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _aa       _offset+2
 #define _zz       _offset+3
 #define _yd       _offset+4
+#define _xx       _offset+5
 #define _dd       _offset+6
 
 // ciir pointer indices
