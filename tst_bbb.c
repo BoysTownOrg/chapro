@@ -15,9 +15,10 @@
 #include "chapro.h"
 
 typedef struct {
-    char *ifn, *ofn, cs, mat, nrep;
+    char *ifn, *ofn, *dfn, mat, nrep;
     double rate;
     float *iwav, *owav;
+    int32_t cs;
     int32_t *siz;
     int32_t iod, nwav, nsmp, mseg, nseg, oseg, pseg;
     void **out;
