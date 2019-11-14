@@ -10,6 +10,7 @@
 
 #ifdef ARSC_LIB
 #include <arsclib.h>
+#endif
 #include <sigpro.h>
 #include "chapro.h"
 #define DATA_HDR "tst_gha_data.h"
