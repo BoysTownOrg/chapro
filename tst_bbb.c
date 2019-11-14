@@ -1,5 +1,5 @@
 // tst_bbb.c - test IIR-filterbank + AGC + AFC
-//              with WAV file input 
+//              with WAV file input & output
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,9 +10,12 @@
 
 #ifdef ARSC_LIB
 #include <arsclib.h>
-#endif // ARSC_LIB
 #include <sigpro.h>
 #include "chapro.h"
+#define DATA_HDR "tst_gha_data.h"
+//#include DATA_HDR
+
+#define MAX_MSG 256
 
 typedef struct {
     char *ifn, *ofn, *dfn, mat, nrep;
@@ -26,9 +29,14 @@ typedef struct {
 
 /***********************************************************/
 
+static char   msg[MAX_MSG] = {0};
+static double srate = 24000;   // sampling rate (Hz)
+static int    chunk = 32;      // chunk size
 static int    prepared = 0;
+static int    io_dev = 0;
+static int    io_wait = 40;
 static struct {
-    char *ifn, *ofn, simfb, afc, mat, nrep;
+    char *ifn, *ofn, simfb, afc, mat, nrep, play;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -40,7 +48,10 @@ static void
 process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 {
     if (prepared) {
+        // next line switches to compiled data
+        //cp = (CHA_PTR) cha_data; 
         float *z = CHA_CB;
+        cha_afc_filters(cp, &afc);
         // process IIR+AGC+AFC
         cha_afc_input(cp, x, x, cs);
         cha_agc_input(cp, x, x, cs);
@@ -59,21 +70,22 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    fprintf(stdout, "usage: tst_bbb [-options] [input_file] [output_file]\n");
-    fprintf(stdout, "options\n");
-    fprintf(stdout, "-a    disable feedback cancelation\n");
-    fprintf(stdout, "-d    disable simulated feedback\n");
-    fprintf(stdout, "-h    print help\n");
-    fprintf(stdout, "-m    output MAT file\n");
-    fprintf(stdout, "-rN   number of input file repetitions = N\n");
-    fprintf(stdout, "-v    print version\n");
+    printf("usage: tst_gha [-options] [input_file] [output_file]\n");
+    printf("options\n");
+    printf("-a    disable feedback cancelation\n");
+    printf("-d    disable simulated feedback\n");
+    printf("-h    print help\n");
+    printf("-m    output MAT file\n");
+    printf("-p    play output\n");
+    printf("-rN   number of input file repetitions = N\n");
+    printf("-v    print version\n");
     exit(0);
 }
 
 static void
 version()
 {
-    fprintf(stdout, "%s\n", cha_version());
+    printf("%s\n", cha_version());
     exit(0);
 }
 
@@ -100,7 +112,8 @@ static void
 parse_args(int ac, char *av[])
 {
     args.afc = 1;
-    args.mat = 0;
+    args.mat = 1;
+    args.play = 0;
     args.nrep = 1;
     args.simfb = 1;
     while (ac > 1) {
@@ -113,6 +126,8 @@ parse_args(int ac, char *av[])
                 usage();
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
+            } else if (av[1][1] == 'p') {
+                args.play = 1;
             } else if (av[1][1] == 'r') {
                 args.nrep = atoi(av[1] + 2);
             } else if (av[1][1] == 'v') {
@@ -124,10 +139,30 @@ parse_args(int ac, char *av[])
             break;
         }
     }
-    args.ifn = (ac > 1) ? _strdup(av[1]) : "test/carrots.wav";
+    args.ifn = (ac > 1) ? _strdup(av[1]) : NULL;
     args.ofn = (ac > 2) ? _strdup(av[2]) : NULL;
     if (args.ofn) args.mat = mat_file(args.ofn);
 }
+
+/***********************************************************/
+
+void
+msleep(uint32_t msec)
+{
+#ifdef WIN32
+    void Sleep(uint32_t);
+    Sleep(msec);
+#else
+    struct timespec delay = {0};
+    uint32_t sec = msec / 1000;
+    msec -= sec * 1000;
+    delay.tv_sec  = sec;
+    delay.tv_nsec = msec * 1000000; // convert msec to nsec
+    nanosleep(&delay, &delay);
+#endif
+}
+
+/***********************************************************/
 
 static void
 set_spl(float *x, int n, double rms_lev, double spl_ref)
@@ -149,221 +184,168 @@ set_spl(float *x, int n, double rms_lev, double spl_ref)
     }
 }
 
-static void
-init_wav(I_O *io)
+static int
+init_wav(I_O *io, char *msg)
 {
     float fs;
-    static char *wfn = "test/tst_bbb.wav";
-    static char *mfn = "test/tst_bbb.mat";
-    static VAR *vl;
+    VAR *vl;
     static double spl_ref = 1.1219e-6;
     static double rms_lev = 65;
 
+    if (io->iwav) free(io->iwav);
+    if (io->owav) free(io->owav);
     if (io->ifn) {
         // get WAV file info
         vl = sp_wav_read(io->ifn, 0, 0, &fs);
         if (vl == NULL) {
             fprintf(stderr, "can't open %s\n", io->ifn);
-            exit(1);
+            return (1);
         }
-        if (fs != io->rate) {
-            fprintf(stderr, "%s rate mismatch: ", io->ifn);
+        if (io->rate != fs) {
+            fprintf(stderr, "WARNING: %s rate mismatch: ", io->ifn);
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
-            exit(2);
+            io->rate = fs;
         }
-        fprintf(stdout, "WAV input: %s...\n", io->ifn);
+        if (msg) sprintf(msg, "WAV input : %s repeat=%d\n", io->ifn, io->nrep);
         io->nwav = vl[0].rows * vl[0].cols;
-        io->iwav = vl[0].data;
-        set_spl(io->iwav, io->nwav, rms_lev, spl_ref);
-    } else {    /* 8-second impulse input */
-        fprintf(stdout, "impulse response...\n");
-        io->nwav = round(io->rate * 8);
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
-        io->iwav[0] = 1;
+        fcopy(io->iwav, vl[0].data, io->nwav);
+        set_spl(io->iwav, io->nwav, rms_lev, spl_ref);
+        sp_var_clear(vl);
+    } else {    /* ADC input */
+        io->nwav = 0;
+        io->iwav = (float *) calloc(io->cs * 2, sizeof(float));
     }
-    io->ofn = wfn; 
-    io->dfn = mfn; 
     if (io->ofn) {
         io->nsmp = io->nwav;
-        io->nseg = 1;
         io->mseg = 1;
+        io->nseg = 1;
         io->owav = (float *) calloc(io->nsmp, sizeof(float));
     } else {    /* DAC output */
-        io->nsmp = round(io->rate / 10);
+        io->cs = round((io->rate * io_wait * 4) / 1000); // chunk size
         io->mseg = 2;
-        io->nseg = (io->nwav + io->nsmp - 1) / io->nsmp;
-        io->owav = (float *) calloc(io->nsmp * io->mseg, sizeof(float));
-    }
+        io->nseg = io->nrep * io->nwav  / io->cs;
+        io->owav = (float *) calloc(io->cs * (io->mseg + 1), sizeof(float));
+	io->nsmp = io->nwav * io->nrep;
+    } 
+    io->pseg = io->mseg;
+    return (0);
 }
+
+/***********************************************************/
 
 static void
 init_aud(I_O *io)
 {
 #ifdef ARSC_LIB
     char name[80];
-    int i, j;
-    int32_t fmt[2];
+    int i, j, err;
     static int nchn = 2;        // number of channels
+    static int nswp = 0;        // number of sweeps (0=continuous)
+    static int32_t fmt[2] = {ARSC_DATA_F4, 0};
 
-    io->iod = ar_find_dev(0);
-    ar_out_open(io->iod, io->rate, nchn);
+    io->iod = io_dev - 1;
+    err = ar_out_open(io->iod, io->rate, nchn);
+    if (err) {
+        ar_err_msg(err, msg, MAX_MSG);
+        fprintf(stderr, "ERROR: %s\n", msg);
+        return;
+    }
     ar_dev_name(io->iod, name, 80);
-    fmt[0] = ARSC_DATA_F4;
-    fmt[1] = 0;
-    ar_set_fmt(io->iod, (int32_t *)fmt);
+    ar_set_fmt(io->iod, fmt);
     io->siz = (int32_t *) calloc(io->mseg, sizeof(int32_t));
     io->out = (void **) calloc(io->mseg * nchn, sizeof(void *));
     for (i = 0; i < io->mseg; i++) {
-        io->siz[i] = io->nsmp;
-        io->out[i * nchn] = io->owav + io->nsmp * i;
+        io->siz[i] = io->cs;
+        io->out[i * nchn] = io->owav + io->cs * i;
         for (j = 1; j < nchn; j++) {
             io->out[i * nchn + j] = NULL;
         }
     }
-    ar_out_prepare(io->iod, io->out, (uint32_t *)io->siz, io->mseg, 0);
-    fprintf(stdout, "audio output: %s", name);
+    ar_out_prepare(io->iod, io->out, (int32_t *)io->siz, io->mseg, nswp);
+    printf("audio output: %s\n", name);
     ar_io_start(io->iod);
-#endif // ARSC_LIB
+#endif
 }
-
-/***********************************************************/
-
-// monitor io
 
 static int
 get_aud(I_O *io)
 {
 #ifdef ARSC_LIB
     io->oseg = ar_io_cur_seg(io->iod);
-#endif // ARSC_LIB
+#endif
     return (io->oseg < io->nseg);
 }
 
 static void
 put_aud(I_O *io, CHA_PTR cp)
 {
-#ifdef ARSC_LIB
-    int od, ow, nd;
+    int od, iw, ow, nd, ns;
 
     if ((io->oseg + io->mseg) == io->pseg) {
-        od = io->pseg * io->nsmp;
-        nd = io->nwav - od;
-        ow = (io->pseg % io->mseg) * io->nsmp;
-        if (nd > io->nsmp) {
-            fcopy(io->owav + ow, io->iwav + od, io->nsmp);
+        od = io->pseg * io->cs;
+        nd = io->nrep * io->nwav - od;
+        ow = (io->pseg % io->mseg) * io->cs;
+        iw = od % io->nwav;
+        ns = (io->cs > (io->nwav - iw)) ? (io->nwav - iw) : io->cs;
+        if (nd >= io->cs) {
+            if (ns == io->cs) {
+                fcopy(io->owav + ow, io->iwav + iw, io->cs);
+            } else {
+                fcopy(io->owav + ow, io->iwav + iw, ns);
+                fcopy(io->owav + ow, io->iwav, io->cs - ns);
+            }
         } else if (nd > 0) {
-            fcopy(io->owav + ow, io->iwav + od, nd);
-            fzero(io->owav + ow + nd, io->nsmp - nd);
+            if (ns == io->cs) {
+                fcopy(io->owav + ow, io->iwav + iw, nd);
+                fzero(io->owav + ow + nd, 2 * io->cs - nd);
+            } else {
+                fcopy(io->owav + ow, io->iwav + iw, nd);
+                fcopy(io->owav + ow + nd, io->iwav + iw, ns - nd);
+                fzero(io->owav + ow + ns, 2 * io->cs - ns);
+            } 
         } else {
-            fzero(io->owav, io->nsmp);
+            fzero(io->owav, 2 * io->cs);
         }
         io->pseg++;
-        process_chunk(cp, io->owav + ow, io->owav + ow, io->nsmp);
+        process_chunk(cp, io->owav + ow, io->owav + ow, io->cs);
     }
-#endif // ARSC_LIB
-}
-
-/***********************************************************/
-
-// terminate io
-
-static void
-write_wave(I_O *io)
-{
-    float r[1], *w, *meer;
-    int   n, nbits = 16;
-    static VAR *vl;
-
-    if (io->dfn) {
-        fprintf(stdout, "MAT output: %s\n", io->dfn);
-        meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
-        vl = sp_var_alloc(8);
-        sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
-        sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
-        sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
-        sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
-        sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
-        sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
-        sp_var_add(vl, "ofn",   io->ofn,       1, 1, "f4str");
-        remove(io->dfn);
-        sp_mat_save(io->dfn, vl);
-        sp_var_clear(vl);
-        if (!afc.qm && meer) free(meer);
-    }
-    if (io->ofn) {
-        fprintf(stdout, "WAV output: %s\n", io->ofn);
-        r[0] = (float) io->rate;
-        n = io->nwav;
-        w = io->owav;
-        vl = sp_var_alloc(2);
-        sp_var_add(vl, "rate",        r,       1, 1, "f4");
-        sp_var_add(vl, "wave",        w,       n, 1, "f4");
-        vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
-        remove(io->ofn);
-        sp_wav_write(io->ofn, vl + 1, r, nbits);
-        sp_var_clear(vl);
-    }
-}
-
-static void
-stop_wav(I_O *io)
-{
-    if (io->ofn) {
-        free(io->owav);
-#ifdef ARSC_LIB
-    } else {
-        fzero(io->owav, io->nsmp * io->mseg);
-        ar_io_stop(io->iod);
-        ar_io_close(io->iod);
-        free(io->siz);
-        free(io->out);
-        free(io->owav);
-#endif // ARSC_LIB
-    }
-    if (io->ifn) {
-        sp_var_clear_all();
-    } else {
-        free(io->iwav);
-    }
-    if (io->nseg == 1) {
-        fprintf(stdout, "...done");
-    }
-    fprintf(stdout, "\n");
 }
 
 /***********************************************************/
 
 // prepare input/output
 
-static void
-prepare_io(I_O *io, double sr, int cs)
+static int
+prepare_io(I_O *io)
 {
     // initialize waveform
-    io->rate = sr;
-    io->cs   = cs;
-    io->ifn  = args.ifn;
-    io->ofn  = args.ofn;
-    io->mat  = args.mat;
-    init_wav(io);
-    fcopy(io->owav, io->iwav, io->nsmp);
+    io->rate = srate;
+    io->cs   = chunk;
+    if (init_wav(io, msg)) {
+        return (1);
+    }
     // prepare i/o
-    io->pseg = io->mseg;
     if (!io->ofn) {
         init_aud(io);
     }
+    printf("%s", msg);
+    printf("prepare_io: sr=%.0f cs=%d ns=%d\n", io->rate, io->cs, io->nsmp);
+    return (0);
 }
 
 // prepare IIR filterbank
-
 static void
-prepare_filterbank(CHA_PTR cp, double sr, int cs)
+prepare_filterbank(CHA_PTR cp)
 {
-    double td, *cf;
-    int nc, nz;
+    double td, sr, *cf;
+    int cs, nc, nz;
     // zeros, poles, gains, & delays
     float   z[64], p[64], g[8];
     int     d[8];
 
+    sr = srate;
+    cs = chunk;
     // prepare IIRFB
     nc = dsl.nchannel;
     cf = dsl.cross_freq;
@@ -394,14 +376,18 @@ prepare_feedback(CHA_PTR cp)
 // prepare signal processing
 
 static void
-prepare(I_O *io, CHA_PTR cp, double sr, int cs)
+prepare(I_O *io, CHA_PTR cp)
 {
-    prepare_io(io, sr, cs);
-    prepare_filterbank(cp, sr, cs);
+    prepare_io(io);
+    srate = io->rate;
+    chunk = io->cs;
+    prepare_filterbank(cp);
     prepare_compressor(cp);
     if (afc.sqm) afc.nqm = io->nsmp * io->nrep;
     prepare_feedback(cp);
     prepared++;
+    // generate C code from prepared data
+    //cha_data_gen(cp, DATA_HDR);
 }
 
 // process signal
@@ -429,20 +415,89 @@ process(I_O *io, CHA_PTR cp)
         }
         t1 = sp_toc();
         t2 = (io->nwav / io->rate) * io->nrep;
-        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n",
-            t1, t2, t1/t2);
+        printf("(wall_time/wave_time) = (%.3f/%.3f) ", t1, t2);
+        printf("= %.3f\n", t1/t2);
+        // report quality metric
         iqm = afc.iqmp ? afc.iqmp[0] : 0;
-        if (iqm > 0) {
+        if (iqm) {
             if (afc.qm[iqm - 1] > 0) {
                 fme = 10 * log10(afc.qm[iqm - 1]);
-                fprintf(stdout, "final misalignment error = %.2f dB\n", fme);
+                printf("final misalignment error = %.2f dB\n", fme);
             }
         }
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);
+            msleep(io_wait); // wait time
         }
     }
+}
+
+/***********************************************************/
+
+// terminate io
+
+static void
+write_wave(I_O *io)
+{
+    float r[1], *w, *meer;
+    int   n, nbits = 16;
+    static VAR *vl;
+
+    if (io->dfn) {
+        printf("MAT output: %s\n", io->dfn);
+        meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
+        vl = sp_var_alloc(8);
+        sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
+        sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
+        sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
+        sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
+        sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
+        sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
+        sp_var_add(vl, "ofn",   io->ofn,       1, 1, "f4str");
+        remove(io->dfn);
+        sp_mat_save(io->dfn, vl);
+        sp_var_clear(vl);
+        if (!afc.qm && meer) free(meer);
+    }
+    if (io->ofn) {
+        printf("WAV output: %s\n", io->ofn);
+        r[0] = (float) io->rate;
+        n = io->nwav;
+        w = io->owav;
+        vl = sp_var_alloc(2);
+        sp_var_add(vl, "rate",        r,       1, 1, "f4");
+        sp_var_add(vl, "wave",        w,       n, 1, "f4");
+        vl[1].dtyp = SP_DTYP_F4; /* workaround sigpro bug */
+        remove(io->ofn);
+        sp_wav_write(io->ofn, vl + 1, r, nbits);
+        sp_var_clear(vl);
+    }
+}
+
+static void
+stop_wav(I_O *io)
+{
+    if (io->ofn) {
+        free(io->owav);
+    } else {
+#ifdef ARSC_LIB
+        ar_io_stop(io->iod);
+        ar_io_close(io->iod);
+#endif
+        if (io->siz) free(io->siz);
+        if (io->out) free(io->out);
+        if (io->owav) free(io->owav);
+    }
+    if (io->ifn) {
+        sp_var_clear_all();
+    } else {
+        free(io->iwav);
+    }
+    if (io->nseg == 1) {
+        printf("...done");
+    }
+    printf("\n");
 }
 
 // clean up io
@@ -454,7 +509,7 @@ cleanup(I_O *io, CHA_PTR cp)
         if (io->nsmp < 1234567) {
             write_wave(io);
         } else {
-            fprintf(stdout, "Too large to write: nsmp=%d\n", io->nsmp);
+            printf("Too large to write: nsmp=%d\n", io->nsmp);
         }
     }
     stop_wav(io);
@@ -491,38 +546,52 @@ configure_feedback()
     afc.rho  = 0.0014388; // forgetting factor
     afc.eps  = 0.0010148; // power threshold
     afc.mu   = 0.0001507; // step size
-    afc.afl  = 100;     // adaptive filter length
-    afc.wfl  = 0;       // whitening-filter length
-    afc.pfl  = 0;       // persistent-filter length
-    afc.hdel = 0;       // output/input hardware delay
-    afc.sqm  = 1;       // save quality metric ?
-    afc.fbg = 1;        // simulated-feedback gain 
-    afc.nqm = 0;        // initialize quality-metric length
+    afc.afl  = 100;       // adaptive filter length
+    afc.wfl  = 0;         // whitening-filter length
+    afc.pfl  = 0;         // persistent-filter length
+    afc.hdel = 0;         // output/input hardware delay
+    afc.sqm  = 1;         // save quality metric ?
+    afc.fbg = 1;          // simulated-feedback gain 
+    afc.nqm = 0;          // initialize quality-metric length
+    if (!args.simfb) afc.fbg = 0;
 }
 
 static void
-configure()
+configure(I_O *io)
 {
-    // initialize local variables
+    static char *ifn = "test/carrots.wav";
+    static char *wfn = "test/tst_gha.wav";
+    static char *mfn = "test/tst_gha.mat";
+
+    // initialize CHAPRO variables
     configure_compressor();
     configure_feedback();
+    // initialize I/O
+#ifdef ARSC_LIB
+    io_dev = ar_find_dev(ARSC_PREF_SYNC) + 1; // find preferred audio device
+#endif
+    io->iwav = NULL;
+    io->owav = NULL;
+    io->ifn  = args.ifn  ? args.ifn : ifn;
+    io->ofn  = args.play ? args.ofn : wfn; 
+    io->dfn  = mfn; 
+    io->mat  = args.mat;
+    io->nrep = (args.nrep < 1) ? 1 : args.nrep;
 }
 
 static void
-report(double sr)
+report()
 {
     char *en, *fc;
-    int nc, nr, nz;
+    int nc, nz;
 
     // report
     fc = args.afc ? "+AFC" : "";
     en = args.simfb ? "en" : "dis";
     nc = dsl.nchannel;
-    nr = args.nrep;
     nz = agc.nz;
-    fprintf(stdout, "CHA simulation: sampling rate=%.0f Hz, ", sr);
-    fprintf(stdout, "feedback simulation %sabled.\n", en);
-    fprintf(stdout, "IIR+AGC%s: nc=%d nz=%d nrep=%d\n", fc, nc, nz, nr);
+    printf("CHA simulation: feedback simulation %sabled.\n", en);
+    printf("IIR+AGC%s: nc=%d nz=%d\n", fc, nc, nz);
 }
 
 /***********************************************************/
@@ -530,15 +599,13 @@ report(double sr)
 int
 main(int ac, char *av[])
 {
-    static double sr = 24000;
-    static int    cs = 32;
     static void *cp[NPTR] = {0};
     static I_O io;
 
     parse_args(ac, av);
-    configure();
-    report(sr);
-    prepare(&io, cp, sr, cs);
+    configure(&io);
+    report();
+    prepare(&io, cp);
     process(&io, cp);
     cleanup(&io, cp);
     return (0);

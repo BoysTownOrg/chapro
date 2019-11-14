@@ -26,13 +26,13 @@ PGMS=tst_bbb
 
 profile : $(PGMS) 
 	# profiling...
-	./tst_bbb -r 80 # feedback simulation enabled
+	./tst_bbb -r80 # feedback simulation enabled
 	gprof tst_bbb > gprof1.txt
 	head gprof1.txt
 
 fast : $(PGMS) $(PROF)
 	# profiling...
-	./tst_bbb -r 80 -d # feedback simulation disabled
+	./tst_bbb -r80 -d # feedback simulation disabled
 	gprof tst_bbb > gprof2.txt
 	head gprof2.txt
 
