@@ -70,6 +70,10 @@ data_plan(CHA_PTR cp, int *psz, int *asz)
     arsiz = 0;
     if (cpsiz) {
         for (i = 0; i < NPTR; i++) {
+            if (cpsiz[i] < 0) {
+                arsiz = 0;
+		break;
+	    }
             arsiz += cpsiz[i];
         }
     }
@@ -89,6 +93,8 @@ state_make(CHA_STA *state, int32_t *cpsiz, void **cp, int ptsiz, int arsiz)
     // allocate memory
     mkcp = (void **)calloc(NPTR, sizeof(void *));
     mkdata = malloc(arsiz);
+    // copy pointers
+    memcpy(mkcp, cp, NPTR * sizeof(void *));
     // copy data
     data = (char *)mkdata;
     for (i = 0; i < NPTR; i++) {

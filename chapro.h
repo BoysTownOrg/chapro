@@ -312,41 +312,40 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 #define _dsm      _offset+7
 #define _dso      _offset+8
-//#define _bkr      _offset+9
-#define _c1       _offset+10
-#define _c2       _offset+11
-#define _fc       _offset+12
-#define _bw       _offset+13
-#define _Lcs      _offset+14
-#define _Lcm      _offset+15
-#define _Lce      _offset+16
-#define _Lmx      _offset+17
-#define _Gcs      _offset+18
-#define _Gcm      _offset+19
-#define _Gce      _offset+20
-#define _Gmx      _offset+21
-#define _Gmn      _offset+22
-#define _Lfb      _offset+23
-#define _Gsup     _offset+24
-#define _Gpre     _offset+25
-#define _gsup     _offset+26
-#define _ginc     _offset+27
-#define _zdr      _offset+28
+#define _c1       _offset+9
+#define _c2       _offset+10
+#define _fc       _offset+11
+#define _bw       _offset+12
+#define _Lcs      _offset+13
+#define _Lcm      _offset+14
+#define _Lce      _offset+15
+#define _Lmx      _offset+16
+#define _Gcs      _offset+17
+#define _Gcm      _offset+18
+#define _Gce      _offset+19
+#define _Gmx      _offset+20
+#define _Gmn      _offset+21
+#define _Lfb      _offset+22
+#define _Gsup     _offset+23
+#define _Gpre     _offset+24
+#define _gsup     _offset+25
+#define _ginc     _offset+26
+#define _zdr      _offset+27
 
 //----------------------------------------
 
 // afc pointer indices
 
-#define _rng0     _offset+14
-#define _rng1     _offset+15
-#define _rng2     _offset+16
-#define _rng3     _offset+17
-#define _efbp     _offset+18
-#define _sfbp     _offset+19
-#define _wfrp     _offset+20
-#define _ffrp     _offset+21
-#define _qm       _offset+22
-#define _iqmp     _offset+23
+#define _rng0     _offset+28
+#define _rng1     _offset+29
+#define _rng2     _offset+30
+#define _rng3     _offset+31
+#define _efbp     _offset+32
+#define _sfbp     _offset+33
+#define _wfrp     _offset+34
+#define _ffrp     _offset+35
+#define _qm       _offset+36
+#define _iqmp     _offset+37
 
 /*****************************************************/
 
