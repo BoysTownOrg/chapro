@@ -137,7 +137,8 @@ cha_firfb_prepare(CHA_PTR cp, double *cf, int nc, double sr,
         fir_transform_lc(cp, bb, nc, nw, cs);
     }
     free(bb);
-    // allocate chunk buffer
+    // allocate input & chunk buffers
+    cha_allocate(cp, nc * cs, sizeof(float), _xx);
     cha_allocate(cp, nc * cs, sizeof(float), _cc);
 
     return (0);

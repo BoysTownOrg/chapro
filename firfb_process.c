@@ -127,7 +127,7 @@ firfb_analyze_lc(float *x, float *y, int cs,
 FUNC(void)
 cha_firfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float   *hh, *xx, *yy, *zz;
+    float   *hh, *xx, *yy, *zz, *ww;
     int      nc, nw;
 
     nc = CHA_IVAR[_nc];
@@ -136,10 +136,12 @@ cha_firfb_analyze(CHA_PTR cp, float *x, float *y, int cs)
     xx = (float *) cp[_ffxx];
     yy = (float *) cp[_ffyy];
     zz = (float *) cp[_ffzz];
+    ww = (float *) cp[_xx];
+    memcpy(ww, x, cs * sizeof(float)); // input buffer
     if (cs < nw) {
-        firfb_analyze_sc(x, y, cs, hh, xx, yy, zz, nc, nw);
+        firfb_analyze_sc(ww, y, cs, hh, xx, yy, zz, nc, nw);
     } else {
-        firfb_analyze_lc(x, y, cs, hh, xx, yy, zz, nc, nw);
+        firfb_analyze_lc(ww, y, cs, hh, xx, yy, zz, nc, nw);
     }
 }
 
