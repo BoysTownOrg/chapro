@@ -239,7 +239,7 @@ FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 
 // instantanous compressor module
 
-FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, int);
+FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, double, int);
 FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/

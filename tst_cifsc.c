@@ -444,7 +444,7 @@ prepare_compressor(CHA_PTR cp, double sr)
 
     compressor_init(&cls);
     if (args.ds) ds = args.ds;
-    cha_icmp_prepare(cp, &cls, lr, ds);
+    cha_icmp_prepare(cp, &cls, sr, lr, ds);
 }
 
 // prepare input/output

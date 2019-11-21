@@ -218,7 +218,7 @@ prepare_filterbank(CHA_PTR cp)
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    double fs, gd; 
+    double fs, gd, sr; 
     static double lr = 2e-5;    // signal-level reference (Pa)
     static double gn = 0;       // flat suppressor gain (dB)
     static int    ds = 24;      // downsample factor
@@ -226,13 +226,14 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
     gd = target_delay;
+    sr = fs * 1000;
     if (args.ds) ds = args.ds;
     if (args.gn) gn = args.gn;
     // prepare compressor
     compressor_init(&cls, gn);
-    cha_icmp_prepare(cp, &cls, lr, ds);
+    cha_icmp_prepare(cp, &cls, sr, lr, ds);
     // initialize waveform
-    io->rate = fs * 1000;
+    io->rate = sr;
     io->ifn = args.ifn;
     io->ofn = args.ofn;
     init_wav(io);

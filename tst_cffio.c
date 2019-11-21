@@ -219,7 +219,7 @@ prepare(I_O *io, CHA_PTR cp)
     sr = fs * 1000;
     nc = cross_freq(cf, sr);
     compressor_init(&cls, cf, sr, gn, nc);
-    cha_icmp_prepare(cp, &cls, lr, ds);
+    cha_icmp_prepare(cp, &cls, sr, lr, ds);
     // initialize waveform
     io->rate = sr;
     io->ifn = args.ifn;

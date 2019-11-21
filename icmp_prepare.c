@@ -11,16 +11,16 @@ static void
 compr_ds_expand (
     CHA_PTR cp, 
     CHA_CLS *cls,
+    double sr,
+    int nc,
     int ds
 ) {
-    double fs, *bw;
+    double *bw;
     int *dsm, *dso;
     int *mf, *gc, *sc;
-    int i, j, k, jk, nc, nf, ns, tc, jmx = 0, jmn = 0, scmx = 0, scmn = 0;
+    int i, j, k, jk, nf, ns, tc, jmx = 0, jmn = 0, scmx = 0, scmn = 0;
     static int ms = 5; /* mimimun samples per envelope cycle */
 
-    fs = CHA_DVAR[_fs];
-    nc = CHA_IVAR[_nc];
     ns = ds;
     bw = cls->bw;
     dsm = (int *) cha_allocate(cp, nc, sizeof(int), _dsm);    
@@ -35,7 +35,7 @@ compr_ds_expand (
         }
     }
     for (k = 0; k < nc; k++) {
-        dsm[k] = (int) floor(2000 * fs / bw[k] / ms);
+        dsm[k] = (int) floor(2 * sr / bw[k] / ms);
         if (dsm[k] > ds) {
             dsm[k] = ds;
         }
@@ -158,11 +158,12 @@ compressor_prep(CHA_PTR cp, int nc)
 /***********************************************************/
 
 FUNC(int)
-cha_icmp_prepare(CHA_PTR cp, CHA_CLS *cls, double lr, int ds)
+cha_icmp_prepare(CHA_PTR cp, CHA_CLS *cls, double sr, double lr, int ds)
 {
-    CHA_IVAR[_ds] = ds;
     cha_prepare(cp);
-    compr_ds_expand(cp, cls, ds);
+    CHA_IVAR[_ds] = ds;
+    CHA_IVAR[_nc] = cls->nc;
+    compr_ds_expand(cp, cls, sr, cls->nc, ds);
     compr_levl_config(cp, cls, lr);
     compr_gain_config(cp, cls);
     compressor_prep(cp, cls->nc);
