@@ -30,6 +30,13 @@ cha_prepare(CHA_PTR cp)
     }
 }
 
+FUNC(void) 
+cha_chunk_size(CHA_PTR cp, int cs)
+{
+    cha_prepare(cp);
+    CHA_IVAR[_cs] = cs;
+}
+
 FUNC(void *) 
 cha_allocate(CHA_PTR cp, int cnt, int siz, int idx)
 {
@@ -92,7 +99,7 @@ state_make(CHA_STA *state, int32_t *cpsiz, void **cp, int ptsiz, int arsiz)
 
     // allocate memory
     mkcp = (void **)calloc(NPTR, sizeof(void *));
-    mkdata = malloc(arsiz);
+    mkdata = calloc(arsiz, 1);
     // copy pointers
     memcpy(mkcp, cp, NPTR * sizeof(void *));
     // copy data

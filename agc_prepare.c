@@ -58,6 +58,7 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *agc)
     tkgn = (float *) cp[_gctkgn];
     bolt = (float *) cp[_gcbolt];
     time_const(dsl->attack, dsl->release, agc->fs, &alfa, &beta);
+    CHA_IVAR[_nc] = nc;
     CHA_DVAR[_gcalfa] = alfa;
     CHA_DVAR[_gcbeta] = beta;
     for (i = 0; i < nc; i++) {
@@ -76,6 +77,5 @@ cha_agc_prepare(CHA_PTR cp, CHA_DSL *dsl, CHA_WDRC *agc)
             bolt[i] = (float) (bolt[i] + tkgn[i]);
         }
     }
-
     return (0);
 }

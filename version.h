@@ -1,13 +1,15 @@
 /* version.h */
 
-#define VER     "CHApro version 0.30, 20-Nov-19"
+#define VER     "CHApro version 0.30, 22-Nov-19"
 #define NOTICE	"Copyright 2016-2019 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
-0.30 - 20-Nov-19
+0.30 - 22-Nov-19
 >  Added input buffer to firfb to fix overwrite bug
 >  Added sr to icmp_prepare arguments
+>  Changed malloc to calloc in state_make
+>  Added chunk_size function
 0.29 - 7-Nov-19
 >  Added input buffer to iirfb to fix overwrite bug
 0.28 - 10-Oct-19

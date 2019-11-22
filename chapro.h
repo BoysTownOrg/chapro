@@ -180,6 +180,7 @@ typedef struct {
 
 FUNC(void *) cha_allocate(CHA_PTR, int, int, int);
 FUNC(void)   cha_cleanup(CHA_PTR);
+FUNC(void)   cha_chunk_size(CHA_PTR, int);
 FUNC(int)    cha_data_gen(CHA_PTR, char *);
 FUNC(int)    cha_data_save(CHA_PTR, char *);
 FUNC(int)    cha_data_load(CHA_PTR, char *);
