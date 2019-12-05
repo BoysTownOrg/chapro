@@ -25,22 +25,26 @@ title('CHAPRO demonstration of AFC processing')
 if (exist('sfbp','var'))
     ny=length(sfbp);
     if (exist('ffrp','var'))
-        y=conv(efbp,ffrp);
-        efbp=y(1:ny);
+        cfbp=conv(efbp,ffrp);
+    else
+        cfbp=efbp;
+        ffrp=zeros(size(efbp));
+        ffrp(1)=1;
     end
     % plot feedback path
     figure(2);clf
     ty=linspace(0,(ny - 1) / sr, ny)*1000;
     my=(max(ty)-min(ty))/20;
     tlim=[min(ty)-my max(ty)+my];
-    plot(ty,sfbp,ty,efbp)
+    cfbp((end+1):ny)=0;
+    plot(ty,sfbp,'k',ty,cfbp,'r')
     xlim(tlim)
     xlabel('time (ms)')
     title('feedback path')
     legend('simulated','estimated')
     grid on
     drawnow
-    mae=10*log10(sum((efbp-sfbp).^2)/sum(sfbp.^2));
+    mae=10*log10(sum((cfbp-sfbp).^2)/sum(sfbp.^2));
     fprintf('final misalignment error = %.2f\n',mae);
     % plot quality metrics
     figure(3); clf
@@ -54,6 +58,24 @@ if (exist('sfbp','var'))
     ylabel('dB')
     xlabel('time (s)')
     title('misalignment error')
+    % plot feedback spectra
+    figure(4); clf
+    efbp((end+1):1024)=0;
+    ffrp((end+1):1024)=0;
+    cfbp((end+1):1024)=0;
+    sfbp((end+1):1024)=0;
+    EF=ffa(efbp);
+    FF=ffa(ffrp);
+    CF=ffa(cfbp);
+    SF=ffa(sfbp);
+    db1=20*log10(max(1e-9,abs(EF)));
+    db2=20*log10(max(1e-9,abs(FF)));
+    db3=20*log10(max(1e-9,abs(CF)));
+    db4=20*log10(max(1e-9,abs(SF)));
+    f=linspace(0,sr/2,length(db1))/1000;
+    semilogx(f,db1,'b',f,db2,'g',f,db3,'r',f,db4,'k');
+    axis([0.1 20 -60 10])
+    legend('W','H','WH','F','Location','south')
 end
 if play_audio
     fprintf('     Original signal: %s\n',ifn);
@@ -63,4 +85,14 @@ if play_audio
     p = audioplayer(y, sr);
     playblocking(p)
 end
+return
+
+% fast Fourier analyze real signal
+function H=ffa(h)
+H=fft(real(h));
+n=length(H);
+m=1+n/2;            % assume n is even
+H(1,:)=real(H(1,:));
+H(m,:)=real(H(m,:));
+H((m+1):n,:)=[];    % remove upper frequencies
 return

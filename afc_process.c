@@ -10,13 +10,13 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float ye, yy, mmu, dif, dm, xx, ss, ee, uu, ef, uf;
-    int i, ih, ij, is, id, j, iqm = 0;
+    float ye, yy, mmu, dif, dm, xx, ss, ee, uu, ef, uf, cfc, sum;
+    int i, ih, ij, is, id, j, jp1, k, nfc, puc, iqm = 0;
     static float *rng0, *rng1, *rng2, *rng3;
     static float *efbp, *sfbp, *wfrp, *ffrp, *qm;
-    static float mu, rho, eps, fbm;
+    static float mu, rho, eps, alf, fbm;
     static float pwr = 0;
-    static int rhd, rsz, mask, afl, wfl, pfl, fbl, nqm, hdel, *iqmp; 
+    static int rhd, rsz, mask, afl, wfl, pfl, fbl, nqm, hdel, pup, *iqmp; 
 
     if (CHA_IVAR[_mxl] == 0) { // if no AFC, do nothing
         return;
@@ -35,6 +35,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         mu   = (float) CHA_DVAR[_mu];
         rho  = (float) CHA_DVAR[_rho];
         eps  = (float) CHA_DVAR[_eps];
+        alf  = (float) CHA_DVAR[_alf];
         fbm  = (float) CHA_DVAR[_fbm];
         rsz  = CHA_IVAR[_rsz];
         afl  = CHA_IVAR[_afl];
@@ -43,6 +44,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         fbl  = CHA_IVAR[_fbl];
         nqm  = CHA_IVAR[_nqm];
         hdel = CHA_IVAR[_hdel];
+        pup  = CHA_IVAR[_pup];
         if (pfl <= 0) rng1 = rng0; // bypass rng1
         if (wfl <= 0) rng2 = rng1; // bypass rng2
         mask = rsz - 1;
@@ -52,9 +54,11 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     // uf -> rng2
     // ee -> rng3
     rhd = CHA_IVAR[_rhd];
+    puc = CHA_IVAR[_puc];
     if (nqm) iqm = iqmp[0];
-    // subtract estimated feedback signal
+    // loop over chunk
     for (i = 0; i < cs; i++) {
+        //------------------------------------
         xx = x[i];
         ih = (rhd + i) & mask;
         is = ih + rsz;
@@ -65,7 +69,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
             ij = (id - j) & mask;
             yy += sfbp[j] * rng0[ij];
         }
-        // apply persistent-feedback filter
+        // apply band-limit filter
         ss = rng0[ih];
         if (pfl > 0) {
             uu = 0;
@@ -85,7 +89,8 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         }
         // apply feedback to input signal
         ee = xx + yy - ye;
-        // apply signal-whitening filter
+        //------------------------------------
+        // apply whiten filter
         if (wfl > 0) {
             rng3[ih] = ee;
             ef = uf = 0;
@@ -101,7 +106,8 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // update adaptive feedback coefficients
         if (afl > 0) {
             uf = rng2[id & mask];
-            pwr = rho * pwr + ef * ef + uf * uf;
+            //pwr = rho * pwr + ef * ef + uf * uf;
+            pwr = rho * (sqrt(ef * ef + uf * uf) - pwr);
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
                 ij = (id - j) & mask;
@@ -109,11 +115,42 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
                 efbp[j] += mmu * ef * uf;
             }
         }
+        // update band-limit filter coefficients
+        if (pup) {
+            puc = (puc + 1) % pup;
+            if (puc == 0) {
+                sum = 0;
+                for (j = 0; j < pfl; j++) {
+                        jp1 = j + 1;
+		        nfc = (jp1 < pfl) ? jp1 : pfl;
+                        cfc = 0;
+		        for (k = 0; k < nfc; k++) {
+                            cfc += efbp[j - k] * ffrp[k];
+                        }
+                    ffrp[j] += alf * (cfc - ffrp[j]);
+                    sum += ffrp[j];
+                }
+                sum /= pfl;
+                for (j = 0; j < pfl; j++) {
+                    ffrp[j] -= sum;
+                }
+            }
+        }
         // save quality metrics
         if (nqm) {
             dm = 0;
-            for (j = 0; j < afl; j++) {
-                dif = sfbp[j] - efbp[j];
+            for (j = 0; j < fbl; j++) {
+		if (pfl) {
+                    jp1 = j + 1;
+		    nfc = (jp1 < pfl) ? jp1 : pfl;
+                    cfc = 0;
+		    for (k = 0; k < nfc; k++) {
+                        cfc += efbp[j - k] * ffrp[k];
+                    }
+		} else {
+                    cfc = efbp[j];
+		}
+                dif = (j < afl) ? sfbp[j] - cfc : sfbp[j];
                 dm += dif * dif;
             }
             qm[iqm++] = dm / fbm;
@@ -121,6 +158,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // copy AFC signal to output
         y[i] = ee;
     }
+    CHA_IVAR[_puc] = puc;
     if (nqm) {
         iqmp[0] = iqm;
         if ((iqm + cs) > nqm) nqm = 0;

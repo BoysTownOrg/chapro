@@ -402,8 +402,8 @@ prepare(I_O *io, CHA_PTR cp)
     static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
     // AFC parameters
     static int    sqm  = 1;      // save quality metric ?
-    static int    wfl  = 0;      // whitening-filter length
-    static int    pfl  = 0;      // persistent-filter length
+    static int    wfl  = 0;      // whiten-filter length
+    static int    pfl  = 0;      // pre-emphasis-filter length
      // simulation parameters
     static int     ds = 200;     // simulated-processing delay
     static double  gs = 4;       // simulated-processing gain

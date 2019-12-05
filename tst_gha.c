@@ -36,6 +36,7 @@ static int    io_dev = 0;
 static int    io_wait = 40;
 static struct {
     char *ifn, *ofn, simfb, afc, mat, nrep, play;
+    int afl, wfl, pfl;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -76,8 +77,12 @@ usage()
     printf("-h    print help\n");
     printf("-m    output MAT file\n");
     printf("-p    play output\n");
+    printf("-nN   AFC filter length = n\n");
+    printf("-pN   band-limit filter length = n\n");
+    printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
     printf("-v    print version\n");
+    printf("-wN   whiten filter length = n\n");
     exit(0);
 }
 
@@ -115,6 +120,9 @@ parse_args(int ac, char *av[])
     args.play = 0;
     args.nrep = 1;
     args.simfb = 1;
+    args.afl = -1;
+    args.wfl = -1;
+    args.pfl = -1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'a') {
@@ -125,12 +133,18 @@ parse_args(int ac, char *av[])
                 usage();
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
+            } else if (av[1][1] == 'n') {
+                args.afl = atoi(av[1] + 2);
             } else if (av[1][1] == 'p') {
+                args.pfl = atoi(av[1] + 2);
+            } else if (av[1][1] == 'P') {
                 args.play = 1;
             } else if (av[1][1] == 'r') {
                 args.nrep = atoi(av[1] + 2);
             } else if (av[1][1] == 'v') {
                 version();
+            } else if (av[1][1] == 'w') {
+                args.wfl = atoi(av[1] + 2);
             }
             ac--;
             av++;
@@ -536,17 +550,33 @@ static void
 configure_feedback()
 {
     // AFC parameters
-    afc.rho  = 0.0014388; // forgetting factor
-    afc.eps  = 0.0010148; // power threshold
-    afc.mu   = 0.0001507; // step size
-    afc.afl  = 100;       // adaptive filter length
-    afc.wfl  = 0;         // whitening-filter length
-    afc.pfl  = 0;         // persistent-filter length
+    afc.afl  = 45;        // adaptive filter length
+    afc.wfl  = 15;        // whiten-filter length
+    afc.pfl  = 0;         // band-limit-filter length
+    // update args
+    if (args.afl >= 0) afc.afl = args.afl;
+    if (args.wfl >= 0) afc.wfl = args.wfl;
+    if (args.pfl >= 0) afc.pfl = args.pfl;
+    afc.alf  = 0;         // band-limit update
+    if (afc.pfl) {
+        afc.rho  = 0.007593337; // forgetting factor
+        afc.eps  = 0.000011766; // power threshold
+        afc.mu   = 0.000264534; // step size
+        afc.alf  = 0.000001736; // band-limit update
+    } else if (afc.wfl) {
+        afc.rho  = 0.001373159; // forgetting factor
+        afc.eps  = 0.000016284; // power threshold
+        afc.mu   = 0.000094613; // step size
+    } else {
+        afc.rho  = 0.000156585; // forgetting factor
+        afc.eps  = 0.000926702; // power threshold
+        afc.mu   = 0.000256003; // step size
+    }
+    afc.pup  = 1;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
-    afc.fbg = 1;          // simulated-feedback gain 
-    afc.nqm = 0;          // initialize quality-metric length
-    if (!args.simfb) afc.fbg = 0;
+    afc.fbg  = 1;         // simulated-feedback gain 
+    afc.nqm  = 0;         // initialize quality-metric length
 }
 
 static void

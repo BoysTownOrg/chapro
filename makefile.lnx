@@ -126,7 +126,7 @@ clean_test:
 	rm -f test.lst test/*.mat test/tst_*.wav
 
 # dependencies
-afc_prepare.o: afc_prepare.c chapro.h ite_fb.h 
+afc_prepare.o: afc_prepare.c chapro.h ite_fb.h iltass.h
 afc_filters.o: afc_filters.c chapro.h 
 afc_process.o: afc_process.c chapro.h 
 agc_prepare.o: agc_prepare.c chapro.h 

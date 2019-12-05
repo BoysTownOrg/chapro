@@ -155,15 +155,17 @@ typedef struct {
     double rho;                  // forgetting factor
     double eps;                  // power threshold
     double  mu;                  // step size
+    double alf;                  // band-limit update
     int    afl;                  // adaptive-filter length
-    int    wfl;                  // whitening-filter length
-    int    pfl;                  // persistent-filter length
+    int    wfl;                  // whiten-filter length
+    int    pfl;                  // band-limit-filter length
     int    fbl;                  // simulated-feedback length
     int    hdel;                 // output/input hardware delay
+    int    pup;                  // band-limit update period
     // feedback filter buffers
     float *efbp;                 // estimated-feedback buffer pointer
     float *sfbp;                 // simulated-feedback buffer pointer
-    float *wfrp;                 // whitening-feedback buffer pointer
+    float *wfrp;                 // whiten-feedback buffer pointer
     float *ffrp;                 // persistent-feedback buffer pointer
     // quality metric buffers & parameters
     float *qm;                   // quality-metric buffer pointer
@@ -394,6 +396,8 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _in2      14
 #define _rhd      15
 #define _afc      16
+#define _pup      17
+#define _puc      18
 
 /*****************************************************/
 
@@ -426,8 +430,9 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 #define _mu       10
 #define _rho      11
 #define _eps      12
-#define _hdel     13
-#define _fbm      14
+#define _alf      13
+#define _hdel     14
+#define _fbm      15
 
 /*****************************************************/
 

@@ -1,10 +1,14 @@
 /* version.h */
 
-#define VER     "CHApro version 0.30, 22-Nov-19"
+#define VER     "CHApro version 0.31, 5-Dec-19"
 #define NOTICE	"Copyright 2016-2019 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.31 - 5-Dec-19
+>  Implemented whiten filter based on inverse LTASS
+>  Implemented band-limit filter 
+>  Optimized parameters for whiten & band-limit filters
 0.30 - 22-Nov-19
 >  Added input buffer to firfb to fix overwrite bug
 >  Added sr to icmp_prepare arguments
@@ -55,7 +59,7 @@
 0.14 - 1-May-18
 > Optimized AFC parameters (mu,rho,eps)
 0.13 - 30-Apr-18
-> Added whitening & fixed filters to AFC
+> Added whiten & fixed filters to AFC
 0.12 - 27-Apr-18
 > Added tst_gha to test IIR+AFC+AGC
 0.11 - 26-Apr-18

@@ -547,9 +547,10 @@ configure_feedback()
     afc.rho  = 0.0014388; // forgetting factor
     afc.eps  = 0.0010148; // power threshold
     afc.mu   = 0.0001507; // step size
+    afc.alf  = 0.0000000; // band-limit update
     afc.afl  = 100;       // adaptive filter length
-    afc.wfl  = 0;         // whitening-filter length
-    afc.pfl  = 0;         // persistent-filter length
+    afc.wfl  = 0;         // whiten-filter length
+    afc.pfl  = 0;         // band-limit-filter length
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg = 1;          // simulated-feedback gain 
