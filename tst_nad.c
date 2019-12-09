@@ -581,6 +581,8 @@ configure_feedback()
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 
     afc.nqm  = 0;         // initialize quality-metric length
+    if (!args.simfb) afc.fbg = 0;
+    if (!args.afc) afc.afl = 0;
 }
 
 static void
