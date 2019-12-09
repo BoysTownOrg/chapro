@@ -8,9 +8,11 @@
 #include <time.h>
 #include <ctype.h>
 
-#include <arsclib.h>
+//#include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
+//#define DATA_HDR "tst_nad_data.h"
+//#include DATA_HDR
 
 #define MAX_MSG 256
 
@@ -247,13 +249,13 @@ init_wav(I_O *io, char *msg)
 static void
 init_aud(I_O *io)
 {
+#ifdef ARSCLIB_H
     char name[80];
     int i, j, err;
     static int nchn = 2;        // number of channels
     static int nswp = 0;        // number of sweeps (0=continuous)
     static int32_t fmt[2] = {ARSC_DATA_F4, 0};
 
-#ifdef ARSCLIB_H
     err = ar_out_open(io->iod, io->rate, nchn);
     if (err) {
         ar_err_msg(err, msg, MAX_MSG);
