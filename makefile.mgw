@@ -118,7 +118,7 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~ *.so
-	rm -f tst_bbb gprof*.txt gmon.out test.lst
+	rm -f tst_nad gprof*.txt gmon.out test.lst
 
 clean_test:
 	rm -f test.lst test/*.mat test/tst_*.wav
@@ -151,7 +151,7 @@ iirfb_prepare.o: iirfb_prepare.c chapro.h
 iirfb_process.o: iirfb_process.c chapro.h 
 opt_afc.o: opt_afc.c chapro.h 
 rfft.o: rfft.c chapro.h 
-tst_bbb.o: tst_bbb.c chapro.h 
+tst_nad.o: tst_nad.c chapro.h 
 tst_cffa.o: tst_cffa.c chapro.h 
 tst_cffio.o: tst_cffio.c chapro.h 
 tst_cffsc.o: tst_cffsc.c chapro.h 

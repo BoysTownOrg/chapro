@@ -22,21 +22,21 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
 	afc_prepare.o afc_filters.o afc_process.o \
 	icmp_prepare.o icmp_process.o
-PGMS=tst_bbb 
+PGMS=tst_nad 
 
 profile : $(PGMS) 
 	# profiling...
-	./tst_bbb -r80 # feedback simulation enabled
-	gprof tst_bbb > gprof1.txt
+	./tst_nad -r80 # feedback simulation enabled
+	gprof tst_nad > gprof1.txt
 	head gprof1.txt
 
 fast : $(PGMS) $(PROF)
 	# profiling...
-	./tst_bbb -r80 -d # feedback simulation disabled
-	gprof tst_bbb > gprof2.txt
+	./tst_nad -r80 -d # feedback simulation disabled
+	gprof tst_nad > gprof2.txt
 	head gprof2.txt
 
-tst_bbb : tst_bbb.o  libchapro.a
+tst_nad : tst_nad.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 libchapro.a: $(CHAPRO)
@@ -60,7 +60,7 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~ *.so
-	rm -f tst_bbb gprof*.txt gmon.out test.lst
+	rm -f tst_nad gprof*.txt gmon.out test.lst
 
 clean_test:
 	rm -f test/*.mat test/tst_*.wav
@@ -92,7 +92,7 @@ iirfb_design.o: iirfb_design.c chapro.h
 iirfb_prepare.o: iirfb_prepare.c chapro.h 
 iirfb_process.o: iirfb_process.c chapro.h 
 rfft.o: rfft.c chapro.h 
-tst_bbb.o: tst_bbb.c chapro.h 
+tst_nad.o: tst_nad.c chapro.h 
 tst_cffa.o: tst_cffa.c chapro.h 
 tst_cffio.o: tst_cffio.c chapro.h 
 tst_cffsc.o: tst_cffsc.c chapro.h 
