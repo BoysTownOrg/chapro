@@ -256,6 +256,7 @@ init_aud(I_O *io)
     static int nswp = 0;        // number of sweeps (0=continuous)
     static int32_t fmt[2] = {ARSC_DATA_F4, 0};
 
+#ifdef ARSCLIB_H
     io->iod = io_dev - 1;
     err = ar_out_open(io->iod, io->rate, nchn);
     if (err) {
@@ -277,12 +278,15 @@ init_aud(I_O *io)
     ar_out_prepare(io->iod, io->out, (int32_t *)io->siz, io->mseg, nswp);
     printf("audio output: %s\n", name);
     ar_io_start(io->iod);
+#endif // ARSCLIB_H
 }
 
 static int
 get_aud(I_O *io)
 {
+#ifdef ARSCLIB_H
     io->oseg = ar_io_cur_seg(io->iod);
+#endif // ARSCLIB_H
     return (io->oseg < io->nseg);
 }
 
@@ -490,8 +494,10 @@ stop_wav(I_O *io)
     if (io->ofn) {
         free(io->owav);
     } else {
+#ifdef ARSCLIB_H
         ar_io_stop(io->iod);
         ar_io_close(io->iod);
+#endif // ARSCLIB_H
         if (io->siz) free(io->siz);
         if (io->out) free(io->out);
         if (io->owav) free(io->owav);
@@ -558,19 +564,19 @@ configure_feedback()
     if (args.wfl >= 0) afc.wfl = args.wfl;
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;         // band-limit update
-    if (afc.pfl) {
-        afc.rho  = 0.007593337; // forgetting factor
-        afc.eps  = 0.000011766; // power threshold
-        afc.mu   = 0.000264534; // step size
-        afc.alf  = 0.000001736; // band-limit update
+    if (afc.pfl) { // optimized for pfl=23
+        afc.rho  = 0.002453253; // forgetting factor
+        afc.eps  = 0.000009346; // power threshold
+        afc.mu   = 0.000048648; // step size
+        afc.alf  = 0.000001810; // band-limit update
     } else if (afc.wfl) {
-        afc.rho  = 0.001373159; // forgetting factor
-        afc.eps  = 0.000016284; // power threshold
-        afc.mu   = 0.000094613; // step size
+        afc.rho  = 0.001644993; // forgetting factor
+        afc.eps  = 0.000018324; // power threshold
+        afc.mu   = 0.000051896; // step size
     } else {
-        afc.rho  = 0.000156585; // forgetting factor
-        afc.eps  = 0.000926702; // power threshold
-        afc.mu   = 0.000256003; // step size
+        afc.rho  = 0.000169571; // forgetting factor
+        afc.eps  = 0.000927518; // power threshold
+        afc.mu   = 0.000255915; // step size
     }
     afc.pup  = 1;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay
@@ -590,7 +596,9 @@ configure(I_O *io)
     configure_compressor();
     configure_feedback();
     // initialize I/O
+#ifdef ARSCLIB_H
     io_dev = ar_find_dev(ARSC_PREF_SYNC) + 1; // find preferred audio device
+#endif // ARSCLIB_H
     io->iwav = NULL;
     io->owav = NULL;
     io->ifn  = args.ifn  ? args.ifn : ifn;

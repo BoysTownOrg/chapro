@@ -1,4 +1,4 @@
-// tst_bbb.c - test IIR-filterbank + AGC + AFC
+// tst_nad.c - test IIR-filterbank + AGC + AFC
 //              with WAV file input & output
 
 #include <stdio.h>
@@ -8,9 +8,7 @@
 #include <time.h>
 #include <ctype.h>
 
-#ifdef ARSC_LIB
-#include <arsclib.h>
-#endif
+//#include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
 #define DATA_HDR "tst_gha_data.h"
@@ -38,6 +36,7 @@ static int    io_dev = 0;
 static int    io_wait = 40;
 static struct {
     char *ifn, *ofn, simfb, afc, mat, nrep, play;
+    int afl, wfl, pfl;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -78,8 +77,12 @@ usage()
     printf("-h    print help\n");
     printf("-m    output MAT file\n");
     printf("-p    play output\n");
+    printf("-nN   AFC filter length = n\n");
+    printf("-pN   band-limit filter length = n\n");
+    printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
     printf("-v    print version\n");
+    printf("-wN   whiten filter length = n\n");
     exit(0);
 }
 
@@ -117,6 +120,9 @@ parse_args(int ac, char *av[])
     args.play = 0;
     args.nrep = 1;
     args.simfb = 1;
+    args.afl = -1;
+    args.wfl = -1;
+    args.pfl = -1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'a') {
@@ -127,12 +133,18 @@ parse_args(int ac, char *av[])
                 usage();
             } else if (av[1][1] == 'm') {
                 args.mat = 1;
+            } else if (av[1][1] == 'n') {
+                args.afl = atoi(av[1] + 2);
             } else if (av[1][1] == 'p') {
+                args.pfl = atoi(av[1] + 2);
+            } else if (av[1][1] == 'P') {
                 args.play = 1;
             } else if (av[1][1] == 'r') {
                 args.nrep = atoi(av[1] + 2);
             } else if (av[1][1] == 'v') {
                 version();
+            } else if (av[1][1] == 'w') {
+                args.wfl = atoi(av[1] + 2);
             }
             ac--;
             av++;
@@ -238,13 +250,13 @@ init_wav(I_O *io, char *msg)
 static void
 init_aud(I_O *io)
 {
-#ifdef ARSC_LIB
     char name[80];
     int i, j, err;
     static int nchn = 2;        // number of channels
     static int nswp = 0;        // number of sweeps (0=continuous)
     static int32_t fmt[2] = {ARSC_DATA_F4, 0};
 
+#ifdef ARSCLIB_H
     io->iod = io_dev - 1;
     err = ar_out_open(io->iod, io->rate, nchn);
     if (err) {
@@ -266,15 +278,15 @@ init_aud(I_O *io)
     ar_out_prepare(io->iod, io->out, (int32_t *)io->siz, io->mseg, nswp);
     printf("audio output: %s\n", name);
     ar_io_start(io->iod);
-#endif
+#endif // ARSCLIB_H
 }
 
 static int
 get_aud(I_O *io)
 {
-#ifdef ARSC_LIB
+#ifdef ARSCLIB_H
     io->oseg = ar_io_cur_seg(io->iod);
-#endif
+#endif // ARSCLIB_H
     return (io->oseg < io->nseg);
 }
 
@@ -482,10 +494,10 @@ stop_wav(I_O *io)
     if (io->ofn) {
         free(io->owav);
     } else {
-#ifdef ARSC_LIB
+#ifdef ARSCLIB_H
         ar_io_stop(io->iod);
         ar_io_close(io->iod);
-#endif
+#endif // ARSCLIB_H
         if (io->siz) free(io->siz);
         if (io->out) free(io->out);
         if (io->owav) free(io->owav);
@@ -544,18 +556,33 @@ static void
 configure_feedback()
 {
     // AFC parameters
-    afc.rho  = 0.0014388; // forgetting factor
-    afc.eps  = 0.0010148; // power threshold
-    afc.mu   = 0.0001507; // step size
-    afc.alf  = 0.0000000; // band-limit update
-    afc.afl  = 100;       // adaptive filter length
-    afc.wfl  = 0;         // whiten-filter length
+    afc.afl  = 45;        // adaptive filter length
+    afc.wfl  = 15;        // whiten-filter length
     afc.pfl  = 0;         // band-limit-filter length
+    // update args
+    if (args.afl >= 0) afc.afl = args.afl;
+    if (args.wfl >= 0) afc.wfl = args.wfl;
+    if (args.pfl >= 0) afc.pfl = args.pfl;
+    afc.alf  = 0;         // band-limit update
+    if (afc.pfl) { // optimized for pfl=23
+        afc.rho  = 0.002453253; // forgetting factor
+        afc.eps  = 0.000009346; // power threshold
+        afc.mu   = 0.000048648; // step size
+        afc.alf  = 0.000001810; // band-limit update
+    } else if (afc.wfl) {
+        afc.rho  = 0.001644993; // forgetting factor
+        afc.eps  = 0.000018324; // power threshold
+        afc.mu   = 0.000051896; // step size
+    } else {
+        afc.rho  = 0.000169571; // forgetting factor
+        afc.eps  = 0.000927518; // power threshold
+        afc.mu   = 0.000255915; // step size
+    }
+    afc.pup  = 1;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
-    afc.fbg = 1;          // simulated-feedback gain 
-    afc.nqm = 0;          // initialize quality-metric length
-    if (!args.simfb) afc.fbg = 0;
+    afc.fbg  = 1;         // simulated-feedback gain 
+    afc.nqm  = 0;         // initialize quality-metric length
 }
 
 static void
@@ -569,9 +596,9 @@ configure(I_O *io)
     configure_compressor();
     configure_feedback();
     // initialize I/O
-#ifdef ARSC_LIB
+#ifdef ARSCLIB_H
     io_dev = ar_find_dev(ARSC_PREF_SYNC) + 1; // find preferred audio device
-#endif
+#endif // ARSCLIB_H
     io->iwav = NULL;
     io->owav = NULL;
     io->ifn  = args.ifn  ? args.ifn : ifn;
