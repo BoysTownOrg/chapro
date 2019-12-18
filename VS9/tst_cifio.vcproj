@@ -45,7 +45,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="c:\usr\include"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
 				WarningLevel="3"
@@ -68,6 +68,7 @@
 				AdditionalLibraryDirectories="c:\usr\lib;&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Lib&quot;"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
+				LinkTimeCodeGeneration="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -123,6 +124,7 @@
 				EnableIntrinsicFunctions="false"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="c:\usr\include"
+				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -145,6 +147,7 @@
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="0"
 				TargetMachine="1"
 			/>
 			<Tool

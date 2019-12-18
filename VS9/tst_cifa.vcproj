@@ -76,6 +76,7 @@
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
 				SubSystem="1"
+				LinkTimeCodeGeneration="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -128,6 +129,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="c:\usr\include;&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
@@ -155,6 +157,7 @@
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="0"
 				TargetMachine="1"
 			/>
 			<Tool

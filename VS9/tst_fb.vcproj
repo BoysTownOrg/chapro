@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="tst_cffa"
-	ProjectGUID="{0122CC1E-B8D7-4BF7-97AC-A13744BB9CD8}"
-	RootNamespace="tst_cffa"
+	Name="tst_fb"
+	ProjectGUID="{1D081A41-F44E-4A85-A416-994DE94B987C}"
+	RootNamespace="tst_fb"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -41,15 +41,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				InlineFunctionExpansion="0"
-				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="c:\usr\include"
-				MinimalRebuild="false"
-				BasicRuntimeChecks="0"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -59,16 +56,13 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="sigpro.lib zlib.lib"
-				LinkIncremental="1"
 				AdditionalLibraryDirectories="c:\usr\lib;&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Lib&quot;"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				LinkTimeCodeGeneration="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -91,13 +85,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -120,12 +113,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="1"
-				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="c:\usr\include"
-				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -148,7 +137,6 @@
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				LinkTimeCodeGeneration="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -183,7 +171,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\tst_cffa.c"
+				RelativePath="..\chapro.c"
+				>
+			</File>
+			<File
+				RelativePath="..\tst_fb.c"
 				>
 			</File>
 		</Filter>
@@ -194,6 +186,10 @@
 			>
 			<File
 				RelativePath="..\chapro.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\sigpro.h"
 				>
 			</File>
 			<File
