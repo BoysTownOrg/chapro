@@ -35,7 +35,7 @@ bitrev(int ii, int m)
 }
 
 static __inline void
-rad2(int ii, float *x0, float *x1)
+rad_2(int ii, float *x0, float *x1)
 {
     int     k;
     float   t;
@@ -198,7 +198,7 @@ rcfft2(float *x, int m)
     } else {
         nn = 2;
         ii = n / nn;
-        rad2(ii, x, x + ii);
+        rad_2(ii, x, x + ii);
     }
 
 // radix 4
@@ -346,7 +346,7 @@ crfft2(float *x, int m)
 
     if (m > m2 * 2) {
         jj = n / 2;
-        rad2(jj, x, x + jj);
+        rad_2(jj, x, x + jj);
     }
 
     return (0);

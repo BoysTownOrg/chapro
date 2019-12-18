@@ -2,8 +2,18 @@
 #ifndef CHAPRO_H
 #define CHAPRO_H
 
+#ifdef WIN32
+#include <io.h>
+#include <Windows.h>
+#endif
+
+#if !defined(_MSC_VER) || (_MSC_VER > 1500)
 #include <stdint.h>
-#include <math.h>
+#else
+typedef short int16_t;
+typedef long int32_t;
+typedef unsigned long  uint32_t;
+#endif
 
 #ifdef DLL
 #define FUNC(type) __declspec(dllexport) type _stdcall

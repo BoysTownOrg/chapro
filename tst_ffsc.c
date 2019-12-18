@@ -141,8 +141,7 @@ void
 msleep(uint32_t msec)
 {
 #ifdef WIN32
-    void Sleep(uint32_t);
-    Sleep(msec);
+	Sleep(msec);
 #else
     struct timespec delay = {0};
     uint32_t sec = msec / 1000;
