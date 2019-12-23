@@ -99,7 +99,7 @@ rcrad4(int ii, int nn,
     float *x0, float *x1, float *x2, float *x3,
     float *x4, float *x5, float *x6, float *x7)
 {
-    double  arg, tpiovn;
+    float   arg, tpiovn;
     float   c1, c2, c3, s1, s2, s3, pr, pi, r1, r5;
     float   t0, t1, t2, t3, t4, t5, t6, t7;
     int     i0, i4, j, j0, ji, jl, jr, jlast, k, k0, kl, m, n, ni;
@@ -107,7 +107,7 @@ rcrad4(int ii, int nn,
     n = nn / 4;
     for (m = 1; (1 << m) < n; m++)
         continue;
-    tpiovn = 2 * M_PI / nn;
+    tpiovn = (float)(2 * M_PI / nn);
     ji = 3;
     jl = 2;
     jr = 2;
@@ -234,12 +234,12 @@ crrad4(int jj, int nn,
     float *x0, float *x1, float *x2, float *x3,
     float *x4, float *x5, float *x6, float *x7)
 {
-    double  arg, tpiovn;
+    float   arg, tpiovn;
     float   c1, c2, c3, s1, s2, s3;
     float   t0, t1, t2, t3, t4, t5, t6, t7;
     int     ii, j, j0, ji, jr, jl, jlast, j4, k, k0, kl, m, n, ni;
 
-    tpiovn = 2 * M_PI / nn;
+    tpiovn = (float)(2 * M_PI / nn);
     ji = 3;
     jl = 2;
     jr = 2;
