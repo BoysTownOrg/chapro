@@ -366,7 +366,7 @@ cgtfb_init(CHA_CLS *cls, double sr)
     nm = icmp.nm;
     po = icmp.po;
     lfbw = fmid / nm;
-    nh = (int) floor(log2(sr / 2000) * po);
+    nh = (int) floor(log2((float)sr / 2000) * po);
     nc = nh + nm;
     cls->nc = nc;
     for (i = 0; i < (nm - 1); i++) {

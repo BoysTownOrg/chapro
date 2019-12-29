@@ -466,28 +466,28 @@ configure_feedback()
 {
     // AFC parameters
     afc.afl  = 45;        // adaptive filter length
-    afc.wfl  = 15;        // whiten-filter length
+    afc.wfl  = 9;         // whiten-filter length
     afc.pfl  = 0;         // band-limit-filter length
     // update args
     if (args.afl >= 0) afc.afl = args.afl;
     if (args.wfl >= 0) afc.wfl = args.wfl;
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;         // band-limit update
-    if (afc.pfl) {
-        afc.rho  = 0.007593337; // forgetting factor
-        afc.eps  = 0.000011766; // power threshold
-        afc.mu   = 0.000264534; // step size
-        afc.alf  = 0.000001736; // band-limit update
+    if (afc.pfl) { // optimized for pfl=36
+        afc.rho  = 0.003384608; // forgetting factor
+        afc.eps  = 0.000013444; // power threshold
+        afc.mu   = 0.000027221; // step size
+        afc.alf  = 1.000000000; // pass gain
     } else if (afc.wfl) {
-        afc.rho  = 0.001373159; // forgetting factor
-        afc.eps  = 0.000016284; // power threshold
-        afc.mu   = 0.000094613; // step size
+        afc.rho  = 0.000360459; // forgetting factor
+        afc.eps  = 0.000018848; // power threshold
+        afc.mu   = 0.000048112; // step size
     } else {
-        afc.rho  = 0.000156585; // forgetting factor
-        afc.eps  = 0.000926702; // power threshold
-        afc.mu   = 0.000256003; // step size
+        afc.rho  = 0.000169571; // forgetting factor
+        afc.eps  = 0.000927518; // power threshold
+        afc.mu   = 0.000255915; // step size
     }
-    afc.pup  = 1;         // band-limit update period
+    afc.pup  = 0;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 

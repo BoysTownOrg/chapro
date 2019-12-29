@@ -54,9 +54,9 @@ typedef unsigned long  uint32_t;
 #define fzero(x,n)      memset(x,0,(n)*sizeof(float))
 #define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
 #define dzero(x,n)      memset(x,0,(n)*sizeof(double))
-#define round(x)        ((int)floorf((float)(x)+0.5f))
+#define round(x)        ((int)floor((x)+0.5))
 #ifndef log2
-#define log2(x)         (logf(x)/M_LN2)
+#define log2(x)         (logf(x)/(float)M_LN2)
 #endif
 
 #define db1(x)          (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))

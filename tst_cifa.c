@@ -75,7 +75,7 @@ cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
     int i, nh, nc;
 
     lfbw = fmid / nm;
-    nh = (int) floor(log2(sr / 2000) * cpo);
+    nh = (int) floor(log2((float)sr / 2000) * cpo);
     nc = nh + nm;
     cls->nc = nc;
     for (i = 0; i < (nm - 1); i++) {

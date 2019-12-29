@@ -363,7 +363,7 @@ cross_freq(double *cf, double sr)
     int i, nh, nc, nm = 5;
     double fmin = 250, fmid = 1000, bpo = 3;
 
-    nh = (int) floor(log2(sr / 2000) * bpo);
+    nh = (int) floor(log2((float)sr / 2000) * bpo);
     nc = nh + nm;
     for (i = 0; i < nm; i++) {
         cf[i] = fmin + i * (fmid - fmin)  / (nm - 0.5);

@@ -17,26 +17,36 @@ fp(end+1)=(rate/2);
 db(end+1)=db(end);
 db = db(9) - db;
 % Generate filter coefficients using FIR2
-ntaps_1 = 256;      % filter order = # of taps -1
+ntaps_1 = 512;      % filter order = # of taps -1
 mp = 10 .^ (db/20);
 nf = fp / (rate/2);
 fc = fir2(ntaps_1,nf,mp);
 prnflt(fc);
 % Gernerate a screen plot
 d2 = log10((rate/2)*.99); % don't exceed nyqfreq for freq. response plot.
-f = logspace(1,d2,512);  % frequency axis--10Hz to nyqfreq
+f = logspace(1,d2,512);   % frequency axis--10Hz to nyqfreq
 th = f*pi/(rate/2);	      % unit circle frequency angle
-fz=abs(freqz(fc,1,th));   % calculate frequency response at 
+fz1=abs(freqz(fc,1,th));  % calculate frequency response at 
   			              % points on the unit circle between 0 and pi.
+wfl=9;
+nt=length(fc);
+n1=(nt-wfl)/2;
+n2=nt-n1+1;
+fc(1:n1)=0;
+fc(n2:nt)=0;
+fz2=abs(freqz(fc,1,th));   % calculate frequency response at 
 % compare the actual and desired frequency response plots
-fzdb=20*log10(fz);
+fk=f(:)/1000;
+db1=20*log10(fz1(:));
+db2=20*log10(fz2(:));
 figure(2);
 i=2:(length(fp)-1);
-semilogx(fp(i)/1000,db(i),'o',f/1000,fzdb);	    % dB mag, linear freq axis
+semilogx(fp(i)/1000,db(i),'bo',fk,db1,'b',fk,db2,'r');	    % dB mag, linear freq axis
 axis([0.1 10 min(db) max(db)]);
 title('inverted LTASS')
+legend('inv. LTASS',sprintf('%d tap',nt),sprintf('%d tap',wfl),'Location','Best')
 %
-write_data('wflt.tst', [f(:)/1000 fzdb(:)]);
+write_data('wflt.txt', [fk db1 db2]);
 return
 
 function prnflt(fc)

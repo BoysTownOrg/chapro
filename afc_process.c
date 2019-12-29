@@ -10,7 +10,7 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float ye, yy, mmu, dif, dm, xx, ss, ee, uu, ef, uf, cfc, sum;
+    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc, sum;
     int i, ih, ij, is, id, j, jp1, k, nfc, puc, iqm = 0;
     static float *rng0, *rng1, *rng2, *rng3;
     static float *efbp, *sfbp, *wfrp, *ffrp, *qm;
@@ -70,7 +70,6 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
             yy += sfbp[j] * rng0[ij];
         }
         // apply band-limit filter
-        ss = rng0[ih];
         if (pfl > 0) {
             uu = 0;
             for (j = 0; j < pfl; j++) {
@@ -107,7 +106,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         if (afl > 0) {
             uf = rng2[id & mask];
             //pwr = rho * pwr + ef * ef + uf * uf;
-            pwr = rho * (sqrt(ef * ef + uf * uf) - pwr);
+            pwr = rho * ((ef * ef + uf * uf) - pwr);
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
                 ij = (id - j) & mask;
