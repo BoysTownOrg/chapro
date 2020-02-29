@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}</ProjectGuid>
     <RootNamespace>chapro_lib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -45,6 +46,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName>chapro</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
@@ -69,7 +71,6 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Lib>
-      <OutputFile>.\$(IntDir)chapro.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Bscmake>
@@ -77,7 +78,7 @@
       <OutputFile>.\Release/chapro_lib.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Message>Install SIGPRO</Message>
+      <Message>Install CHAPRO</Message>
       <Command>Copy $(TargetPath) ..\..\lib
 Copy $(TargetPath) c:\usr\lib
 Copy ..\chapro.h ..\..\include
