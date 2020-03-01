@@ -6,7 +6,7 @@
 
 /**************************** change log **********************************
 0.32 - 1-Mar-20
->  fix allocation bug in afc_prepare for MGW
+>  Fixed allocation bug in afc_prepare for MGW
 0.31 - 5-Dec-19
 >  Implemented whiten filter based on inverse LTASS
 >  Implemented band-limit filter 
