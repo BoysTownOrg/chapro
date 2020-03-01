@@ -227,7 +227,7 @@ init_wav(I_O *io)
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
             exit(2);
         }
-        fprintf(stdout, "WAV input: %s...\n", io->ifn);
+        fprintf(stdout, " WAV input: %s...\n", io->ifn);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = vl[0].data;
         set_spl(io->iwav, io->nwav, rms_lev, spl_ref);
@@ -460,7 +460,9 @@ process(I_O *io, CHA_PTR cp)
         }
         t1 = sp_toc();
         t2 = io->nwav / io->rate;
-        fprintf(stdout, "(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
+        printf("speed_ratio: ");
+        printf("(wave_time/wall_time) = (%.3f/%.3f) ", t2, t1);
+        printf("= %.1f\n", t2 / t1);
         if (iqm > 0) {
             i1 =  round(io->rate);
             sum = 0;

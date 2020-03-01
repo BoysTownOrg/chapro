@@ -217,7 +217,7 @@ init_wav(I_O *io, char *msg)
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
             io->rate = fs;
         }
-        if (msg) sprintf(msg, "WAV input : %s repeat=%d\n", io->ifn, io->nrep);
+        if (msg) sprintf(msg, " WAV input : %s repeat=%d\n", io->ifn, io->nrep);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         fcopy(io->iwav, vl[0].data, io->nwav);
@@ -340,7 +340,7 @@ prepare_io(I_O *io)
         init_aud(io);
     }
     printf("%s", msg);
-    printf("prepare_io: sr=%.0f cs=%d ns=%d\n", io->rate, io->cs, io->nsmp);
+    printf(" prepare_io: sr=%.0f cs=%d ns=%d\n", io->rate, io->cs, io->nsmp);
     return (0);
 }
 
@@ -425,8 +425,9 @@ process(I_O *io, CHA_PTR cp)
         }
         t1 = sp_toc();
         t2 = (io->nwav / io->rate) * io->nrep;
-        printf("(wall_time/wave_time) = (%.3f/%.3f) ", t1, t2);
-        printf("= %.3f\n", t1/t2);
+        printf("speed_ratio: ");
+        printf("(wave_time/wall_time) = (%.3f/%.3f) ", t2, t1);
+        printf("= %.1f\n", t2 / t1);
         // report quality metric
         iqm = afc.iqmp ? afc.iqmp[0] : 0;
         if (iqm) {
@@ -471,7 +472,7 @@ write_wave(I_O *io)
         if (!afc.qm && meer) free(meer);
     }
     if (io->ofn) {
-        printf("WAV output: %s\n", io->ofn);
+        printf(" WAV output: %s\n", io->ofn);
         r[0] = (float) io->rate;
         n = io->nwav;
         w = io->owav;
@@ -561,21 +562,22 @@ configure_feedback()
     if (args.wfl >= 0) afc.wfl = args.wfl;
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;         // band-limit update
-    if (afc.pfl) { // optimized for pfl=36
-        afc.rho  = 0.003384608; // forgetting factor
-        afc.eps  = 0.000013444; // power threshold
-        afc.mu   = 0.000027221; // step size
-        afc.alf  = 1.000000000; // pass gain
+    if (afc.pfl) { // optimized for pfl=23
+        afc.rho  = 0.002577405; // forgetting factor
+        afc.eps  = 0.000008689; // power threshold
+        afc.mu   = 0.000050519; // step size
+        afc.alf  = 0.000001825; // band-limit update
     } else if (afc.wfl) {
         afc.rho  = 0.000360459; // forgetting factor
         afc.eps  = 0.000018848; // power threshold
         afc.mu   = 0.000048112; // step size
+   
     } else {
         afc.rho  = 0.000169571; // forgetting factor
         afc.eps  = 0.000927518; // power threshold
         afc.mu   = 0.000255915; // step size
     }
-    afc.pup  = 0;         // band-limit update period
+    afc.pup  = 1;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 
@@ -617,8 +619,7 @@ report()
     nc = dsl.nchannel;
     nz = agc.nz;
     printf("CHA simulation: feedback simulation %sabled.\n", en);
-    printf("IIR+AGC%s: nc=%d nz=%d  ", fc, nc, nz);
-    printf("afl=%d wfl=%d pfl=%d\n", afc.afl, afc.wfl, afc.pfl);
+    printf("IIR+AGC%s: nc=%d nz=%d\n", fc, nc, nz);
 }
 
 /***********************************************************/

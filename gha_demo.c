@@ -136,7 +136,9 @@ main(int ac, char *av[])
     save_mat(ofn, fs, x, y, n);
     t2 = n / fs;
     printf("%s -> %s\n", ifn, ofn);
-    printf("wall_time=%.3fs wave_time=%.3fs ratio=%.3f\n", t1, t2, t1 / t2);
+    printf("speed_ratio: ");
+    printf("(wave_time/wall_time) = (%.3f/%.3f) ", t2, t1);
+    printf("= %.1f\n", t2 / t1);
     free(y);
 
     return (0);

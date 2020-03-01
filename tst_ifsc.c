@@ -189,7 +189,7 @@ init_wav(I_O *io, char *msg)
             fprintf(stderr, "%.0f != %.0f\n", fs, io->rate);
             io->rate = fs;
         }
-        if (msg) sprintf(msg, "WAV input : %s repeat=%d\n", io->ifn, io->nrep);
+        if (msg) sprintf(msg, " WAV input : %s repeat=%d\n", io->ifn, io->nrep);
         io->nwav = vl[0].rows * vl[0].cols;
         io->iwav = (float *) calloc(io->nwav, sizeof(float));
         fcopy(io->iwav, vl[0].data, io->nwav);
@@ -303,7 +303,7 @@ write_wave(I_O *io)
     static VAR *vl;
 
     if (io->ofn) {
-        printf("WAV output: %s\n", io->ofn);
+        printf(" WAV output: %s\n", io->ofn);
         r[0] = (float) io->rate;
         n = io->nwav;
         w = io->owav;
@@ -358,7 +358,7 @@ prepare_io(I_O *io)
         init_aud(io);
     }
     printf("%s", msg);
-    printf("prepare_io: sr=%.0f cs=%d ns=%d\n", io->rate, io->cs, io->nsmp);
+    printf(" prepare_io: sr=%.0f cs=%d ns=%d\n", io->rate, io->cs, io->nsmp);
     return (0);
 }
 
@@ -430,7 +430,9 @@ process(I_O *io, CHA_PTR cp)
         }
         t1 = sp_toc();
         t2 = io->nwav / io->rate;
-        printf("(wall_time/wave_time) = (%.3f/%.3f) = %.3f\n", t1, t2, t1/t2);
+        printf("speed_ratio: ");
+        printf("(wave_time/wall_time) = (%.3f/%.3f) ", t2, t1);
+        printf("= %.1f\n", t2 / t1);
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);
