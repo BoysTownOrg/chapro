@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "CHApro version 0.31, 5-Dec-19"
-#define NOTICE	"Copyright 2016-2019 Boys Town National Research Hospital"
+#define VER     "CHApro version 0.32, 1-Mar-20"
+#define NOTICE	"Copyright 2016-2020 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.32 - 1-Mar-20
+>  fix allocation bug in afc_prepare for MGW
 0.31 - 5-Dec-19
 >  Implemented whiten filter based on inverse LTASS
 >  Implemented band-limit filter 
