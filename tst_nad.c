@@ -11,7 +11,7 @@
 //#include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-//#define DATA_HDR "tst_nad_data.h"
+#define DATA_HDR "tst_nad_data.h"
 //#include DATA_HDR
 
 #define MAX_MSG 256
@@ -162,7 +162,6 @@ void
 msleep(uint32_t msec)
 {
 #ifdef WIN32
-    void Sleep(uint32_t);
     Sleep(msec);
 #else
     struct timespec delay = {0};
@@ -457,7 +456,7 @@ write_wave(I_O *io)
     static VAR *vl;
 
     if (io->dfn) {
-        printf("MAT output: %s\n", io->dfn);
+        printf(" MAT output: %s\n", io->dfn);
         meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
         vl = sp_var_alloc(8);
         sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
@@ -556,7 +555,7 @@ configure_feedback()
 {
     // AFC parameters
     afc.afl  = 45;        // adaptive filter length
-    afc.wfl  = 15;        // whiten-filter length
+    afc.wfl  = 9;         // whiten-filter length
     afc.pfl  = 0;         // band-limit-filter length
     // update args
     if (args.afl >= 0) afc.afl = args.afl;
@@ -564,14 +563,15 @@ configure_feedback()
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;         // band-limit update
     if (afc.pfl) { // optimized for pfl=23
-        afc.rho  = 0.002453253; // forgetting factor
-        afc.eps  = 0.000009346; // power threshold
-        afc.mu   = 0.000048648; // step size
-        afc.alf  = 0.000001810; // band-limit update
+        afc.rho  = 0.002577405; // forgetting factor
+        afc.eps  = 0.000008689; // power threshold
+        afc.mu   = 0.000050519; // step size
+        afc.alf  = 0.000001825; // band-limit update
     } else if (afc.wfl) {
-        afc.rho  = 0.001644993; // forgetting factor
-        afc.eps  = 0.000018324; // power threshold
-        afc.mu   = 0.000051896; // step size
+        afc.rho  = 0.000360459; // forgetting factor
+        afc.eps  = 0.000018848; // power threshold
+        afc.mu   = 0.000048112; // step size
+   
     } else {
         afc.rho  = 0.000169571; // forgetting factor
         afc.eps  = 0.000927518; // power threshold
@@ -582,8 +582,6 @@ configure_feedback()
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 
     afc.nqm  = 0;         // initialize quality-metric length
-    if (!args.simfb) afc.fbg = 0;
-    if (!args.afc) afc.afl = 0;
 }
 
 static void

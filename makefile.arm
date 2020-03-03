@@ -26,6 +26,9 @@ PGMS=tst_nad
 
 all: $(PGMS)
 
+tst_nad.c : tst_gha.c
+	sed -f nad.sed tst_gha.c > tst_nad.c
+
 tst_nad : tst_nad.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
 
@@ -40,9 +43,9 @@ install: $(LIBDIR)/libchapro.a $(PGMS)
 	scp $(PGMS) mha@192.168.7.2:/home/mha
 
 zipsrc:
-	zip chaprosc *.mgw *.lnx *.mac
+	zip chaprosc *.mgw *.lnx *.mac *.sed
 	zip chaprosc *.h *.c *.m *.def
-	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
+	zip chaprosc VS16/*.sln VS16/*.vcxproj test/cat.wav
 	zip chaprosc configure configure.bat 
 	zip chaprosc compress.bat suppress.bat shacmp.bat
 

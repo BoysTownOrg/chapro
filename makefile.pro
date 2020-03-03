@@ -36,6 +36,9 @@ fast : $(PGMS) $(PROF)
 	gprof tst_nad > gprof2.txt
 	head gprof2.txt
 
+tst_nad.c : tst_gha.c
+	sed -f nad.sed tst_gha.c > tst_nad.c
+
 tst_nad : tst_nad.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
@@ -47,9 +50,9 @@ install: libchapro.a
 	cp -f chapro.h $(INCDIR)
 
 zipsrc:
-	zip chaprosc *.mgw *.lnx *.mac
+	zip chaprosc *.mgw *.lnx *.mac *.sed
 	zip chaprosc *.h *.c *.m *.def
-	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
+	zip chaprosc VS9/*.sln VS9/*.vcxproj test/cat.wav
 	zip chaprosc configure configure.bat 
 	zip chaprosc compress.bat suppress.bat shacmp.bat
 

@@ -29,6 +29,9 @@ HDRS=chapro.h
 
 all: $(PGMS)
 
+tst_nad.c : tst_gha.c
+	sed -f nad.sed tst_gha.c > tst_nad.c
+
 tst: $(PGMS) test.lst
 	.\tst_ffa
 	.\tst_ffio
@@ -105,9 +108,9 @@ install: libchapro.a
 	cp -f chapro.h $(INCDIR)
 
 zipsrc:
-	zip chaprosc *.mgw *.lnx *.mac
-	zip chaprosc *.h *.c *.m *.def
-	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
+	zip chaprosc *.mgw *.lnx *.mac *.sed
+	zip chaprosc *.h *.c *.m *.def test/cat.wav
+	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
 	zip chaprosc configure configure.bat 
 	zip chaprosc compress.bat suppress.bat shacmp.bat
 
