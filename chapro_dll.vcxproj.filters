@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\afc_filters.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\afc_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\afc_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\agc_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\agc_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cfirfb_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cfirfb_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cha_core.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chapro.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cha_scale.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ciirfb_design.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ciirfb_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ciirfb_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dciirfb_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dciirfb_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fft.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\firfb_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\firfb_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\icmp_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\icmp_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\iirfb_design.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\iirfb_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\iirfb_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rfft.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\cha_ff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cha_fm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cha_gf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cha_if.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chapro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source FIles">
+      <UniqueIdentifier>{ac1d84be-c803-4c48-b40a-19070dfd9624}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5da78c19-3f92-4b01-9e89-973b9ae40241}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource FIles">
+      <UniqueIdentifier>{b32755a6-39ea-44eb-a20c-a68b94bcece1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\chapro.def">
+      <Filter>Resource FIles</Filter>
+    </None>
+  </ItemGroup>
+</Project>
