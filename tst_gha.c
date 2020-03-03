@@ -456,7 +456,7 @@ write_wave(I_O *io)
     static VAR *vl;
 
     if (io->dfn) {
-        printf("MAT output: %s\n", io->dfn);
+        printf(" MAT output: %s\n", io->dfn);
         meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
         vl = sp_var_alloc(8);
         sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
@@ -582,6 +582,7 @@ configure_feedback()
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 
     afc.nqm  = 0;         // initialize quality-metric length
+    if (!args.simfb) afc.fbg = 0;
 }
 
 static void
