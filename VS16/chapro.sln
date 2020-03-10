@@ -22,6 +22,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_ffsc", "tst_ffsc.vcxproj", "{C5C6EA80-5AAA-474C-A253-E969524CE8AB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chapro_dll", "chapro_dll.vcxproj", "{95B1FCB3-0CE5-40ED-809E-9348C9117B37}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9A4F40A-17D4-48C8-80A9-053C5E9F2E18} = {B9A4F40A-17D4-48C8-80A9-053C5E9F2E18}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tst_dll", "tst_dll.vcxproj", "{85CEC95F-5431-46A0-A436-D0351551E3EA}"
 EndProject
