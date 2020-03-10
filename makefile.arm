@@ -4,7 +4,7 @@
 
 LIBS=-lsigpro -lm
 SCLIB=-larsc -lasound $(LIBS)
-CC=arm-linux-gnueabihf-gcc
+CC=arm-linux-gnueabihf-gcc-7
 AR=arm-linux-gnueabihf-ar
 
 CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O3
