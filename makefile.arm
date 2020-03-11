@@ -35,12 +35,11 @@ tst_nad : tst_nad.o  libchapro.a
 libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)
 
-$(LIBDIR)/libchapro.a : libchapro.a
-	mkdir -p $(LIBDIR)
-	cp -f libchapro.a $(LIBDIR)
-
-install: $(LIBDIR)/libchapro.a $(PGMS)
-	scp $(PGMS) mha@192.168.7.2:/home/mha
+install: tst_nad libchapro.a 
+	mkdir -p $(LIBDIR) $(INCDIR) arm
+	install libchapro.a  $(LIBDIR)
+	install chapro.h $(INCDIR)
+	cp -f tst_nad arm
 
 zipsrc:
 	zip chaprosc *.mgw *.lnx *.mac *.sed
