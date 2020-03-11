@@ -4,15 +4,14 @@
 
 LIBS=-lsigpro -lm
 SCLIB=-larsc -lasound $(LIBS)
-CC=arm-linux-gnueabihf-gcc-7
+CC=arm-linux-gnueabihf-gcc
 AR=arm-linux-gnueabihf-ar
 
 CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O3
 LFLAGS=-L$(LIBDIR)
 
-LIBDIR=/usr/local/lib/arm
-INCDIR=/usr/local/include
-BINDIR=
+LIBDIR=/usr/arm-linux-gnueabihf/lib
+INCDIR=/usr/arm-linux-gnueabihf/include
 
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
