@@ -10,8 +10,9 @@ AR=arm-linux-gnueabihf-ar
 CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O3
 LFLAGS=-L$(LIBDIR)
 
-LIBDIR=/usr/arm-linux-gnueabihf/lib
-INCDIR=/usr/arm-linux-gnueabihf/include
+LIBDIR=/usr/local/arm/lib
+INCDIR=/usr/local/arm/include
+BINDIR=/usr/local/arm/bin
 
 CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	agc_prepare.o agc_process.o \
@@ -35,10 +36,10 @@ libchapro.a: $(CHAPRO)
 	$(AR) rs libchapro.a $(CHAPRO)
 
 install: tst_nad libchapro.a 
-	mkdir -p $(LIBDIR) $(INCDIR) arm
+	mkdir -p $(LIBDIR) $(INCDIR) $(BINDIR)
 	install libchapro.a  $(LIBDIR)
 	install chapro.h $(INCDIR)
-	cp -f tst_nad arm
+	install tst_nad $(BINDIR)
 
 zipsrc:
 	zip chaprosc *.mgw *.lnx *.mac *.sed
