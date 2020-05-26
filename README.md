@@ -26,7 +26,9 @@ The objective or this library is to provide an example of basic hearing-aid sign
 
 Installation
 
-Download repo from https://github.com/BTNRH/chapro. Makefiles are provided for building test programs at Linux or MinGW command lines. A solution file is provided in the VS9 folder for building under Visual Studio. Note: when running test programs under VS, set the "Working Directory" to "..". Test program inputs and outputs are located in the subdirectory "test".
+Please install ARSC and SIGPRO from https://github.com/BTNRH before installing CHAPRO.
+
+Download CHAPRO from https://github.com/BTNRH/chapro. Makefiles are provided for building test programs at Linux or MinGW command lines. A solution file is provided in the VS9 folder for building under Visual Studio. Note: when running test programs under VS, set the "Working Directory" to "..". Test program inputs and outputs are located in the subdirectory "test".
 
 API Reference
 
