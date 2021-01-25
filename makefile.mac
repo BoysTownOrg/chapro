@@ -117,7 +117,7 @@ install: libchapro.a
 	cp -f $(HDRS) $(INCDIR)
 
 zipsrc:
-	zip chaprosc *.mgw *.lnx *.mac *.sed
+	zip chaprosc *.mgw *.lnx *.mac *.arm *.sed
 	zip chaprosc *.h *.c *.m *.def test/cat.wav
 	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
 	zip chaprosc configure configure.bat 

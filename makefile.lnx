@@ -1,128 +1,170 @@
-# makefile for SIGPRO under Linux
+# makefile for CHAPRO under Linux
+# Library requirement: sigpro
+# Package requirement: gcc-arm-linux-gnueabihf
 
-# Note: remove -DZLIB & -lz to compile without zlib
-CFLAGS=-Wall -I$(INCDIR) -DZLIB -Wno-unused-local-typedef -fPIC
-LIBS=-lm -lz
-CC=gcc
+LIBS=-lsigpro -lm -lz
+SCLIB=-larsc -lasound $(LIBS)
+CC=gcc 
 AR=ar
-SIGPRO_O= fft.o rcfft.o crfft.o cdb.o linspace.o rand.o randflat.o \
-    fftfilt.o freqshape.o scalar.o vector.o interp.o convert.o window.o \
-    matvar.o filter.o anafilt.o wavrw.o fmins.o fminsearch.o version.o \
-    tictoc.o
+
+CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O2
+LFLAGS=-L$(LIBDIR)
+
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 BINDIR=/usr/local/bin
-TST= rdmat tst_fft tst_shp tst_src tst_mat tst_wav tst_afd tst_xfr tst_min \
-    tst_cpx tst_tb
-PGMS= $(TST) rdmat
 
-test : $(PGMS)
-	./tst_shp
-	./tst_src
-	./tst_fft
-	diff -s tst_fft.lnx tst_fft.txt
-	./tst_mat
-	./tst_wav
-	./tst_afd
-	./tst_xfr
-	./tst_min
-	./tst_cpx
-	./tst_tb
+CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
+	agc_prepare.o agc_process.o \
+	cfirfb_prepare.o cfirfb_process.o \
+	firfb_prepare.o firfb_process.o \
+	iirfb_design.o iirfb_prepare.o iirfb_process.o \
+	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
+	afc_prepare.o afc_filters.o afc_process.o \
+	icmp_prepare.o icmp_process.o
+PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
+     tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
+     tst_gha gha_demo opt_afc
+HDRS=chapro.h 
 
-tst_fft : tst_fft.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+all: $(PGMS)
 
-tst_shp : tst_shp.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_nad.c : tst_gha.c
+	sed -f nad.sed tst_gha.c > tst_nad.c
 
-tst_src : tst_src.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst: $(PGMS) test.lst
+	./tst_ffa
+	./tst_ffio
+	./tst_ffio -t
+	./tst_ffsc
+	./tst_ifa
+	./tst_ifio
+	./tst_ifio -t
+	./tst_ifsc
+	./tst_cffa
+	./tst_cffio
+	./tst_cffio -t
+	./tst_cffsc
+	./tst_cifa
+	./tst_cifio
+	./tst_cifio -t
+	./tst_cifsc
+	./tst_gha
+	./gha_demo
 
-tst_mat : tst_mat.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+test.lst:
+	ls -l test > test.lst
 
-tst_wav : tst_wav.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_cffa : tst_cffa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_tb : tst_tb.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_cffio : tst_cffio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_afd : tst_afd.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_cffsc : tst_cffsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
-tst_xfr : tst_xfr.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_ffa : tst_ffa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_min : tst_min.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_ffio : tst_ffio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tst_cpx : tst_cpx.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_ffsc : tst_ffsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
-rdmat : rdmat.o libsigpro.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+tst_cifa : tst_cifa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-libsigpro.a: $(SIGPRO_O)
-	$(AR) rs libsigpro.a $(SIGPRO_O)
+tst_cifio : tst_cifio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-$(LIBDIR)/libsigpro.a : libsigpro.a
+tst_cifsc : tst_cifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifa : tst_ifa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifio : tst_ifio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifsc : tst_ifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_gha : tst_gha.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+gha_demo : gha_demo.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+opt_afc : opt_afc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+libchapro.a: $(CHAPRO)
+	$(AR) rs libchapro.a $(CHAPRO)
+
+install: libchapro.a
 	mkdir -p $(LIBDIR)
-	cp -f libsigpro.a $(LIBDIR)
-
-$(INCDIR)/sigpro.h : sigpro.h
 	mkdir -p $(INCDIR)
-	cp -f sigpro.h $(INCDIR)
-
-$(BINDIR)/rdmat : rdmat
-	mkdir -p $(BINDIR)
-	cp -f rdmat $(BINDIR)
-
-install: $(BINDIR)/rdmat $(LIBDIR)/libsigpro.a $(INCDIR)/sigpro.h
+	cp -f libchapro.a $(LIBDIR)
+	cp -f $(HDRS) $(INCDIR)
 
 zipsrc:
-	zip sigprosc *.mgw *.lnx *.mac
-	zip sigprosc *.h *.c *.plt *.std *.m *.def
-	zip sigprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters test/*
-	zip sigprosc configure configure.bat
+	zip chaprosc *.mgw *.lnx *.mac *.arm *.sed
+	zip chaprosc *.h *.c *.m *.def test/cat.wav
+	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
+	zip chaprosc configure configure.bat 
+	zip chaprosc compress.bat suppress.bat shacmp.bat
 
-zipdll:
-	zip -j sigprdll c:/usr/lib/sigpro.dll
-	zip -j sigprdll sigpro.h
-
-dist: zipsrc zipdll
-	cp -f sigpr*.zip ../dist
+dist: zipsrc 
+	cp -f chapr*.zip ../dist
 	rm -f *.zip
 
 clean:
-	rm -f *.o *.obj *.bak *.a *.exe $(PGMS)
-	rm -f *.txt *.log *.mat *~ *.wav *.so
+	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
+	rm -f out*.mat out*.wav *.cfg *~ *.so
+	rm -f tst_nad gprof*.txt gmon.out test.lst
+	rm -f test.lst test/*.mat test/tst_*.wav
 
 # dependencies
-anafilt.o:sigpro.h
-cdb.o:sigpro.h
-convert.obj:sigpro.h
-crfft.o:sigpro.h
-fft.o:sigpro.h
-fftfilt.o:sigpro.h
-filter.o:sigpro.h
-freqshape.o:sigpro.h
-interp.o:sigpro.h
-linspace.o:sigpro.h
-matvar.o:sigpro.h
-rand.o:sigpro.h
-randflat.o:sigpro.h
-rcfft.o:sigpro.h
-scalar.o:sigpro.h
-sptest.o:sigpro.h
-tst_afd.o:sigpro.h
-tst_cpx.o:sigpro.h
-tst_fft.o:sigpro.h
-tst_mat.o:sigpro.h
-tst_min.o:sigpro.h
-tst_shp.o:sigpro.h
-tst_src.o:sigpro.h
-tst_wav.o:sigpro.h
-tst_xfr.o:sigpro.h
-vector.o:sigpro.h
-version.o:sigpro.h version.h
-window.o:sigpro.h
+afc_prepare.o: afc_prepare.c chapro.h ite_fb.h iltass.h
+afc_filters.o: afc_filters.c chapro.h 
+afc_process.o: afc_process.c chapro.h 
+agc_prepare.o: agc_prepare.c chapro.h 
+agc_process.o: agc_process.c chapro.h
+cfirfb_prepare.o: cfirfb_prepare.c chapro.h 
+cfirfb_process.o: cfirfb_process.c chapro.h 
+cha_core.o: cha_core.c chapro.h
+cha_scale.o: cha_scale.c chapro.h
+chapro.o: chapro.c 
+ciirfb_design.o: ciirfb_design.c chapro.h 
+ciirfb_prepare.o: ciirfb_prepare.c chapro.h 
+ciirfb_process.o: ciirfb_process.c chapro.h 
+db.o: db.c chapro.h 
+dciirfb_prepare.o: dciirfb_prepare.c chapro.h 
+dciirfb_process.o: dciirfb_process.c chapro.h 
+fft.o: fft.c chapro.h 
+firfb_prepare.o: firfb_prepare.c chapro.h 
+firfb_process.o: firfb_process.c chapro.h 
+gha_demo.o: gha_demo.c chapro.h 
+icmp_prepare.o: icmp_prepare.c chapro.h 
+icmp_process.o: icmp_process.c chapro.h 
+iirfb_design.o: iirfb_design.c chapro.h 
+iirfb_prepare.o: iirfb_prepare.c chapro.h 
+iirfb_process.o: iirfb_process.c chapro.h 
+opt_afc.o: opt_afc.c chapro.h 
+rfft.o: rfft.c chapro.h 
+tst_nad.o: tst_nad.c chapro.h 
+tst_cffa.o: tst_cffa.c chapro.h 
+tst_cffio.o: tst_cffio.c chapro.h 
+tst_cffsc.o: tst_cffsc.c chapro.h 
+tst_cifa.o: tst_cifa.c chapro.h 
+tst_cifio.o: tst_cifio.c chapro.h 
+tst_cifsc.o: tst_cifsc.c chapro.h 
+tst_ffa.o: tst_ffa.c chapro.h 
+tst_ffio.o: tst_ffio.c chapro.h 
+tst_ffsc.o: tst_ffsc.c chapro.h 
+tst_gha.o: tst_gha.c chapro.h 
+tst_ifa.o: tst_ifa.c chapro.h 
+tst_ifio.o: tst_ifio.c chapro.h 
+tst_ifsc.o: tst_ifsc.c chapro.h 
