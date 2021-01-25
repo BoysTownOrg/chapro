@@ -1,94 +1,111 @@
 /* version.h */
 
-#define VER     "CHApro version 0.32, 1-Mar-20"
-#define NOTICE	"Copyright 2016-2020 Boys Town National Research Hospital"
+#define VER     "SigPro version 0.40, 20-Feb-20"
+#define NOTICE	"Copyright 2005-2020 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
-0.32 - 1-Mar-20
->  Fixed allocation bug in afc_prepare for MGW
-0.31 - 5-Dec-19
->  Implemented whiten filter based on inverse LTASS
->  Implemented band-limit filter 
->  Optimized parameters for whiten & band-limit filters
-0.30 - 22-Nov-19
->  Added input buffer to firfb to fix overwrite bug
->  Added sr to icmp_prepare arguments
->  Changed malloc to calloc in state_make
->  Added chunk_size function
-0.29 - 7-Nov-19
->  Added input buffer to iirfb to fix overwrite bug
-0.28 - 10-Oct-19
-> Added proc & rprt to CHA_STA
-> Undefine Win32 for MinGW in chapro.h
-> Fixed audio output in test programs
-> Changed int in CHA_STA to int32_t;
-> Added type to CHA_STA
-0.27 - 23-Sep-19
-> Added functions state & afc_filters
-0.26 - 19-Sep-19
-> Moved "save quality metric" code into library
-0.25 - 18-Sep-19
-> Removed function hex_patch
-> Added functions data_save & data_load
-0.24 - 18-Sep-19
-> Replaced most afc_prepare args with CHA_AFC struct
-> Eliminated use of CHA_DVAR & CHA_IVAR in tst_*sc.c
-> Moved config specification to configure function in tst_*sc.c
-0.23 - 22-Aug-19
-> Merge module headers into chapro.h
-0.23 - 22-Aug-19
-> Merge module headers into chapro.h
-> Clean up code
-0.22 - 12-Jun-18
-> Added hardware-delay parameter (hdel) to AFC processing
-0.21 - 8-Jun-18
-> Added command-line input of AFC parameters to tst_iffb
-0.20 - 2-Jun-18
-> Separate float & double implementations of complex IIR filters
-0.19 - 1-Jun-18
-> Implemented second-order sections for IIR filters
-0.18 - 31-May-18
-> Cleaned up API
-> Added IIR design functions
-0.17 - 30-May-18
-> Converted complex IIR to zero-pole design
-> Converted IIR delay to int
-0.16 - 12-May-18
-> Added C code for IIR filterbank design
-0.15 - 4-May-18
-> Efficiency improments in feedback_prepare.c
-0.14 - 1-May-18
-> Optimized AFC parameters (mu,rho,eps)
-0.13 - 30-Apr-18
-> Added whiten & fixed filters to AFC
-0.12 - 27-Apr-18
-> Added tst_gha to test IIR+AFC+AGC
-0.11 - 26-Apr-18
-> Reduced eps to 1e-30 in feedback_process.c
-> Fix ifn arg in tst_iffb.c
-0.10 - 24-Apr-18
-> In case of error, exit immediately
-0.09 - 24-Apr-18
-> Removed log function from AFC quality metric
-0.08 - 22-Apr-18
-> Removed log function from AFC quality metric
-0.07 - 22-Apr-18
-> Added support for IIR filterbank and adaptive feedback cancelation
-0.06 - 1-Feb-17
-> Added db & undb functions
-0.05 - 12-Jan-17
-> Fixed allocation of chunk buffer in tst_gfsc.c/prepare
-> Fixed file-to-file processing in tst_gfsc.c/{prepare,process,cleanup}
-> Updated tst_ftsc.c
-0.04 - 15-Nov-16
-> Four modules implemented:
->   complex-gammatone filterbank
->   instantaneous compression
->   FIR filterbank
->   automatic gain control
-0.03 - 6-Nov-16
-> Code has been modularized 
-0.01 - 15-Aug-13
-> First working version
+0.40 - 20-Feb-20
+> Fixed bug in sp_tic.
+0.39 - 30-Sep-19
+> Fixed bug in sp_tic.
+0.38 - 21-Sep-19
+> Fixed support for char arrays in sp_var_set
+0.37 - 19-Sep-19
+> Removed function sp_var_str
+> Added function sp_var_add
+> Added function sp_var_idx
+0.36 - 25-Aug-19
+> Added function sp_wav_write_rep
+0.35 - 24-Jun-18
+> Fixed VAR struct and MAT files for 64-bit Linux
+0.34 - 22-Apr-18
+> Added function to copy a string into a variable list
+0.33 - 15-Nov-16
+> Cleaned up (matvar.c, tst_cpx.c, & rand.c) for MacOS
+0.32 - 21-Nov-15
+> Added function sp_fmainsearch
+0.31 - 29-Aug-13
+> Added functions sp_tic & sp_toc
+0.30 - 27-Aug-13
+> Fixed f4 bug in sp_wav_write
+0.29 - 18-Apr-11
+> Fixed phase in sp_freqz
+> Added sp_version
+0.28 - 17-Apr-11
+> Added functions sp_freqz, sp_vsub, sp_vdiv
+> Added functions sp_cvadd, sp_cvmul, sp_vcdiv, sp_cvsub
+0.27 - 12-Nov-10
+> Check for zero rows * col in rd_var()
+0.26 - 12-Oct-10
+> Added "const" to "char *fmrt" in sp_var_set declaration
+> Added check for NULL pointer in tst_cpx.c
+> > Tweaked complex data in mat_wr()
+0.25 - 12-Oct-10
+> Added sp_var_data_type
+> Tweaked printing complex data in rdmat.c
+0.24 - 5-Oct-10
+> Tweaked reading complex data in matvar.c
+0.23 - 4-Oct-10
+> Added sp_cmagsq
+> Implemented partial read in sp_wav_read
+0.22 - 1-Oct-10
+> Changed rows & cols to long in VAR structure
+> Added sp_vmax & sp_vmin
+0.21 - 25-Aug-10
+> Tweaked options for sp_fmins
+0.20 - 10-Aug-10
+> Tweaked reading complex data in matvar.c
+0.19 - 8-Aug-10
+> Tweaked reading complex data in matvar.c
+0.18 - 15-May-10
+> Correct mismatched byte-order in matvar.c
+0.17 - 11-May-10
+> Check for nv>0 in sp_mat_load
+> Interleave complex values in rd_var
+0.16 - 10-Apr-10
+> Fixed binary read for Windows in matvar.c
+0.15 - 22-Mar-10
+> added sp_var_find, sp_var_f4, sp_var_f8, sp_var_i2, sp_var_i4
+> added sp_fmins
+> added OPT to sigpro.h
+0.14 - 18-Mar-10
+> changed filename argument declarations from "char *" to "const char *".
+> cleaned up warnings for gcc -Wall
+0.13 - 11-Mar-10
+> added sp_chirp
+0.12 - 8-Mar-10
+> fixed bug in sp_rand
+> fixed bug in sp_randflat
+> added sp_transfer function
+> added tst_xfr test program
+0.11 - 3-Oct-09
+> changed random number generator
+> added wav_read & wav_write functions
+0.10 - 20-Sep-09
+> changed definition of sp_fetch_mat to allow submatrix
+0.09 - 30-Jul-09
+> changed to unsigned data type for rows and columns in matvar.c
+> changed to unsigned print format for rows and columns in rdmat.c
+0.08 - 25-Apr-09
+> added bessel, butter, & cheby filter design functions
+> added cgd complex group delay
+> added Nuttal window
+> added support for compressed MAT variables
+0.07 - 21-Apr-09
+> improved reading MAT files
+0.06 - 15-Dec-05
+> improved slow-FT
+0.05 - 13-Dec-05
+> use slow-FT when not power of 2
+> added version function
+0.04 - 11-Dec-05
+> added window function
+> added filter and fftfilt functions
+0.03 - 11-Nov-05
+> improved convert function
+0.02 - 25-Oct-05
+> improved random number generators
+0.01 - 23-Oct-05
+> first working version
 **************************************************************************/

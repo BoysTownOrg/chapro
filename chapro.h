@@ -54,9 +54,9 @@ typedef unsigned long  uint32_t;
 #define fzero(x,n)      memset(x,0,(n)*sizeof(float))
 #define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
 #define dzero(x,n)      memset(x,0,(n)*sizeof(double))
-#define round(x)        ((int)floor((x)+0.5))
+#define round(x)        ((int)floorf((float)(x)+0.5f))
 #ifndef log2
-#define log2(x)         (logf(x)/(float)M_LN2)
+#define log2(x)         (logf(x)/M_LN2)
 #endif
 
 #define db1(x)          (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
@@ -199,10 +199,10 @@ FUNC(int)    cha_data_load(CHA_PTR, char *);
 FUNC(int)    cha_state_save(CHA_PTR, CHA_STA *);
 FUNC(int)    cha_state_copy(CHA_STA *, CHA_STA *);
 FUNC(int)    cha_state_free(CHA_STA *);
+FUNC(int)    cha_fft(float *, int);
+FUNC(int)    cha_ifft(float *, int);
 FUNC(void)   cha_fft_cr(float *, int);
 FUNC(void)   cha_fft_rc(float *, int);
-FUNC(void)   cha_fft(float *, int);
-FUNC(void)   cha_ifft(float *, int);
 FUNC(void)   cha_prepare(CHA_PTR);
 FUNC(void)   cha_scale(float *, int, float);
 FUNC(char *) cha_version(void);
@@ -263,6 +263,13 @@ FUNC(int) cha_afc_prepare(CHA_PTR, CHA_AFC *);
 FUNC(int) cha_afc_filters(CHA_PTR, CHA_AFC *);
 FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
 FUNC(void) cha_afc_output(CHA_PTR, float *, int);
+
+/*****************************************************/
+
+// frequency compression module
+
+FUNC(int) cha_nfc_prepare(CHA_PTR, CHA_AFC *);
+FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 

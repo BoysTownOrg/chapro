@@ -1,5 +1,6 @@
-// ifft.c - inverse FFT
+// fft.c - complex FFT and IFFT for chapro firmware
 
+#include <stdlib.h>
 #include <math.h>
 #include "chapro.h"
 
@@ -85,30 +86,103 @@ cfft2(float *x, int m, int d)
     return (0);
 }
 
-/***********************************************************/
+//-----------------------------------------------------------
 
-// complex-to-complex FFT
-
-FUNC(void)
-cha_fft(float *x, int n)
+static int
+cdft(float *x, int n, int d)
 {
-    int m;
+    double a, ur, ui, vr, vi, wr, wi, xr, xi, yr, yi, zz;
+    float *x0, *x1, *y0, *y1, *y;
+    int i, ii, j, jj, m;
+    static double tpi = 2 * M_PI;
 
-    m = ilog2(n);
-    cfft2(x, m, 1);
+    m = n * 2;
+    y = (float *) calloc(m, sizeof(float));
+    x0 = x;
+    y0 = y;
+    y1 = y + 1;
+    x1 = x + 1;
+    a = -tpi / n;
+    if (d)
+	a = -a;
+    ur = cos(a);
+    ui = sin(a);
+    for (i = 0; i < n; i++) {
+	if (i == 0) {
+	    vr = 1;
+	    vi = 0;
+	} else {
+	    zz = ur * vr - ui * vi;
+	    vi = ur * vi + ui * vr;
+	    vr = zz;
+	}
+        xr = x0[0];
+        xi = x1[0];
+	yr = xr * vr - xi * vi;
+	yi = xr * vi + xi * vr;
+	wr = vr;
+	wi = vi;
+	for (j = 1; j < n; j++) {
+	    zz = vr * wr - vi * wi;
+	    wi = vr * wi + vi * wr;
+	    wr = zz;
+	    jj = j * 2;
+	    xr = x0[jj];
+	    xi = x1[jj];
+	    yr += xr * wr - xi * wi;
+	    yi += xr * wi + xi * wr;
+	}
+	ii = i * 2;
+	y0[ii] = (float) yr;
+	y1[ii] = (float) yi;
+    }
+    for (i = 0; i < n; i++) {
+	x0[i] = y0[i];
+	x1[i] = y1[i];
+    }
+    free(y);
+
+    return (0);
 }
 
-// complex-to-complex inverse FFT
+//-----------------------------------------------------------
 
-FUNC(void)
-cha_ifft(float *x, int n)
-{
-    int i, m;
+FUNC(int) cha_fft(
+    float *x, int n
+) {
+    int m, err;
+
+    if (n < 2)
+	return (0);
 
     m = ilog2(n);
-    cfft2(x, m, 0);
-    // scale inverse by 1/n
+    if (m > 0)
+        err = cfft2(x, m, 0);
+    else
+        err = cdft(x, n, 0);
+
+    return (err);
+}
+
+FUNC(int) cha_ifft(
+    float *x, int n
+) {
+    int m, err, i;
+
+    if (n < 2)
+	return (0);
+
+    m = ilog2(n);
+    if (m > 0)
+        err = cfft2(x, m, 1);
+    else
+        err = cdft(x, n, 1);
+
+// scale inverse by 1/n
+
     for (i = 0; i < n * 2; i++) {
         x[i] /= n;
     }
+
+    return (err);
 }

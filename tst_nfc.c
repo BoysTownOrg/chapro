@@ -11,7 +11,7 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#define DATA_HDR "tst_gha_data.h"
+#define DATA_HDR "tst_nfc_data.h"
 //#include DATA_HDR
 
 #define MAX_MSG 256
@@ -34,10 +34,10 @@ static int    chunk = 32;      // chunk size
 static int    prepared = 0;
 static int    io_wait = 40;
 static struct {
-    char *ifn, *ofn, simfb, afc, mat, nrep, play;
+    char *ifn, *ofn, simfb, nfc, mat, nrep, play;
     int afl, wfl, pfl;
 } args;
-static CHA_AFC afc = {0};
+static CHA_AFC nfc = {0};
 static CHA_DSL dsl = {0};
 static CHA_WDRC agc = {0};
 
@@ -50,15 +50,13 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
         float *z = CHA_CB;
-        cha_afc_filters(cp, &afc);
-        // process IIR+AGC+AFC
-        cha_afc_input(cp, x, x, cs);
+        // process IIR+AGC+NFC
         cha_agc_input(cp, x, x, cs);
+        cha_nfc_process(cp, x, x, cs);
         cha_iirfb_analyze(cp, x, z, cs);
         cha_agc_channel(cp, z, z, cs);
         cha_iirfb_synthesize(cp, z, y, cs);
         cha_agc_output(cp, y, y, cs);
-        cha_afc_output(cp, y, cs);
     }
 }
 
@@ -69,14 +67,14 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    printf("usage: tst_gha [-options] [input_file] [output_file]\n");
+    printf("usage: tst_nfc [-options] [input_file] [output_file]\n");
     printf("options\n");
     printf("-a    disable feedback cancelation\n");
     printf("-d    disable simulated feedback\n");
     printf("-h    print help\n");
     printf("-m    output MAT file\n");
     printf("-p    play output\n");
-    printf("-nN   AFC filter length = n\n");
+    printf("-nN   NFC filter length = n\n");
     printf("-pN   band-limit filter length = n\n");
     printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
@@ -114,8 +112,8 @@ mat_file(char *fn)
 static void
 parse_args(int ac, char *av[])
 {
-    args.afc = 1;
-    args.mat = 1;
+    args.nfc = 1;
+    args.mat = 0;
     args.play = 0;
     args.nrep = 1;
     args.simfb = 1;
@@ -124,8 +122,8 @@ parse_args(int ac, char *av[])
     args.pfl = -1;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'a') {
-                args.afc = 0;
+            if (av[1][1] == 'c') {
+                args.nfc = 0;
             } if (av[1][1] == 'd') {
                 args.simfb = 0;
             } else if (av[1][1] == 'h') {
@@ -379,8 +377,8 @@ prepare_compressor(CHA_PTR cp)
 static void
 prepare_feedback(CHA_PTR cp)
 {
-    // prepare AFC
-    cha_afc_prepare(cp, &afc);
+    // prepare NFC
+    cha_nfc_prepare(cp, &nfc);
 }
 
 // prepare signal processing
@@ -393,7 +391,6 @@ prepare(I_O *io, CHA_PTR cp)
     chunk = io->cs;
     prepare_filterbank(cp);
     prepare_compressor(cp);
-    if (afc.sqm) afc.nqm = io->nsmp * io->nrep;
     prepare_feedback(cp);
     prepared++;
     // generate C code from prepared data
@@ -406,8 +403,8 @@ static void
 process(I_O *io, CHA_PTR cp)
 {
     float *x, *y;
-    int i, j, m, n, cs, nk, iqm;
-    double t1, t2, fme;
+    int i, j, m, n, cs, nk;
+    double t1, t2;
 
     if (io->ofn) {
         sp_tic();
@@ -428,14 +425,6 @@ process(I_O *io, CHA_PTR cp)
         printf("speed_ratio: ");
         printf("(wave_time/wall_time) = (%.3f/%.3f) ", t2, t1);
         printf("= %.1f\n", t2 / t1);
-        // report quality metric
-        iqm = afc.iqmp ? afc.iqmp[0] : 0;
-        if (iqm) {
-            if (afc.qm[iqm - 1] > 0) {
-                fme = 10 * log10(afc.qm[iqm - 1]);
-                printf("final misalignment error = %.2f dB\n", fme);
-            }
-        }
     } else {
         while (get_aud(io)) {
             put_aud(io, cp);
@@ -451,25 +440,18 @@ process(I_O *io, CHA_PTR cp)
 static void
 write_wave(I_O *io)
 {
-    float r[1], *w, *meer;
+    float r[1], *w;
     int   n, nbits = 16;
     static VAR *vl;
 
     if (io->dfn) {
         printf(" MAT output: %s\n", io->dfn);
-        meer = afc.qm ? afc.qm : (float *) calloc(sizeof(float), afc.nqm);
-        vl = sp_var_alloc(8);
-        sp_var_add(vl, "merr",     meer, afc.nqm, 1, "f4");
-        sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
-        sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
-        sp_var_add(vl, "wfrp", afc.wfrp, afc.wfl, 1, "f4");
-        sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
+        vl = sp_var_alloc(2);
         sp_var_add(vl, "ifn",   io->ifn,       1, 1, "f4str");
         sp_var_add(vl, "ofn",   io->ofn,       1, 1, "f4str");
         remove(io->dfn);
         sp_mat_save(io->dfn, vl);
         sp_var_clear(vl);
-        if (!afc.qm && meer) free(meer);
     }
     if (io->ofn) {
         printf(" WAV output: %s\n", io->ofn);
@@ -553,44 +535,22 @@ configure_compressor()
 static void
 configure_feedback()
 {
-    // AFC parameters
-    afc.afl  = 45;        // adaptive filter length
-    afc.wfl  = 9;         // whiten-filter length
-    afc.pfl  = 0;         // band-limit-filter length
+    // NFC parameters
+    nfc.afl  = 45;        // adaptive filter length
+    nfc.wfl  = 9;         // whiten-filter length
+    nfc.pfl  = 0;         // band-limit-filter length
     // update args
-    if (args.afl >= 0) afc.afl = args.afl;
-    if (args.wfl >= 0) afc.wfl = args.wfl;
-    if (args.pfl >= 0) afc.pfl = args.pfl;
-    afc.alf  = 0;         // band-limit update
-    if (afc.pfl) { // optimized for pfl=23
-        afc.rho  = 0.002577405; // forgetting factor
-        afc.eps  = 0.000008689; // power threshold
-        afc.mu   = 0.000050519; // step size
-        afc.alf  = 0.000001825; // band-limit update
-    } else if (afc.wfl) {
-        afc.rho  = 0.000360459; // forgetting factor
-        afc.eps  = 0.000018848; // power threshold
-        afc.mu   = 0.000048112; // step size
-   
-    } else {
-        afc.rho  = 0.000169571; // forgetting factor
-        afc.eps  = 0.000927518; // power threshold
-        afc.mu   = 0.000255915; // step size
-    }
-    afc.pup  = 1;         // band-limit update period
-    afc.hdel = 0;         // output/input hardware delay
-    afc.sqm  = 1;         // save quality metric ?
-    afc.fbg  = 1;         // simulated-feedback gain 
-    afc.nqm  = 0;         // initialize quality-metric length
-    if (!args.simfb) afc.fbg = 0;
+    if (args.afl >= 0) nfc.afl = args.afl;
+    if (args.wfl >= 0) nfc.wfl = args.wfl;
+    if (args.pfl >= 0) nfc.pfl = args.pfl;
 }
 
 static void
 configure(I_O *io)
 {
     static char *ifn = "test/carrots.wav";
-    static char *wfn = "test/tst_gha.wav";
-    static char *mfn = "test/tst_gha.mat";
+    static char *wfn = "test/tst_nfc.wav";
+    static char *mfn = "test/tst_nfc.mat";
 
     // initialize CHAPRO variables
     configure_compressor();
@@ -615,11 +575,11 @@ report()
     int nc, nz;
 
     // report
-    fc = args.afc ? "+AFC" : "";
+    fc = args.nfc ? "+NFC" : "";
     en = args.simfb ? "en" : "dis";
     nc = dsl.nchannel;
     nz = agc.nz;
-    printf("CHA simulation: feedback simulation %sabled.\n", en);
+    printf("CHA simulation: frequency compression %sabled.\n", en);
     printf("IIR+AGC%s: nc=%d nz=%d\n", fc, nc, nz);
 }
 
