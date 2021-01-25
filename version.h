@@ -1,10 +1,12 @@
 /* version.h */
 
-#define VER     "SigPro version 0.40, 20-Feb-20"
-#define NOTICE	"Copyright 2005-2020 Boys Town National Research Hospital"
+#define VER     "SigPro version 0.41, 24-Jan-21"
+#define NOTICE	"Copyright 2005-2021 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.41 - 24-Jan-21
+> Cleaned up for NFC stub.
 0.40 - 20-Feb-20
 > Fixed bug in sp_tic.
 0.39 - 30-Sep-19
