@@ -26,13 +26,13 @@ The objective or this library is to provide an example of basic hearing-aid sign
 
 Installation
 
-Please install ARSC and SIGPRO from https://github.com/BTNRH before installing CHAPRO.
+Install BTNRH libraries for streaming audio (ARSC) and basic signal processing (SigPro) from repos https://github.com/BTNRH/arsc and https://github.com/BTNRH/sigpro.   
 
-Download CHAPRO from https://github.com/BTNRH/chapro. Makefiles are provided for building test programs at Linux or MinGW command lines. A solution file is provided in the VS9 folder for building under Visual Studio. Note: when running test programs under VS, set the "Working Directory" to "..". Test program inputs and outputs are located in the subdirectory "test".
+Download CHAPRO repo from https://github.com/BTNRH/chapro. Makefiles are provided for building test programs at Linux or MinGW command lines. A solution file is provided in the VS9 folder for building under Visual Studio. Note: when running test programs under VS, set the "Working Directory" to "..". Test program inputs and outputs are located in the subdirectory "test".
 
 API Reference
 
-The API is described in the User Manual at https://github.com/BTNRH/chapro/blob/master/chapro.pdf.
+The API is described in the User Manual at https://github.com/BoysTownorg/chapro/blob/master/chapro.pdf.
 
 Tests
 
@@ -40,11 +40,12 @@ The following test programs are included.
 
     tst_ffa  - test FIR filterbank analysis
     tst_ffio - test FIR filterbank analysis & synthesis
-    tst_ffsc - test FIR filterbank and AGC compression
+    tst_ffsc - test FIR filterbank (analysis & synthesis) and AGC processing
     tst_ifa  - test IIR filterbank analysis
     tst_ifio - test IIR filterbank analysis & synthesis
-    tst_ifsc - test IIR filterbank and AGC compression
-    tst_gha  - test IIR filterbank, AGC compression, and AFC feedback management
+    tst_ifsc - test IIR filterbank (analysis & synthesis) and AGC processing
+    tst_iffb - test IIR filterbank (analysis & synthesis) and AFC processing
+    tst_gha  - test IIR filterbank (analysis & synthesis) and AFC+AGC processing
 
 Contributors
 
