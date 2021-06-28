@@ -1,4 +1,4 @@
-// tst_nfc.c - test IIR-filterbank + AGC + NFC
+// tst_nfc.c - test NFC
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -34,12 +34,11 @@ static int    chunk = 32;      // chunk size
 static int    prepared = 0;
 static int    io_wait = 40;
 static struct {
-    char *ifn, *ofn, simfb, nfc, mat, nrep, play;
-    int afl, wfl, pfl;
+    char *ifn, *ofn, nfc, mat, nrep, play;
+    double f1, f2;
+    int nw;
 } args;
-static CHA_AFC nfc = {0};
-static CHA_DSL dsl = {0};
-static CHA_WDRC agc = {0};
+static CHA_NFC nfc = {0};
 
 /***********************************************************/
 
@@ -49,14 +48,9 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
-        float *z = CHA_CB;
-        // process IIR+AGC+NFC
-        cha_agc_input(cp, x, x, cs);
-        cha_nfc_process(cp, x, x, cs);
-        cha_iirfb_analyze(cp, x, z, cs);
-        cha_agc_channel(cp, z, z, cs);
-        cha_iirfb_synthesize(cp, z, y, cs);
-        cha_agc_output(cp, y, y, cs);
+        //float *z = CHA_CB;
+        // process NFC
+        cha_nfc_process(cp, x, y, cs);
     }
 }
 
@@ -69,17 +63,13 @@ usage()
 {
     printf("usage: tst_nfc [-options] [input_file] [output_file]\n");
     printf("options\n");
-    printf("-a    disable feedback cancelation\n");
-    printf("-d    disable simulated feedback\n");
+    printf("-f1 N compression-lower-bound frequency [3000]\n");
+    printf("-f2 N compression-upper-bound frequency [4000]\n");
     printf("-h    print help\n");
-    printf("-m    output MAT file\n");
-    printf("-p    play output\n");
-    printf("-nN   NFC filter length = n\n");
-    printf("-pN   band-limit filter length = n\n");
     printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
     printf("-v    print version\n");
-    printf("-wN   whiten filter length = n\n");
+    printf("-wN   window size = N [128]\n");
     exit(0);
 }
 
@@ -90,50 +80,26 @@ version()
     exit(0);
 }
 
-static int
-mat_file(char *fn)
-{
-    int d;
-
-    if (fn) {
-        d = strlen(fn) - 4;
-        if (d > 0) {
-            if ((tolower(fn[d + 1]) == 'm')
-             && (tolower(fn[d + 2]) == 'a')
-             && (tolower(fn[d + 3]) == 't')) {
-                return (1);
-            }
-        }
-    }
-
-    return (0);
-}
-
 static void
 parse_args(int ac, char *av[])
 {
-    args.nfc = 1;
-    args.mat = 0;
     args.play = 0;
     args.nrep = 1;
-    args.simfb = 1;
-    args.afl = -1;
-    args.wfl = -1;
-    args.pfl = -1;
+    args.f1 = 0;
+    args.f2 = 0;
+    args.nw = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'c') {
-                args.nfc = 0;
-            } if (av[1][1] == 'd') {
-                args.simfb = 0;
-            } else if (av[1][1] == 'h') {
+            if (av[1][1] == 'h') {
                 usage();
-            } else if (av[1][1] == 'm') {
-                args.mat = 1;
-            } else if (av[1][1] == 'n') {
-                args.afl = atoi(av[1] + 2);
-            } else if (av[1][1] == 'p') {
-                args.pfl = atoi(av[1] + 2);
+            } else if (av[1][1] == 'f') {
+                if (av[1][2] == '1') {
+                    args.f1 = atoi(av[2]);
+                } else if (av[1][2] == '2') {
+                    args.f2 = atoi(av[2]);
+                }
+                ac--;
+                av++;
             } else if (av[1][1] == 'P') {
                 args.play = 1;
             } else if (av[1][1] == 'r') {
@@ -141,7 +107,7 @@ parse_args(int ac, char *av[])
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
-                args.wfl = atoi(av[1] + 2);
+                args.nw = atoi(av[1] + 2);
             }
             ac--;
             av++;
@@ -151,7 +117,6 @@ parse_args(int ac, char *av[])
     }
     args.ifn = (ac > 1) ? _strdup(av[1]) : NULL;
     args.ofn = (ac > 2) ? _strdup(av[2]) : NULL;
-    if (args.ofn) args.mat = mat_file(args.ofn);
 }
 
 /***********************************************************/
@@ -199,7 +164,7 @@ init_wav(I_O *io, char *msg)
     float fs;
     VAR *vl;
     static double spl_ref = 1.1219e-6;
-    static double rms_lev = 65;
+    static double rms_lev = 79.01;
 
     if (io->iwav) free(io->iwav);
     if (io->owav) free(io->owav);
@@ -342,40 +307,8 @@ prepare_io(I_O *io)
     return (0);
 }
 
-// prepare IIR filterbank
 static void
-prepare_filterbank(CHA_PTR cp)
-{
-    double td, sr, *cf;
-    int cs, nc, nz;
-    // zeros, poles, gains, & delays
-    float   z[64], p[64], g[8];
-    int     d[8];
-
-    sr = srate;
-    cs = chunk;
-    // prepare IIRFB
-    nc = dsl.nchannel;
-    cf = dsl.cross_freq;
-    nz = agc.nz;
-    td = agc.td;
-    cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
-    cha_iirfb_prepare(cp, z, p, g, d, nc, nz, sr, cs);
-}
-
-// prepare AGC compressor
-
-static void
-prepare_compressor(CHA_PTR cp)
-{
-    // prepare AGC
-    cha_agc_prepare(cp, &dsl, &agc);
-}
-
-// prepare feedback
-
-static void
-prepare_feedback(CHA_PTR cp)
+prepare_nfc(CHA_PTR cp)
 {
     // prepare NFC
     cha_nfc_prepare(cp, &nfc);
@@ -389,12 +322,8 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_io(io);
     srate = io->rate;
     chunk = io->cs;
-    prepare_filterbank(cp);
-    prepare_compressor(cp);
-    prepare_feedback(cp);
+    prepare_nfc(cp);
     prepared++;
-    // generate C code from prepared data
-    //cha_data_gen(cp, DATA_HDR);
 }
 
 // process signal
@@ -420,7 +349,7 @@ process(I_O *io, CHA_PTR cp)
                 process_chunk(cp, x + i * cs, y + i * cs, cs);
             }
         }
-        t1 = sp_toc();
+        t1 = fmax(0.001,sp_toc());
         t2 = (io->nwav / io->rate) * io->nrep;
         printf("speed_ratio: ");
         printf("(wave_time/wall_time) = (%.3f/%.3f) ", t2, t1);
@@ -512,49 +441,28 @@ cleanup(I_O *io, CHA_PTR cp)
 /***********************************************************/
 
 static void
-configure_compressor()
-{
-    // DSL prescription example
-    static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
-        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
-        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
-        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
-        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
-        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
-    };
-    static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
-    static int    nz = 4;
-    static double td = 2.5;
-
-    memcpy(&dsl, &dsl_ex, sizeof(CHA_DSL));
-    memcpy(&agc, &agc_ex, sizeof(CHA_WDRC));
-    agc.nz = nz;
-    agc.td = td;
-}
-
-static void
-configure_feedback()
+configure_nfc()
 {
     // NFC parameters
-    nfc.afl  = 45;        // adaptive filter length
-    nfc.wfl  = 9;         // whiten-filter length
-    nfc.pfl  = 0;         // band-limit-filter length
+    nfc.cs  = chunk;     // chunk size
+    nfc.f1  = 3000;      // compression-lower-bound frequency
+    nfc.f2  = 4000;      // compression-upper-bound frequency
+    nfc.nw  = 128;       // window size
+    nfc.sr  = srate;     // sampling rate
     // update args
-    if (args.afl >= 0) nfc.afl = args.afl;
-    if (args.wfl >= 0) nfc.wfl = args.wfl;
-    if (args.pfl >= 0) nfc.pfl = args.pfl;
+    if (args.f1 > 0) nfc.f1 = args.f1;
+    if (args.f2 > 0) nfc.f2 = args.f2;
+    if (args.nw > 0) nfc.nw = args.nw;
 }
 
 static void
 configure(I_O *io)
 {
-    static char *ifn = "test/carrots.wav";
+    static char *ifn = "test/cat.wav";
     static char *wfn = "test/tst_nfc.wav";
-    static char *mfn = "test/tst_nfc.mat";
 
     // initialize CHAPRO variables
-    configure_compressor();
-    configure_feedback();
+    configure_nfc();
     // initialize I/O
 #ifdef ARSCLIB_H
     io->iod = ar_find_dev(ARSC_PREF_SYNC); // find preferred audio device
@@ -563,24 +471,17 @@ configure(I_O *io)
     io->owav = NULL;
     io->ifn  = args.ifn  ? args.ifn : ifn;
     io->ofn  = args.play ? args.ofn : wfn; 
-    io->dfn  = mfn; 
-    io->mat  = args.mat;
+    io->dfn  = 0; 
+    io->mat  = 0;
     io->nrep = (args.nrep < 1) ? 1 : args.nrep;
 }
 
 static void
 report()
 {
-    char *en, *fc;
-    int nc, nz;
-
     // report
-    fc = args.nfc ? "+NFC" : "";
-    en = args.simfb ? "en" : "dis";
-    nc = dsl.nchannel;
-    nz = agc.nz;
-    printf("CHA simulation: frequency compression %sabled.\n", en);
-    printf("IIR+AGC%s: nc=%d nz=%d\n", fc, nc, nz);
+    printf("CHA simulation: nw=%d ", nfc.nw);
+    printf("f1=%.0f f2=%.0f\n", nfc.f1, nfc.f2);
 }
 
 /***********************************************************/

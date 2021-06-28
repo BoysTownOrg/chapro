@@ -126,8 +126,8 @@ typedef struct {
 #define CLS_MXCH 32         // maximum number of channels
 
 typedef struct {
-    int cm;                 // compression mode
-    int nc;                 // number of channels
+    int32_t cm;                 // compression mode
+    int32_t nc;                 // number of channels
     double fc[CLS_MXCH];    // center frequency
     double bw[CLS_MXCH];    // bandwith
     double Gcs[CLS_MXCH];   // gain at compression start
@@ -142,18 +142,18 @@ typedef struct {
 
 typedef struct {
     // processing 
-    double sr;      // sampling rate (Hz)
+    double sr;       // sampling rate (Hz)
     // FIR
-    int    nz;      // number of  poles & zeros
-    int    nw;      // window size
-    int    wt;      // window type: 0=Hamming, 1=Blackman
+    int32_t nz;      // number of  poles & zeros
+    int32_t nw;      // window size
+    int32_t wt;      // window type: 0=Hamming, 1=Blackman
     // IIR
-    double fd;      // estimated filter delay (ms)
-    double gd;      // target delay (ms)
-    double gn;      // flat gain (dB)
-    int    nm;      // number of frequency bands below 1 kHz
-    int    po;      // number of bands per octave above 1 kHz
-    int    no;      // gammatone filter order
+    double  fd;      // estimated filter delay (ms)
+    double  gd;      // target delay (ms)
+    double  gn;       // flat gain (dB)
+    int32_t nm;      // number of frequency bands below 1 kHz
+    int32_t po;      // number of bands per octave above 1 kHz
+    int32_t no;      // gammatone filter order
 } CHA_ICMP;
 
 /*****************************************************/
@@ -162,29 +162,40 @@ typedef struct {
     // simulation parameters
     double fbg;                  // simulated-feedback gain
     // AFC parameters
-    double rho;                  // forgetting factor
-    double eps;                  // power threshold
-    double  mu;                  // step size
-    double alf;                  // band-limit update
-    int    afl;                  // adaptive-filter length
-    int    wfl;                  // whiten-filter length
-    int    pfl;                  // band-limit-filter length
-    int    fbl;                  // simulated-feedback length
-    int    hdel;                 // output/input hardware delay
-    int    pup;                  // band-limit update period
+    double   rho;                // forgetting factor
+    double   eps;                // power threshold
+    double    mu;                // step size
+    double   alf;                // band-limit update
+    int32_t  afl;                // adaptive-filter length
+    int32_t  wfl;                // whiten-filter length
+    int32_t  pfl;                // band-limit-filter length
+    int32_t  fbl;                // simulated-feedback length
+    int32_t  hdel;               // output/input hardware delay
+    int32_t  pup;                // band-limit update period
     // feedback filter buffers
-    float *efbp;                 // estimated-feedback buffer pointer
-    float *sfbp;                 // simulated-feedback buffer pointer
-    float *wfrp;                 // whiten-feedback buffer pointer
-    float *ffrp;                 // persistent-feedback buffer pointer
+    float   *efbp;               // estimated-feedback buffer pointer
+    float   *sfbp;               // simulated-feedback buffer pointer
+    float   *wfrp;               // whiten-feedback buffer pointer
+    float   *ffrp;               // persistent-feedback buffer pointer
     // quality metric buffers & parameters
     float *qm;                   // quality-metric buffer pointer
-    int   *iqmp;                 // quality-metric index pointer
-    int    nqm;                  // quality-metric buffer size
-    int    iqm;                  // quality-metric index
-    int    sqm;                  // save quality metric ?
+    int32_t *iqmp;               // quality-metric index pointer
+    int32_t  nqm;                // quality-metric buffer size
+    int32_t  iqm;                // quality-metric index
+    int32_t  sqm;                // save quality metric ?
     CHA_PTR pcp;                 // previous CHA_PTR
 } CHA_AFC;
+
+typedef struct {
+    int32_t cs;             // chunk size
+    int32_t nw;             // window size (pow2)
+    int32_t wt;             // window type: 0=Hamming, 1=Blackman
+    int32_t nm;             // frequency-map size
+    double  sr;             // sampling rate (Hz)
+    double  f1;             // compression-lower-bound frequency (Hz)
+    double  f2;             // compression-upper-bound frequency (Hz)
+    int32_t *map;           // frequency map pointer
+} CHA_NFC;
 
 /*****************************************************/
 
@@ -266,9 +277,9 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 /*****************************************************/
 
-// frequency compression module
+// frequency-compression module
 
-FUNC(int) cha_nfc_prepare(CHA_PTR, CHA_AFC *);
+FUNC(int) cha_nfc_prepare(CHA_PTR, CHA_NFC *);
 FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
@@ -367,6 +378,15 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _qm       _offset+36
 #define _iqmp     _offset+37
 
+// nfc pointer indices
+
+#define _nfc_mm   _offset+38
+#define _nfc_ww   _offset+39
+#define _nfc_xx   _offset+40
+#define _nfc_XX   _offset+41
+#define _nfc_yy   _offset+42
+#define _nfc_YY   _offset+43
+
 /*****************************************************/
 
 // global integer variable indices
@@ -376,14 +396,11 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 
 //----------------------------------------
 
-// fir & cfir integer variable indices
-
-#define _nw       2
-
 // iir integer variable indices
 
 #define _op       2
 #define _nn       3
+#define _nw       4
 
 // ciir integer variable indices
 
@@ -394,9 +411,9 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 
 // icmp integer variable indices
 
-#define _nw       2
 #define _cm       3
-#define _ds       4
+#define _nw       4
+#define _ds       5
 
 //----------------------------------------
 
@@ -415,6 +432,14 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _afc      16
 #define _pup      17
 #define _puc      18
+
+// nfc integer variable indices
+
+#define _nfc_nw   19 // window size
+#define _nfc_nm   20 // frequency-map size
+#define _nfc_wt   21 // window window type
+#define _nfc_ncs  22 // chunks-per-shift number
+#define _nfc_ics  23 // chunks-per-shift count
 
 /*****************************************************/
 

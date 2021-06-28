@@ -1,10 +1,13 @@
 /* version.h */
 
-#define VER     "CHAPro version 0.41, 26-Jan-21"
+#define VER     "CHAPro version 0.42, 28-Jun-21"
 #define NOTICE	"Copyright 2005-2021 Boys Town National Research Hospital"
 #define RIGHTS	"Non-profit redistribution permitted."
 
 /**************************** change log **********************************
+0.42 - 28-Jun-21
+> Replaced "int" with "int32_t" in chapro.h structs.
+> Added non-linear frequency compression (NFC).
 0.41 - 26-Jan-21
 > Cleaned up for NFC stub.
 0.40 - 20-Feb-20

@@ -1,4 +1,4 @@
-// tst_nfc.c - test IIR-filterbank + AGC + NFC
+// tst_gha.c - test IIR-filterbank + AGC + NFC
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -75,7 +75,6 @@ usage()
     printf("-d    disable simulated feedback\n");
     printf("-h    print help\n");
     printf("-m    output MAT file\n");
-    printf("-p    play output\n");
     printf("-nN   AFC filter length = n\n");
     printf("-pN   band-limit filter length = n\n");
     printf("-P    play output\n");
@@ -126,7 +125,7 @@ parse_args(int ac, char *av[])
         if (av[1][0] == '-') {
             if (av[1][1] == 'a') {
                 args.afc = 0;
-            } if (av[1][1] == 'd') {
+            } else if (av[1][1] == 'd') {
                 args.simfb = 0;
             } else if (av[1][1] == 'h') {
                 usage();

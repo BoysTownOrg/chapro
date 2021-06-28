@@ -29,9 +29,9 @@ PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_gha tst_nfc gha_demo opt_afc 
 HDRS=chapro.h
 
-all: $(PGMS)
+all: $(PGMS) tst_nad.c
 
-tst_nad.c : tst_gha.c
+tst_nad.c : tst_gha.c nad.sed
 	sed -f nad.sed tst_gha.c > tst_nad.c
 
 tst: $(PGMS) test.lst
@@ -121,7 +121,7 @@ zipsrc:
 	zip chaprosc *.h *.c *.m *.def test/cat.wav
 	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
 	zip chaprosc configure configure.bat 
-	zip chaprosc compress.bat suppress.bat shacmp.bat
+	#zip chaprosc compress.bat suppress.bat shacmp.bat
 
 dist: zipsrc 
 	cp -f chapr*.zip ../dist

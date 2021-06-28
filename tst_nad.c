@@ -1,5 +1,5 @@
-// tst_nad.c - test IIR-filterbank + AGC + AFC
-//              with WAV file input & output
+// tst_nad.c - test IIR-filterbank + AGC + NFC
+//              with WAV file input & output (no audio device)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,7 +75,6 @@ usage()
     printf("-d    disable simulated feedback\n");
     printf("-h    print help\n");
     printf("-m    output MAT file\n");
-    printf("-p    play output\n");
     printf("-nN   AFC filter length = n\n");
     printf("-pN   band-limit filter length = n\n");
     printf("-P    play output\n");
@@ -126,7 +125,7 @@ parse_args(int ac, char *av[])
         if (av[1][0] == '-') {
             if (av[1][1] == 'a') {
                 args.afc = 0;
-            } if (av[1][1] == 'd') {
+            } else if (av[1][1] == 'd') {
                 args.simfb = 0;
             } else if (av[1][1] == 'h') {
                 usage();
@@ -248,12 +247,12 @@ init_wav(I_O *io, char *msg)
 static void
 init_aud(I_O *io)
 {
-#ifdef ARSCLIB_H
+#ifdef output (no audio device)
     char name[80];
     int i, j, err;
     static int nchn = 2;        // number of channels
     static int nswp = 0;        // number of sweeps (0=continuous)
-    static int32_t fmt[2] = {ARSC_DATA_F4, 0};
+    static int32_t fmt[2] = {output (no audio device)
 
     err = ar_out_open(io->iod, io->rate, nchn);
     if (err) {
@@ -275,15 +274,15 @@ init_aud(I_O *io)
     ar_out_prepare(io->iod, io->out, (int32_t *)io->siz, io->mseg, nswp);
     printf("audio output: %s\n", name);
     ar_io_start(io->iod);
-#endif // ARSCLIB_H
+#endif // output (no audio device)
 }
 
 static int
 get_aud(I_O *io)
 {
-#ifdef ARSCLIB_H
+#ifdef output (no audio device)
     io->oseg = ar_io_cur_seg(io->iod);
-#endif // ARSCLIB_H
+#endif // output (no audio device)
     return (io->oseg < io->nseg);
 }
 
@@ -492,10 +491,10 @@ stop_wav(I_O *io)
     if (io->ofn) {
         free(io->owav);
     } else {
-#ifdef ARSCLIB_H
+#ifdef output (no audio device)
         ar_io_stop(io->iod);
         ar_io_close(io->iod);
-#endif // ARSCLIB_H
+#endif // output (no audio device)
         if (io->siz) free(io->siz);
         if (io->out) free(io->out);
         if (io->owav) free(io->owav);
@@ -596,9 +595,9 @@ configure(I_O *io)
     configure_compressor();
     configure_feedback();
     // initialize I/O
-#ifdef ARSCLIB_H
-    io->iod = ar_find_dev(ARSC_PREF_SYNC); // find preferred audio device
-#endif // ARSCLIB_H
+#ifdef output (no audio device)
+    io->iod = ar_find_dev(output (no audio device)
+#endif // output (no audio device)
     io->iwav = NULL;
     io->owav = NULL;
     io->ifn  = args.ifn  ? args.ifn : ifn;
