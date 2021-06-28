@@ -141,6 +141,8 @@ Copy ..\chapro.h c:\usr\include
     <ClCompile Include="..\iirfb_design.c" />
     <ClCompile Include="..\iirfb_prepare.c" />
     <ClCompile Include="..\iirfb_process.c" />
+    <ClCompile Include="..\nfc_prepare.c" />
+    <ClCompile Include="..\nfc_process.c" />
     <ClCompile Include="..\rfft.c" />
   </ItemGroup>
   <ItemGroup>

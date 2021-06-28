@@ -70,6 +70,12 @@
     <ClCompile Include="..\rfft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\nfc_prepare.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nfc_process.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cha_cf.h">
