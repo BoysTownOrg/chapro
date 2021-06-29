@@ -48,7 +48,6 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
-        //float *z = CHA_CB;
         // process NFC
         cha_nfc_process(cp, x, y, cs);
     }
@@ -324,6 +323,8 @@ prepare(I_O *io, CHA_PTR cp)
     chunk = io->cs;
     prepare_nfc(cp);
     prepared++;
+    // generate C code from prepared data
+    //cha_data_gen(cp, DATA_HDR);
 }
 
 // process signal

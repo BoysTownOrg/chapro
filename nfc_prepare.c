@@ -17,10 +17,12 @@ nfc_map(int nw, double f1, double f2, double sr, int *map)
     n1 = round(f1 / df);
     n2 = round(f2 / df);
     nn = n2 - n1;
-    dk = log((double) nw / n1) / log((double) n2 / n1);
-    for (k = 0; k <= nn; k++) {
-        kk = log((double) (k + n1) / n1);
-        map[k] = round(n1 * exp(kk * dk));
+    if (map) {
+        dk = log((double) nw / n1) / log((double) n2 / n1);
+        for (k = 0; k <= nn; k++) {
+            kk = log((double) (k + n1) / n1);
+            map[k] = round(n1 * exp(kk * dk));
+        }
     }
 
     return (nn + 1);
@@ -55,7 +57,7 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
 {
     double  sr, f1, f2;
     float  *ww;
-    int      cs, nf, nw, wt, *mm;
+    int      cs, nf, nw, wt, nm, *mm;
 
     cs = nfc->cs;
     nw = nfc->nw;
@@ -75,13 +77,15 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     // copy NFC parameters
     CHA_IVAR[_nfc_nw] = nw;
     CHA_IVAR[_nfc_wt] = wt;
-    // compute NFC frequency map 
-    mm = (int32_t *)cha_allocate(cp, nw, sizeof(int32_t), _nfc_mm);
-    if (nfc->map && nfc->nm) {
-        memcpy(mm,nfc->map,(nfc->nm)*sizeof(int32_t));
-        CHA_IVAR[_nfc_nm] = nfc->nm;
-    } else {
-        CHA_IVAR[_nfc_nm] = nfc_map(nw, f1, f2, sr, mm);
+    // specify NFC frequency map 
+    if (nfc->map && nfc->nm) { // copy from NFC struct ??
+        nm = CHA_IVAR[_nfc_nm] = nfc->nm;
+        mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
+        memcpy(mm,nfc->map,nm * sizeof(int32_t));
+    } else {                   // compute log-frequency map
+        nm = CHA_IVAR[_nfc_nm] = nfc_map(nw, f1, f2, sr, 0);
+        mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
+        nfc_map(nw, f1, f2, sr, mm);
     }
     // compute chunks per shift
         CHA_IVAR[_nfc_ics] = 0;
@@ -90,7 +94,7 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     ww = cha_allocate(cp, nw, sizeof(float), _nfc_ww);
     nfc_window(ww, nw, wt, 2);
     // allocate NFC buffers
-    nf = nw * 4;
+    nf = nw * 2;
     cha_allocate(cp, nw, sizeof(float), _nfc_xx);
     cha_allocate(cp, nf, sizeof(float), _nfc_yy);
     cha_allocate(cp, nf, sizeof(float), _nfc_XX);
