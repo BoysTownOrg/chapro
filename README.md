@@ -49,7 +49,7 @@ The following test programs are included.
 
 Contributors
 
-Contact Stephen.Neely@boystown.org or Daniel.Rasetshwane@boystown.org to contribute code to the repo.
+Contact Stephen.Neely@boystown.org to contribute code to the repo.
 
 License
 
