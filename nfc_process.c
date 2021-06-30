@@ -59,25 +59,33 @@ fmap(float *y, float *x, int nf, int *mm, int nm)
     }
 }
 
-// nonlinear-frequency-compression shift
+// NFC analyze
 static __inline void
-nfc_shift(float *xx, float *yy, float *XX, float *YY, float *ww, 
-    int *mm, int nm, int nw, int ns, int nf)
+nfc_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
 {
     int i;
 
     for (i = 0; i < nw; i++) {
-        XX[i] = xx[i] * ww[i];   // window input
+        XX[i] = xx[i] * ww[i];   // apply window to input
     }
     fzero(XX + nw, nw);
     rfft(XX, nf);                // FFT
-    fmap(YY, XX, nf, mm, nm);    // compress frequency range
+    fcopy(xx, xx + ns, ns);      // save last half of input window
+}
+
+// NFC synthesize
+static __inline void
+nfc_synthesize(float *yy, float *YY, int ns, int nf)
+{
+    int i, nn;
+
     rifft(YY, nf);               // IFFT
-    fmove(yy, yy + ns, nf - ns); // shift output
-    for (i = 0; i < nw; i++) {
+    nn = nf - ns;
+    fmove(yy, yy + ns, nn);      // shift previous output
+    for (i = 0; i < nn; i++) {
         yy[i] += YY[i];          // overlap-add output
     }
-    fcopy(xx, xx + ns, ns);
+    fcopy(yy + nn, YY + nn, ns); // save response tail
 }
 
 // nonlinear-frequency-compression short chunk
@@ -86,7 +94,7 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     float *xx, float *yy, float *XX, float *YY, float *ww, 
     int *mm, int nm, int nw)
 {
-    int icp, ics, ncs, nn, nf, ns;
+    int icp, ics, nn, nf, ns, ncs;
 
     // process chunk
     ncs = CHA_IVAR[_nfc_ncs];
@@ -96,10 +104,11 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     nn = ics * cs;
     fcopy(xx + nn + ns, x, cs);
     fcopy(y, yy + nn, cs);
-    icp = ics + 1;
-    if (icp == ncs) {
-        nfc_shift(xx, yy, XX, YY, ww, mm, nm, nw, ns, nf);
-        icp = 0;
+    icp = (ics + 1) % ncs;
+    if (icp == 0) { // perform NFC after every shift
+        nfc_analyze(xx, XX, ww, nw, ns, nf);
+        fmap(YY, XX, nf, mm, nm);    // compress frequency range
+        nfc_synthesize(yy, YY, ns, nf);
     }
     // update chunk count
     CHA_IVAR[_nfc_ics] = icp;
@@ -120,7 +129,10 @@ nfc_lc(float *x, float *y, int cs,
     for (k = 0; k < nn; k++) {
         fcopy(xx + nn + ns, x + k * ns, ns);
         fcopy(y + k * ns, yy + nn, ns);
-        nfc_shift(xx, yy, XX, YY, ww, mm, nm, nw, ns, nf);
+        // perform NFC after every shift
+        nfc_analyze(xx, XX, ww, nw, ns, nf);
+        fmap(YY, XX, nf, mm, nm);    // compress frequency range
+        nfc_synthesize(yy, YY, ns, nf);
     }
 }
 
