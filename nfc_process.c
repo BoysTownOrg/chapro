@@ -56,8 +56,6 @@ fmap(float *y, float *x, int nf, int *mm, int nm)
     fcopy(y, x, nn);
     fzero(y + nn, nf - nn);
 
-    seriallog("fmap 1");
-
     for (k = 0; k < (nm - 1); k++)
     {
         yy = y + 2 * k + nn;
@@ -93,8 +91,6 @@ nfc_shift(float *xx, float *yy, float *XX, float *YY, float *ww,
         yy[i] += YY[i]; // overlap-add output
     }
     fcopy(xx, xx + ns, ns);
-
-    seriallog("nfc_shift 1");
 }
 
 // nonlinear-frequency-compression short chunk
