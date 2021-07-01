@@ -1,4 +1,5 @@
-// tst_cifa.c - test gammatone-filterbank analysis 
+#ifndef ARDUINO
+// tst_cifa.c - test gammatone-filterbank analysis
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,8 @@
 #include <sigpro.h>
 #include "chapro.h"
 
-typedef struct {
+typedef struct
+{
     char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
@@ -30,7 +32,7 @@ init_wav(I_O *io)
 {
     /* impulse input */
     io->nwav = round(io->rate);
-    io->iwav = (float *) calloc(io->nwav, sizeof(float));
+    io->iwav = (float *)calloc(io->nwav, sizeof(float));
     fprintf(stdout, "impulse response: \n");
     io->ofn = "test/tst_cifa.mat";
     io->iwav[0] = 1;
@@ -44,7 +46,7 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 {
     char *ft;
     float r[1], d[1], *x, *y;
-    int   n;
+    int n;
     static VAR *vl;
 
     ft = "MAT";
@@ -53,13 +55,13 @@ write_waves(I_O *io, CHA_PTR cp, int c)
     n = io->nwav;
     x = io->iwav;
     y = io->owav;
-    r[0] = (float) io->rate;
-    d[0] = (float) target_delay;
+    r[0] = (float)io->rate;
+    d[0] = (float)target_delay;
     vl = sp_var_alloc(4);
     sp_var_add(vl, "rate", r, 1, 1, "f4");
-    sp_var_add(vl,    "x", x, n, 1, "f4");
-    sp_var_add(vl,    "y", y, n, c, "f4c");
-    sp_var_add(vl,   "td", d, 1, 1, "f4");
+    sp_var_add(vl, "x", x, n, 1, "f4");
+    sp_var_add(vl, "y", y, n, c, "f4c");
+    sp_var_add(vl, "td", d, 1, 1, "f4");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
 }
@@ -75,16 +77,18 @@ cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
     int i, nh, nc;
 
     lfbw = fmid / nm;
-    nh = (int) floor(log2((float)sr / 2000) * cpo);
+    nh = (int)floor(log2((float)sr / 2000) * cpo);
     nc = nh + nm;
     cls->nc = nc;
-    for (i = 0; i < (nm - 1); i++) {
+    for (i = 0; i < (nm - 1); i++)
+    {
         cls->fc[i] = lfbw * (i + 1);
         cls->bw[i] = lfbw;
     }
     cls->fc[nm - 1] = fmid;
     cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
-    for (i = nm; i < nc; i++) {
+    for (i = nm; i < nc; i++)
+    {
         cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
         cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo) - pow(2.0, (i - nm + 0.5) / cpo));
     }
@@ -100,14 +104,14 @@ static void
 prepare_filterbank(CHA_PTR cp)
 {
     double gd, *fc, *bw;
-    float z[256], p[256], g[64]; 
+    float z[256], p[256], g[64];
     int nc, d[32];
     CHA_CLS cls;
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
-    static int    nm =  5;      // number of frequency bands below 1 kHz
-    static int    po =  3;      // number of bands per octave above 1 kHz
-    static int    no =  4;      // gammatone filter order
+    static double sr = 24000; // sampling rate (Hz)
+    static int cs = 32;       // chunk size
+    static int nm = 5;        // number of frequency bands below 1 kHz
+    static int po = 3;        // number of bands per octave above 1 kHz
+    static int no = 4;        // gammatone filter order
 
     gd = target_delay = cgtfb_init(&cls, sr, nm, po);
     // prepare filterbank
@@ -135,7 +139,7 @@ prepare(I_O *io, CHA_PTR cp)
     nc = CHA_IVAR[_nc];
     ns = io->nsmp;
     // output buffer
-    io->owav = (float *) calloc(nc * ns * 2, sizeof(float));
+    io->owav = (float *)calloc(nc * ns * 2, sizeof(float));
     // report
     fprintf(stdout, "CHA filterbank analysis: sampling rate=%.0f kHz, ", fs);
     fprintf(stdout, "filterbank gd=%.1f ms\n", gd);
@@ -147,7 +151,8 @@ unscramble_out(float *y, float *z, int nc, int ns, int cs, int j)
 {
     int k;
 
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         fcopy(y + j * cs + k * ns, z + k * cs, cs);
     }
 }
@@ -169,7 +174,8 @@ process(I_O *io, CHA_PTR cp)
     // process gammatone filterbank
     cs = CHA_IVAR[_cs]; // chunk size
     nk = ns / cs;       // number of chunks
-    for (j = 0; j < nk; j++) {
+    for (j = 0; j < nk; j++)
+    {
         cha_ciirfb_analyze(cp, x + j * cs, z, cs);
         unscramble_out(y, z, nc, ns * 2, cs * 2, j);
     }
@@ -186,8 +192,7 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-int
-main(int ac, char *av[])
+int main(int ac, char *av[])
 {
     static I_O io;
     static void *cp[NPTR] = {0};
@@ -197,3 +202,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

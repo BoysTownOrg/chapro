@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // freqshape.c
 
 #include <stdlib.h>
@@ -144,3 +145,4 @@ FUNC(int) sp_frqshp(
 
     return (err);
 }
+#endif

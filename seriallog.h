@@ -1,0 +1,1 @@
+void seriallog(const char *msg);
