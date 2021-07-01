@@ -46,6 +46,7 @@ The following test programs are included.
     tst_ifsc - test IIR filterbank (analysis & synthesis) and AGC processing
     tst_iffb - test IIR filterbank (analysis & synthesis) and AFC processing
     tst_gha  - test IIR filterbank (analysis & synthesis) and AFC+AGC processing
+    tst_nfc  - test nonlinear frequency compression
 
 Contributors
 
