@@ -4,9 +4,9 @@ pfn='test/tst_gha.mat';
 wd=0; % write data?
 load(pfn)
 play_audio=1;
-gn=0.317858; % audioread scale factor 
+gn=2; % audioread scale factor 
 x=audioread(ifn)*gn;
-[y,sr]=audioread(ofn);
+y=audioread(ofn);
 gn=sqrt(mean(y.^2))/sqrt(mean(x.^2));
 fprintf('tst_gha: ifn=%s; gn=%.1f\n',ifn, gn);
 % plot input/output
@@ -77,39 +77,10 @@ if (exist('sfbp','var'))
     semilogx(f,db1,'b',f,db2,'g',f,db3,'r',f,db4,'k');
     axis([0.1 20 -60 10])
     legend('W','H','WH','F','Location','south')
-    % calculate feedback-estimation-error
-    figure(5); clf
-    H1=SF./EF;
-    nf=length(H1);
-    H1(((nf-1)/4):nf)=1;
-    % Generate filter coefficients using cheby1
-    [b,a]=cheby1(2,2,0.05,'high');
-    nt = 2*(nf-1);
-    h=zeros(nt,1);
-    h(1)=1;
-    h=filter(b,a,h);
-    H2=ffa(h);
-    h=h/abs(H2((nf-1)/2));
-    H2=ffa(h);
-    % plot band-limit spectra
-    figure(5); clf
-    db5=20*log10(abs(H1));
-    db6=20*log10(abs(H2));
-    f=linspace(0,sr/2,length(db1))' / 1000;
-    subplot(1,2,1)
-    semilogx(f,db5,'b',f,db6,'r');
-    axis([0.1 20 -30 10])
-    subplot(1,2,2)
-    nn=40;
-    ii=1:nn;
-    plot(ii,h(ii))
-    axis([0 nn -0.2 1])
-    %prnflt(h);
     if (wd)
         ii=1:ny;
-        jj=(merr>-90);
         write_data('gha2.txt',[ty(ii) sfbp(ii) cfbp(ii)]);
-        write_data('gha3.txt',[tt(jj) merr(jj)]);
+        write_data('gha3.txt',[tt merr(:)]);
         write_data('gha4.txt',[f db1 db2 db3 db4]);
     end
 end
@@ -131,23 +102,6 @@ m=1+n/2;            % assume n is even
 H(1,:)=real(H(1,:));
 H(m,:)=real(H(m,:));
 H((m+1):n,:)=[];    % remove upper frequencies
-return
-
-function prnflt(fc)
-[~,m]=max(fc);
-nt=100;
-fprintf('static float bandlimit[%d] = {\n    ',nt);
-for k=1:nt
-  fprintf('%11.8f',fc(m+k-1));
-  if (k == nt)
-    fprintf('};\n');
-  else
-    fprintf(',');
-    if (mod(k,7)==0)
-      fprintf('\n    ');
-    end
-  end
-end
 return
 
 function write_data(fn,data)
