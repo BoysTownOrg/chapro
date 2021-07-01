@@ -1,26 +1,34 @@
-% tst_nfc - CHAPRO demonstration of nonlinear frequency compression
+% tst_nfc - CHAPRO demonstration of nonlinear frequency compression (NFC)
 function tst_nfc
-f1=3000;
-f2=4000;
-nw=128;
-[x,sr]=audioread('test/cat.wav');
-if (0)
-    map=nfc_prepare(nw,f1,f2,sr);
-    nfc_process(x,sr,map,nw);
-    fprintf('tst_nfc: f1=%.0f f2=%.0f nw=%d ',f1,f2,nw);
-end
-y=audioread('test/tst_nfc.wav');
+pfn='test/tst_nfc.mat';
+load(pfn)
+fprintf('tst_nfc: nw=%d f1=%.0f f1=%.0f nw=%d ',nw,f1,f2,nm);
+x=audioread(ifn);
+y=audioread(ofn);
 a1=sqrt(mean(x.^2));
 a2=sqrt(mean(y.^2));
-%----------------------
 fprintf('amplitude_ratio=%.3f\n',a2/a1);
 %----------------------
 figure(1); clf
+df=sr/nw/2000;
+nm=length(mm);
+fi=[0.001 mm]*df;
+fo=[0.001 mm(1)+(1:nm)-1]*df;
+subplot(2,1,1)
+plot(fi,fo)
+axis([0 12 0 6])
+ylabel('output frequency (kHz)')
+subplot(2,1,2)
+loglog(fi,fo)
+axis([0.1 12 0.1 12])
+xlabel('input frequency (kHz)')
+ylabel('output frequency (kHz)')
+figure(2); clf
 n=512;
 m=n/4;
 w=hamming(n/2);
 spectrogram(x*1e6,w,m,n,sr,'yaxis');
-figure(2); clf
+figure(3); clf
 spectrogram(y*1e6,w,m,n,sr,'yaxis');
 %----------------------
 playblocking(audioplayer(x,sr))

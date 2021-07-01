@@ -61,7 +61,7 @@ fmap(float *y, float *x, int nf, int *mm, int nm)
 
 // NFC analyze
 static __inline void
-nfc_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
+short_term_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
 {
     int i;
 
@@ -75,7 +75,7 @@ nfc_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
 
 // NFC synthesize
 static __inline void
-nfc_synthesize(float *yy, float *YY, int ns, int nf)
+short_term_synthesize(float *yy, float *YY, int ns, int nf)
 {
     int i, nn;
 
@@ -106,9 +106,9 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     fcopy(y, yy + nn, cs);
     icp = (ics + 1) % ncs;
     if (icp == 0) { // perform NFC after every shift
-        nfc_analyze(xx, XX, ww, nw, ns, nf);
+        short_term_analyze(xx, XX, ww, nw, ns, nf);
         fmap(YY, XX, nf, mm, nm);    // compress frequency range
-        nfc_synthesize(yy, YY, ns, nf);
+        short_term_synthesize(yy, YY, ns, nf);
     }
     // update chunk count
     CHA_IVAR[_nfc_ics] = icp;
@@ -130,9 +130,9 @@ nfc_lc(float *x, float *y, int cs,
         fcopy(xx + nn + ns, x + k * ns, ns);
         fcopy(y + k * ns, yy + nn, ns);
         // perform NFC after every shift
-        nfc_analyze(xx, XX, ww, nw, ns, nf);
+        short_term_analyze(xx, XX, ww, nw, ns, nf);
         fmap(YY, XX, nf, mm, nm);    // compress frequency range
-        nfc_synthesize(yy, YY, ns, nf);
+        short_term_synthesize(yy, YY, ns, nf);
     }
 }
 

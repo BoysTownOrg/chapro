@@ -183,18 +183,18 @@ typedef struct {
     int32_t  nqm;                // quality-metric buffer size
     int32_t  iqm;                // quality-metric index
     int32_t  sqm;                // save quality metric ?
-    CHA_PTR pcp;                 // previous CHA_PTR
+    CHA_PTR  pcp;                // previous CHA_PTR
 } CHA_AFC;
 
 typedef struct {
-    int32_t cs;             // chunk size
-    int32_t nw;             // window size (pow2)
-    int32_t wt;             // window type: 0=Hamming, 1=Blackman
-    int32_t nm;             // frequency-map size
-    double  sr;             // sampling rate (Hz)
-    double  f1;             // compression-lower-bound frequency (Hz)
-    double  f2;             // compression-upper-bound frequency (Hz)
-    int32_t *map;           // frequency map pointer
+    int32_t  cs;             // chunk size
+    int32_t  nw;             // window size (pow2)
+    int32_t  wt;             // window type: 0=Hamming, 1=Blackman
+    int32_t  nm;             // frequency-map size
+    double   sr;             // sampling rate (Hz)
+    double   f1;             // compression-lower-bound frequency (Hz)
+    double   f2;             // compression-upper-bound frequency (Hz)
+    int32_t *mm;             // frequency-map pointer
 } CHA_NFC;
 
 /*****************************************************/

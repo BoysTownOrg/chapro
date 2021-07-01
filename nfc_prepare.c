@@ -16,16 +16,16 @@ nfc_map(int nw, double f1, double f2, double sr, int *map)
     df = sr / (2 * nw);
     n1 = round(f1 / df);
     n2 = round(f2 / df);
-    nn = n2 - n1;
+    nn = n2 - n1 + 1;
     if (map) {
         dk = log((double) nw / n1) / log((double) n2 / n1);
-        for (k = 0; k <= nn; k++) {
+        for (k = 0; k < nn; k++) {
             kk = log((double) (k + n1) / n1);
             map[k] = round(n1 * exp(kk * dk));
         }
     }
 
-    return (nn + 1);
+    return (nn);
 }
 
 
@@ -61,11 +61,13 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
 
     cs = nfc->cs;
     nw = nfc->nw;
+    nm = nfc->nm;
     wt = nfc->wt;
     sr = nfc->sr;
     f1 = nfc->f1;
     f2 = nfc->f2;
-    printf("NFC parameters: nw=%d f1=%.0f f2=%.0f\n", nw, f1, f2);
+    printf("NFC parameters: nw=%d f1=%.0f f2=%.0f nm=%d\n",
+        nw, f1, f2, nm);
     if (cs <= 0) {
         return (1);
     }
@@ -78,10 +80,10 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     CHA_IVAR[_nfc_nw] = nw;
     CHA_IVAR[_nfc_wt] = wt;
     // specify NFC frequency map 
-    if (nfc->map && nfc->nm) { // copy from NFC struct ??
+    if (nfc->mm && nfc->nm) { // copy from NFC struct ??
         nm = CHA_IVAR[_nfc_nm] = nfc->nm;
         mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
-        memcpy(mm,nfc->map,nm * sizeof(int32_t));
+        memcpy(mm,nfc->mm,nm * sizeof(int32_t));
     } else {                   // compute log-frequency map
         nm = CHA_IVAR[_nfc_nm] = nfc_map(nw, f1, f2, sr, 0);
         mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
