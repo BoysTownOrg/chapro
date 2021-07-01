@@ -14,7 +14,7 @@ nfc_map(int nw, double f1, double f2, double sr, int *map)
     int k, n1, n2, nn;
 
     df = sr / (2 * nw);
-    f1 = fmax(f1, df);
+    f1 = fmax(df,fmin(f1, sr/2));
     f2 = fmax(f1,fmin(f2, sr/2));
     n1 = round(f1 / df);
     n2 = round(f2 / df);
