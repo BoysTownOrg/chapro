@@ -58,8 +58,8 @@ FUNC(int)
 cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
 {
     double  sr, f1, f2;
-    float  *ww;
-    int      cs, nf, nw, wt, nm, *mm;
+    float  *ww, *g1, *g2;
+    int      cs, nf, nw, nn, wt, nm, *mm;
 
     cs = nfc->cs;
     nw = nfc->nw;
@@ -103,6 +103,16 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     cha_allocate(cp, nf, sizeof(float), _nfc_yy);
     cha_allocate(cp, nf, sizeof(float), _nfc_XX);
     cha_allocate(cp, nf, sizeof(float), _nfc_YY);
+    // allocate gain buffers
+    if (nfc->g1) {
+        g1 = cha_allocate(cp, nw, sizeof(float), _nfc_g1);
+        fcopy(g1, nfc->g1, nw);
+    }
+    if (nfc->g2) {
+        nn = round(2 * f2 / sr);
+        g2 = cha_allocate(cp, nn, sizeof(float), _nfc_g2);
+        fcopy(g1, nfc->g2, nn);
+    }
 
     return (0);
 }

@@ -195,6 +195,8 @@ typedef struct {
     double   f1;             // compression-lower-bound frequency (Hz)
     double   f2;             // compression-upper-bound frequency (Hz)
     int32_t *mm;             // frequency-map pointer
+    float   *g1;             // pre-map gain pointer
+    float   *g2;             // post-map gain pointer
 } CHA_NFC;
 
 /*****************************************************/
@@ -386,6 +388,8 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _nfc_XX   _offset+41
 #define _nfc_yy   _offset+42
 #define _nfc_YY   _offset+43
+#define _nfc_g1   _offset+44
+#define _nfc_g2   _offset+45
 
 /*****************************************************/
 

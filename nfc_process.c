@@ -41,11 +41,21 @@ rifft(float *x, int n)
 
 // map frequencies
 static __inline void
-fmap(float *y, float *x, int nf, int *mm, int nm)
+fmap(float *y, float *x, int nf, int *mm, int nm, float *g1, float *g2)
 {
-    float *xx, *yy;
+    float g, *xx, *yy;
     int k, kk, nn;
 
+    // apply pre-map gain
+    if (g1) {
+        nn = mm[nm - 1];
+        for (k = 0; k < nn; k++) {
+            g = g1[k];
+            x[2 * k    ] *= g; // real
+            x[2 * k + 1] *= g; // imag
+        }
+    }
+    // perform frequency mapping
     nn = mm[0] * 2;
     fcopy(y, x, nn);
     fzero(y + nn, nf - nn);
@@ -55,6 +65,15 @@ fmap(float *y, float *x, int nf, int *mm, int nm)
             xx = x + 2 * kk;
             yy[0] += xx[0]; // real
             yy[1] += xx[1]; // imag
+        }
+    }
+    // apply post-map gain
+    if (g2) {
+        nn = mm[0] + nm - 1;
+        for (k = 0; k < nn; k++) {
+            g = g2[k];
+            y[2 * k    ] *= g; // real
+            y[2 * k + 1] *= g; // imag
         }
     }
 }
@@ -91,7 +110,8 @@ short_term_synthesize(float *yy, float *YY, int ns, int nf)
 // nonlinear-frequency-compression short chunk
 static __inline void
 nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
-    float *xx, float *yy, float *XX, float *YY, float *ww, 
+    float *xx, float *yy, float *XX, float *YY, float *ww,
+    float *g1, float *g2,
     int *mm, int nm, int nw)
 {
     int icp, ics, nn, nf, ns, ncs;
@@ -107,7 +127,7 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     icp = (ics + 1) % ncs;
     if (icp == 0) { // perform NFC after every shift
         short_term_analyze(xx, XX, ww, nw, ns, nf);
-        fmap(YY, XX, nf, mm, nm);    // compress frequency range
+        fmap(YY, XX, nf, mm, nm, g1, g2);    // compress frequency range
         short_term_synthesize(yy, YY, ns, nf);
     }
     // update chunk count
@@ -118,6 +138,7 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
 static __inline void
 nfc_lc(float *x, float *y, int cs,
     float *xx, float *yy, float *XX, float *YY, float *ww, 
+    float *g1, float *g2,
     int *mm, int nm, int nw)
 {
     int k, nn, nf, ns;
@@ -131,7 +152,7 @@ nfc_lc(float *x, float *y, int cs,
         fcopy(y + k * ns, yy + nn, ns);
         // perform NFC after every shift
         short_term_analyze(xx, XX, ww, nw, ns, nf);
-        fmap(YY, XX, nf, mm, nm);    // compress frequency range
+        fmap(YY, XX, nf, mm, nm, g1, g2);    // compress frequency range
         short_term_synthesize(yy, YY, ns, nf);
     }
 }
@@ -142,7 +163,7 @@ nfc_lc(float *x, float *y, int cs,
 FUNC(void)
 cha_nfc_process(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float *ww, *xx, *yy, *XX, *YY;
+    float *ww, *xx, *yy, *XX, *YY, *g1, *g2;
     int nw, nm, *mm;
 
     // copy parameters and pointers from cha_data
@@ -154,9 +175,11 @@ cha_nfc_process(CHA_PTR cp, float *x, float *y, int cs)
     yy = (float *) cp[_nfc_yy];
     XX = (float *) cp[_nfc_XX];
     YY = (float *) cp[_nfc_YY];
+    g1 = (float *) cp[_nfc_g1];
+    g2 = (float *) cp[_nfc_g2];
     if (cs < (nw / 2)) {       // short chunk ??
-        nfc_sc(cp, x, y, cs, xx, yy, XX, YY, ww, mm, nm, nw);
+        nfc_sc(cp, x, y, cs, xx, yy, XX, YY, g1, g2, ww, mm, nm, nw);
     } else {                   // long chunk (not yet implemented)
-        nfc_lc(x, y, cs, xx, yy, XX, YY, ww, mm, nm, nw);
+        nfc_lc(x, y, cs, xx, yy, XX, YY, ww, g1, g2, mm, nm, nw);
     }
 }
