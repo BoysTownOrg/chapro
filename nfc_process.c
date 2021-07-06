@@ -178,7 +178,7 @@ cha_nfc_process(CHA_PTR cp, float *x, float *y, int cs)
     g1 = (float *) cp[_nfc_g1];
     g2 = (float *) cp[_nfc_g2];
     if (cs < (nw / 2)) {       // short chunk ??
-        nfc_sc(cp, x, y, cs, xx, yy, XX, YY, g1, g2, ww, mm, nm, nw);
+        nfc_sc(cp, x, y, cs, xx, yy, XX, YY, ww, g1, g2, mm, nm, nw);
     } else {                   // long chunk (not yet implemented)
         nfc_lc(x, y, cs, xx, yy, XX, YY, ww, g1, g2, mm, nm, nw);
     }
