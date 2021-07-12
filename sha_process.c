@@ -8,7 +8,7 @@
 
 static double g0, a1, a2, a3;
 static float *AA, *II, *SS;
-static int xr, hbw;
+static int exr, hbw;
 
 /***********************************************************/
 #ifdef ARM_DSP
@@ -50,8 +50,9 @@ compress(float *y, float *x, int nf, float *g1)
     float g, gg, xr, xi, xx, JJ;
     int e, k, kr, ki, k1, k2, k2mn, k2mx, kk;
     static float spl_ref = 1.1219e-6;
+    static float eps = 1e-12;
 
-    gg = 0.25 / (spl_ref * spl_ref); // reference intensity [11-Jul-2021]
+    gg = 1 / (spl_ref * spl_ref) / 4; // reference intensity [11-Jul-2021]
     // compute amplitude and intensity
     for (k = 0; k < nf; k++) {
         kr = 2 * k;
@@ -64,7 +65,7 @@ compress(float *y, float *x, int nf, float *g1)
         }
         xx = (xr * xr + xi * xi) * gg;
         II[k] = xx;
-        AA[k] = sqrt(xx);
+        AA[k] = (float)sqrt(xx);
     }
     // apply suppression
     if (hbw) {
@@ -82,16 +83,19 @@ compress(float *y, float *x, int nf, float *g1)
         for (k = 0; k < nf; k++) {
             xx = y[k];
             II[k1] = xx;
-            AA[k1] = sqrt(xx);
+            AA[k1] = (float)sqrt(xx);
         }
     }
     // calculate compression and apply to input
     for (k = 0; k < nf; k++) {
-        if (xr > 1) {                  // include expansion ??
-            JJ = 1 / (II[k] + 1e-12); e = xr; while (--e) JJ *= JJ;      // repeat xr times } else {
+        if (exr > 1) {                  // include expansion ??
+            JJ = 1 / (II[k] + eps); 
+            e = exr;
+            while (--e) JJ *= JJ;      // repeat xr times 
+        } else {
             JJ = 0;
         }
-        g = g0 / sqrt(1 + a1 * AA[k] + a2 * II[k] + a3 * JJ);
+        g = g0 / (float)sqrt(1 + a1 * AA[k] + a2 * II[k] + a3 * JJ);
         kr = 2 * k;
         ki = kr + 1;
         y[kr] = x[kr] * g; // real
@@ -200,7 +204,7 @@ cha_sha_process(CHA_PTR cp, float *x, float *y, int cs)
     a1 = CHA_DVAR[_sha_a1];
     a2 = CHA_DVAR[_sha_a2];
     a3 = CHA_DVAR[_sha_a3];
-    xr = CHA_IVAR[_sha_xr];
+    exr = CHA_IVAR[_sha_xr];
     hbw = CHA_IVAR[_sha_hbw];
     if (cs <= (nw / 2)) {       // short chunk ??
         sha_sc(cp, x, y, cs, xx, yy, XX, YY, ww, g1, nw);

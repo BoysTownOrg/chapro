@@ -343,9 +343,9 @@ prepare_sha(CHA_PTR cp)
         supp = calloc(nf * nf, sizeof(float));
         suppress_prepare(supp, nf);
         sha.supp = supp; 
-        sha.Gmax = 27.3;
+        sha.Gmax = 27.9;
     } else {
-        sha.Gmax = 27.1;
+        sha.Gmax = 27.9;
     }
     sha.Lmax = 105;
     sha.Lckp = 40;

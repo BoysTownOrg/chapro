@@ -98,11 +98,11 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     ww = cha_allocate(cp, nw, sizeof(float), _nfc_ww);
     nfc_window(ww, nw, wt, 2);
     // allocate NFC buffers
-    nf = nw * 2 + 2;
+    nf = nw * 2 + 1;
     cha_allocate(cp, nw, sizeof(float), _nfc_xx);
-    cha_allocate(cp, nf, sizeof(float), _nfc_yy);
-    cha_allocate(cp, nf, sizeof(float), _nfc_XX);
-    cha_allocate(cp, nf, sizeof(float), _nfc_YY);
+    cha_allocate(cp, nf * 2, sizeof(float), _nfc_yy);
+    cha_allocate(cp, nf * 2, sizeof(float), _nfc_XX);
+    cha_allocate(cp, nf * 2, sizeof(float), _nfc_YY);
     // allocate gain buffers
     if (nfc->g1) {
         g1 = cha_allocate(cp, nw, sizeof(float), _nfc_g1);

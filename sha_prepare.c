@@ -17,14 +17,14 @@ sha_window(float *w, int nw, int wt, int nsw)
     for (j = 0; j < nw; j++) {
         p = M_PI * (2.0 * j - nw) / nw;
         if (wt == 0) {
-            w[j] = (1 - b) + b * cos(p);                   // Hamming
+            w[j] = (float)((1 - b) + b * cos(p));                  // Hamming
         } else {
-            w[j] = (1 - a + cos(p) + a * cos(2 * p)) / 2;  // Blackman
+            w[j] = (float)((1 - a + cos(p) + a * cos(2 * p)) / 2); // Blackman
         }
         sm += w[j];
     }
     for (j = 0; j < nw; j++) {
-        w[j] *= (nw / sm / nsw);
+        w[j] *= (float)(nw / sm / nsw);
     }
 }
 
@@ -62,7 +62,7 @@ cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
     // copy SHA parameters
     CHA_IVAR[_sha_nw] = nw;
     CHA_IVAR[_sha_wt] = wt;
-    nf = nw + 1;
+    nf = 2 * nw + 1;
     // compute chunks per shift
     CHA_IVAR[_sha_ics] = 0;
     CHA_IVAR[_sha_ncs] = (nw / 2) / cs;
