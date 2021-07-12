@@ -8,7 +8,6 @@ fprintf('tst_sha: nw=%d sr=%.0f hbw=%d ',nw,sr,hbw);
 fprintf('Gmax=%0.1f Lckp=%.0f ',Gmax,Lckp);
 sha_prepare(Gmax,Lmax,Lckp,Lekp,xr,nw,hbw);
 %----------------------
-%sha_process(x,gx,sr,nw,hbw,ofn);
 y=audioread(ofn);
 ax=sqrt(mean(x.^2))*gx;
 ay=sqrt(mean(y.^2))*gx;
@@ -152,36 +151,6 @@ else
     G=g0./sqrt(1+a1*A+a2*I);
 end
 X=X.*G;
-end
-
-function y=sha_process(x,gx,sr,nw,hbw,ofn)
-x=x*gx;
-shft=nw/2;
-nfft=nw*2;
-nx=length(x);
-ns=floor(nx/shft);
-y=zeros(size(x));
-w=hamming(nw);
-w=w/mean(2*w);
-xx=zeros(nfft,1);
-for k=1:ns
-    kk=(k-1)*shft;
-    n1=min(nw,nx-kk);
-    n2=min(nfft,nx-kk);
-    i0=(nfft-n1+1):nfft;
-    i1=1:n1;
-    i2=1:n2;
-    k1=kk+i1;
-    k2=kk+i2;
-    xx(i0)=0;            % zero
-    xx(i1)=x(k1).*w(i1); % window
-    XX=ffa(xx);          % analyze
-    YY=compress(XX,hbw);
-    yy=ffs(YY);          % synthesize
-    y(k2)=y(k2)+yy(i2);  % overlap
-end
-y=y/gx;
-audiowrite(ofn,y,sr);
 end
 
 %=======================================
