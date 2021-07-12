@@ -36,7 +36,7 @@ static int    prepared = 0;
 static int    io_wait = 40;
 static struct {
     char *ifn, *ofn, hbw, mat, nrep, play;
-    double lbf, ubf;
+    double lbf, ubf, Gmax;
     int nw, xr;
 } args;
 static CHA_SHA sha = {0};
@@ -64,6 +64,7 @@ usage()
     printf("usage: tst_sha [-options] [input_file] [output_file]\n");
     printf("options\n");
     printf("-bN   half-band-width  = N [1]\n");
+    printf("-gN   maximum gain  = N \n");
     printf("-h    print help\n");
     printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
@@ -90,10 +91,13 @@ parse_args(int ac, char *av[])
     args.xr   = 2;
     args.nw   = 0;
     args.mat  = 1;
+    args.Gmax  = 0;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'b') {
                 args.hbw = atoi(av[1] + 2);
+            } else if (av[1][1] == 'g') {
+                args.Gmax = atof(av[1] + 2);
             } else if (av[1][1] == 'h') {
                 usage();
             } else if (av[1][1] == 'P') {
@@ -338,20 +342,22 @@ prepare_sha(CHA_PTR cp)
 {
     int nf;
 
-    if (args.hbw > 0) {
-        nf = sha.nw + 1;
-        supp = calloc(nf * nf, sizeof(float));
-        suppress_prepare(supp, nf);
-        sha.supp = supp; 
-        sha.Gmax = 27.9;
-    } else {
-        sha.Gmax = 27.9;
-    }
+    sha.Gmax = 27.9;
     sha.Lmax = 105;
     sha.Lckp = 40;
     sha.Lekp = 10;
     sha.xr   = args.xr;
     sha.hbw  = args.hbw;
+    if (args.Gmax > 0) {
+        sha.Gmax = args.Gmax;
+    }
+    if (args.hbw > 0) {
+        nf = sha.nw + 1;
+        supp = calloc(nf * nf, sizeof(float));
+        suppress_prepare(supp, nf);
+        sha.supp = supp; 
+        sha.hbw  = args.hbw;
+    }
     cha_sha_prepare(cp, &sha);
 }
 

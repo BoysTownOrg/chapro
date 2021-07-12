@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "chapro.h"
 
-static double g0, a1, a2, a3;
+static float g0, a1, a2, a3;
 static float *AA, *II, *SS;
 static int exr, hbw;
 
@@ -200,10 +200,10 @@ cha_sha_process(CHA_PTR cp, float *x, float *y, int cs)
     SS = (float *) cp[_sha_SS];
     AA = (float *) cp[_sha_AA];
     II = (float *) cp[_sha_II];
-    g0 = CHA_DVAR[_sha_g0];
-    a1 = CHA_DVAR[_sha_a1];
-    a2 = CHA_DVAR[_sha_a2];
-    a3 = CHA_DVAR[_sha_a3];
+    g0 = (float)CHA_DVAR[_sha_g0];
+    a1 = (float)CHA_DVAR[_sha_a1];
+    a2 = (float)CHA_DVAR[_sha_a2];
+    a3 = (float)CHA_DVAR[_sha_a3];
     exr = CHA_IVAR[_sha_xr];
     hbw = CHA_IVAR[_sha_hbw];
     if (cs <= (nw / 2)) {       // short chunk ??

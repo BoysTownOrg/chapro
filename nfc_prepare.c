@@ -41,14 +41,14 @@ nfc_window(float *w, int nw, int wt, int nsw)
     for (j = 0; j < nw; j++) {
         p = M_PI * (2.0 * j - nw) / nw;
         if (wt == 0) {
-            w[j] = (1 - b) + b * cos(p);                   // Hamming
+            w[j] = (float)((1 - b) + b * cos(p));                   // Hamming
         } else {
-            w[j] = (1 - a + cos(p) + a * cos(2 * p)) / 2;  // Blackman
+            w[j] = (float)((1 - a + cos(p) + a * cos(2 * p)) / 2);  // Blackman
         }
         sm += w[j];
     }
     for (j = 0; j < nw; j++) {
-        w[j] *= (nw / sm / nsw);
+        w[j] *= (float)(nw / sm / nsw);
     }
 }
 
