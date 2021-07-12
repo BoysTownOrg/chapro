@@ -22,6 +22,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
 	afc_prepare.o afc_filters.o afc_process.o \
 	nfc_prepare.o nfc_process.o \
+	sha_prepare.o sha_process.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
