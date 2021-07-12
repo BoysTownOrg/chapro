@@ -178,6 +178,8 @@
     <ClCompile Include="..\iirfb_prepare.c" />
     <ClCompile Include="..\iirfb_process.c" />
     <ClCompile Include="..\rfft.c" />
+    <ClCompile Include="..\sha_prepare.c" />
+    <ClCompile Include="..\sha_process.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\chapro.h" />

@@ -144,6 +144,8 @@ Copy ..\chapro.h c:\usr\include
     <ClCompile Include="..\nfc_prepare.c" />
     <ClCompile Include="..\nfc_process.c" />
     <ClCompile Include="..\rfft.c" />
+    <ClCompile Include="..\sha_prepare.c" />
+    <ClCompile Include="..\sha_process.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\chapro.h" />

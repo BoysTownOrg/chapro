@@ -73,6 +73,12 @@
     <ClCompile Include="..\rfft.c">
       <Filter>Source FIles</Filter>
     </ClCompile>
+    <ClCompile Include="..\sha_prepare.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sha_process.c">
+      <Filter>Source FIles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cha_ff.h">
