@@ -413,12 +413,11 @@ static void
 write_wave(I_O *io)
 {
     float r[1], *w;
-    int   n, nm, nf, nbits = 16;
+    int   n, nf, nbits = 16;
     static VAR *vl;
 
     if (io->dfn) {
         printf(" MAT output: %s\n", io->dfn);
-        nm = sha.nm;
         vl = sp_var_alloc(12);
         sp_var_add(vl,  "ifn",   io->ifn,  1,  1, "f4str");
         sp_var_add(vl,  "ofn",   io->ofn,  1,  1, "f4str");
