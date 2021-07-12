@@ -45,15 +45,16 @@ rifft(float *x, int n)
 
 // apply compression
 static __inline void
-compress(float *y, float *x, int nf, float *g1)
+compress(float *y, float *x, int nw, float *g1)
 {
     float g, gg, xr, xi, xx, JJ;
-    int e, k, kr, ki, k1, k2, k2mn, k2mx, kk;
+    int e, k, kr, ki, k1, k2, k2mn, k2mx, kk, nf;
     static float spl_ref = 1.1219e-6;
     static float eps = 1e-12;
 
+    nf = nw + 1;
     gg = 1 / (spl_ref * spl_ref) / 4; // reference intensity [11-Jul-2021]
-    // compute amplitude and intensity
+    // compute intensity for each channel
     for (k = 0; k < nf; k++) {
         kr = 2 * k;
         ki = kr + 1;
@@ -65,26 +66,29 @@ compress(float *y, float *x, int nf, float *g1)
         }
         xx = (xr * xr + xi * xi) * gg;
         II[k] = xx;
-        AA[k] = (float)sqrt(xx);
     }
-    // apply suppression
-    if (hbw) {
+    if (hbw > 0) { // is suppression bandwidth > zero ??
+        // calculate suppression and apply to intensity
+        // [note: output buffer "y" used as scratch buffer here]
         for (k1 = 0; k1 < nf; k1++) {
-            y[k1] = 0;
             k2mn = k1 - hbw;
             k2mx = k1 + hbw;
             k2mn = (k2mn <  0) ?  0 : k2mn;
             k2mx = (k2mx > nf) ? nf : k2mx;
+            xx = 0;
             for (k2 = k2mn; k2 < k2mx; k2++) {
                 kk = k1 + k2 * nf;
-                y[k1] += (k2 == k1) ? SS[kk] : SS[kk] * II[k2];
+                xx += (k1 == k2) ? II[k2] : SS[kk] * II[k2];
             }
+            y[k1] = xx;
         }
         for (k = 0; k < nf; k++) {
-            xx = y[k];
-            II[k1] = xx;
-            AA[k1] = (float)sqrt(xx);
+            II[k] = y[k];
         }
+    }
+    // calculate amplitude for each channel
+    for (k = 0; k < nf; k++) {
+           AA[k] = (float)sqrt(II[k]);
     }
     // calculate compression and apply to input
     for (k = 0; k < nf; k++) {
@@ -105,10 +109,11 @@ compress(float *y, float *x, int nf, float *g1)
 
 // short-term FFT analyze
 static __inline void
-short_term_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
+short_term_analyze(float *xx, float *XX, int nw, int ns, float *ww)
 {
-    int i;
+    int i, nf;
 
+    nf = nw * 2;
     for (i = 0; i < nw; i++) {
         XX[i] = xx[i] * ww[i];   // apply window to input
     }
@@ -119,10 +124,11 @@ short_term_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
 
 // short-term FFT synthesize
 static __inline void
-short_term_synthesize(float *yy, float *YY, int ns, int nf)
+short_term_synthesize(float *yy, float *YY, int nw, int ns)
 {
-    int i, nn;
+    int i, nn, nf;
 
+    nf = nw * 2;
     rifft(YY, nf);               // IFFT
     nn = nf - ns;
     fmove(yy, yy + ns, nn);      // shift previous output
@@ -138,21 +144,20 @@ sha_sc(CHA_PTR cp, float *x, float *y, int cs,
     float *xx, float *yy, float *XX, float *YY, float *ww,
     float *g1, int nw)
 {
-    int icp, ics, nn, nf, ns, ncs;
+    int icp, ics, nn, ns, ncs;
 
     // process chunk
     ncs = CHA_IVAR[_sha_ncs];
     ics = CHA_IVAR[_sha_ics];
     ns = nw / 2;
-    nf = nw * 2;
     nn = ics * cs;
     fcopy(xx + nn + ns, x, cs);
     fcopy(y, yy + nn, cs);
     icp = (ics + 1) % ncs;
     if (icp == 0) { // perform frequency-map after every shift
-        short_term_analyze(xx, XX, ww, nw, ns, nf);
-        compress(YY, XX, nf, g1);
-        short_term_synthesize(yy, YY, ns, nf);
+        short_term_analyze(xx, XX, nw, ns, ww);
+        compress(YY, XX, nw, g1);
+        short_term_synthesize(yy, YY, nw, ns);
     }
     // update chunk count
     CHA_IVAR[_sha_ics] = icp;
@@ -164,19 +169,18 @@ sha_lc(float *x, float *y, int cs,
     float *xx, float *yy, float *XX, float *YY, float *ww, 
     float *g1, int nw)
 {
-    int k, nn, nf, ns;
+    int k, nn, ns;
 
     // process chunk
     ns = nw / 2;
-    nf = nw * 2;
     nn = cs / ns;
     for (k = 0; k < nn; k++) {
         fcopy(xx + nn + ns, x + k * ns, ns);
         fcopy(y + k * ns, yy + nn, ns);
         // perform frequency-map after every shift
-        short_term_analyze(xx, XX, ww, nw, ns, nf);
-        compress(YY, XX, nf, g1);
-        short_term_synthesize(yy, YY, ns, nf);
+        short_term_analyze(xx, XX, nw, ns, ww);
+        compress(YY, XX, nw, g1);
+        short_term_synthesize(yy, YY, nw, ns);
     }
 }
 

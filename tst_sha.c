@@ -318,7 +318,7 @@ static void
 suppress_prepare(float *supp, int nf)
 {
     double si, oo, ee;
-    int k1, k2;
+    int k1, k2, kk;
 
     supp[0] = 1;
     for (k1 = 1; k1 < nf; k1++) {
@@ -332,7 +332,8 @@ suppress_prepare(float *supp, int nf)
                 ee = 16;
             }
             si = 1 / (1 + 1e4 * pow(fabs(oo), ee));
-            supp[k1 + k2 * nf] = (float) si;
+            kk = k1 + k2 * nf;
+            supp[kk] = (float) si;
         }
     }
 }
@@ -342,7 +343,7 @@ prepare_sha(CHA_PTR cp)
 {
     int nf;
 
-    sha.Gmax = 27.9;
+    sha.Gmax = 28.9;
     sha.Lmax = 105;
     sha.Lckp = 40;
     sha.Lekp = 10;

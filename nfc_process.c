@@ -41,10 +41,10 @@ rifft(float *x, int n)
 
 // map frequencies
 static __inline void
-fmap(float *y, float *x, int nf, int *mm, int nm, float *g1, float *g2)
+fmap(float *y, float *x, int nw, int *mm, int nm, float *g1, float *g2)
 {
     float g, *xx, *yy;
-    int k, kk, nn;
+    int k, kk, nf, nn;
 
     // apply pre-map gain
     if (g1) {
@@ -57,6 +57,7 @@ fmap(float *y, float *x, int nf, int *mm, int nm, float *g1, float *g2)
     }
     // perform frequency mapping
     nn = mm[0] * 2;
+    nf = nw * 2;
     fcopy(y, x, nn);
     fzero(y + nn, nf - nn);
     for (k = 0; k < (nm - 1); k++) {
@@ -80,10 +81,11 @@ fmap(float *y, float *x, int nf, int *mm, int nm, float *g1, float *g2)
 
 // short-term FFT analyze
 static __inline void
-short_term_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
+short_term_analyze(float *xx, float *XX, int nw, int ns, float *ww)
 {
-    int i;
-
+    int i, nf;
+ 
+    nf = nw * 2;
     for (i = 0; i < nw; i++) {
         XX[i] = xx[i] * ww[i];   // apply window to input
     }
@@ -94,10 +96,11 @@ short_term_analyze(float *xx, float *XX, float *ww, int nw, int ns, int nf)
 
 // short-term FFT synthesize
 static __inline void
-short_term_synthesize(float *yy, float *YY, int ns, int nf)
+short_term_synthesize(float *yy, float *YY, int nw, int ns)
 {
-    int i, nn;
+    int i, nf, nn;
 
+    nf = nw * 2;
     rifft(YY, nf);               // IFFT
     nn = nf - ns;
     fmove(yy, yy + ns, nn);      // shift previous output
@@ -114,21 +117,20 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     float *g1, float *g2,
     int *mm, int nm, int nw)
 {
-    int icp, ics, nn, nf, ns, ncs;
+    int icp, ics, nn, ns, ncs;
 
     // process chunk
     ncs = CHA_IVAR[_nfc_ncs];
     ics = CHA_IVAR[_nfc_ics];
     ns = nw / 2;
-    nf = nw * 2;
     nn = ics * cs;
     fcopy(xx + nn + ns, x, cs);
     fcopy(y, yy + nn, cs);
     icp = (ics + 1) % ncs;
     if (icp == 0) { // perform frequency-map after every shift
-        short_term_analyze(xx, XX, ww, nw, ns, nf);
-        fmap(YY, XX, nf, mm, nm, g1, g2);    // compress frequency range
-        short_term_synthesize(yy, YY, ns, nf);
+        short_term_analyze(xx, XX, nw, ns, ww);
+        fmap(YY, XX, nw, mm, nm, g1, g2);    // compress frequency range
+        short_term_synthesize(yy, YY, nw, ns);
     }
     // update chunk count
     CHA_IVAR[_nfc_ics] = icp;
@@ -141,19 +143,18 @@ nfc_lc(float *x, float *y, int cs,
     float *g1, float *g2,
     int *mm, int nm, int nw)
 {
-    int k, nn, nf, ns;
+    int k, nn, ns;
 
     // process chunk
     ns = nw / 2;
-    nf = nw * 2;
     nn = cs / ns;
     for (k = 0; k < nn; k++) {
         fcopy(xx + nn + ns, x + k * ns, ns);
         fcopy(y + k * ns, yy + nn, ns);
         // perform frequency-map after every shift
-        short_term_analyze(xx, XX, ww, nw, ns, nf);
-        fmap(YY, XX, nf, mm, nm, g1, g2);    // compress frequency range
-        short_term_synthesize(yy, YY, ns, nf);
+        short_term_analyze(xx, XX, nw, ns, ww);
+        fmap(YY, XX, nw, mm, nm, g1, g2);    // compress frequency range
+        short_term_synthesize(yy, YY, nw, ns);
     }
 }
 

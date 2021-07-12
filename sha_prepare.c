@@ -62,7 +62,6 @@ cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
     // copy SHA parameters
     CHA_IVAR[_sha_nw] = nw;
     CHA_IVAR[_sha_wt] = wt;
-    nf = 2 * nw + 1;
     // compute chunks per shift
     CHA_IVAR[_sha_ics] = 0;
     CHA_IVAR[_sha_ncs] = (nw / 2) / cs;
@@ -70,6 +69,7 @@ cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
     ww = cha_allocate(cp, nw, sizeof(float), _sha_ww);
     sha_window(ww, nw, wt, 2);
     // allocate SHA buffers
+    nf = nw + 1;
     cha_allocate(cp, nw, sizeof(float), _sha_xx);
     cha_allocate(cp, nf * 2, sizeof(float), _sha_yy);
     cha_allocate(cp, nf * 2, sizeof(float), _sha_XX);
@@ -98,6 +98,7 @@ cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
     cha_allocate(cp, nf, sizeof(float), _sha_II);
     // copy SHA suppression
     if (sha->supp) { // copy suppressive-influence matrix
+        nf = nw + 1;
         supp = (float *)cha_allocate(cp, nf * nf, sizeof(float), _sha_SS);
         fcopy(supp, sha->supp, nf * nf);
     }
