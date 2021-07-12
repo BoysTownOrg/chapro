@@ -192,12 +192,32 @@ typedef struct {
     int32_t  wt;             // window type: 0=Hamming, 1=Blackman
     int32_t  nm;             // frequency-map size
     double   sr;             // sampling rate (Hz)
-    double   f1;             // compression-lower-bound frequency (Hz)
-    double   f2;             // compression-upper-bound frequency (Hz)
+    double  lbf;             // compression-lower-bound frequency (Hz)
+    double  ubf;             // compression-upper-bound frequency (Hz)
     int32_t *mm;             // frequency-map pointer
     float   *g1;             // pre-map gain pointer
     float   *g2;             // post-map gain pointer
 } CHA_NFC;
+
+typedef struct {
+    int32_t  cs;             // chunk size
+    int32_t  nw;             // window size (pow2)
+    int32_t  wt;             // window type: 0=Hamming, 1=Blackman
+    int32_t  nm;             // frequency-map size
+    int32_t  xr;             // expansion ratio
+    int32_t hbw;             // half-band-width of suppression
+    double   sr;             // sampling rate (Hz)
+    double  lbf;             // compression-lower-bound frequency (Hz)
+    double  ubf;             // compression-upper-bound frequency (Hz)
+    double Gmax;             // maximum gain (dB)
+    double Lmax;             // maximum output level (dB SPL)
+    double Lckp;             // compression knee-point input level (dB SPL)
+    double Lekp;             // expansion knee-point input level (dB SPL)
+    int32_t *mm;             // frequency-map pointer
+    float   *g1;             // pre-map gain pointer
+    float   *g2;             // post-map gain pointer
+    float *supp;             // suppressive influence pointer
+} CHA_SHA;
 
 /*****************************************************/
 
@@ -283,6 +303,13 @@ FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 FUNC(int) cha_nfc_prepare(CHA_PTR, CHA_NFC *);
 FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
+
+/*****************************************************/
+
+// suppression module
+
+FUNC(int) cha_sha_prepare(CHA_PTR, CHA_SHA *);
+FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
@@ -391,6 +418,20 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _nfc_g1   _offset+44
 #define _nfc_g2   _offset+45
 
+// sha pointer indices 
+
+#define _sha_mm   _offset+38
+#define _sha_ww   _offset+39
+#define _sha_xx   _offset+40
+#define _sha_XX   _offset+41
+#define _sha_yy   _offset+42
+#define _sha_YY   _offset+43
+#define _sha_g1   _offset+44
+#define _sha_g2   _offset+45
+#define _sha_SS   _offset+46
+#define _sha_AA   _offset+47
+#define _sha_II   _offset+48
+
 /*****************************************************/
 
 // global integer variable indices
@@ -445,6 +486,16 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _nfc_ncs  22 // chunks-per-shift number
 #define _nfc_ics  23 // chunks-per-shift count
 
+// sha integer variable indices
+
+#define _sha_nw   19 // window size
+#define _sha_nm   20 // frequency-map size
+#define _sha_wt   21 // window window type
+#define _sha_ncs  22 // chunks-per-shift number
+#define _sha_ics  23 // chunks-per-shift count
+#define _sha_xr   24 // expansion ratio
+#define _sha_hbw  25 // half-band-width of suppression
+
 /*****************************************************/
 
 // global double variable indices
@@ -479,6 +530,13 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _alf      13
 #define _hdel     14
 #define _fbm      15
+
+// sha double variable indices
+
+#define _sha_g0   16
+#define _sha_a1   17
+#define _sha_a2   18
+#define _sha_a3   19
 
 /*****************************************************/
 

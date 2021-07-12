@@ -1,4 +1,4 @@
-// tst_nfc.c - test NFC
+// tst_sha.c - test supression hearing aid (SHA)
 //              with WAV file input & ARSC output
 
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
-#define DATA_HDR "tst_nfc_data.h"
+#define DATA_HDR "tst_sha_data.h"
 //#include DATA_HDR
 
 #define MAX_MSG 256
@@ -30,16 +30,16 @@ typedef struct {
 
 static char   msg[MAX_MSG] = {0};
 static double srate = 24000;   // sampling rate (Hz)
+static float *supp = NULL;
 static int    chunk = 32;      // chunk size
 static int    prepared = 0;
 static int    io_wait = 40;
-static int   *mm = NULL;
 static struct {
-    char *ifn, *ofn, nfc, mat, nrep, play;
+    char *ifn, *ofn, hbw, mat, nrep, play;
     double lbf, ubf;
-    int nw;
+    int nw, xr;
 } args;
-static CHA_NFC nfc = {0};
+static CHA_SHA sha = {0};
 
 /***********************************************************/
 
@@ -49,8 +49,8 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     if (prepared) {
         // next line switches to compiled data
         //cp = (CHA_PTR) cha_data; 
-        // process NFC
-        cha_nfc_process(cp, x, y, cs);
+        // process SHA
+        cha_sha_process(cp, x, y, cs);
     }
 }
 
@@ -61,15 +61,16 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 static void
 usage()
 {
-    printf("usage: tst_nfc [-options] [input_file] [output_file]\n");
+    printf("usage: tst_sha [-options] [input_file] [output_file]\n");
     printf("options\n");
-    printf("-f1 N compression-lower-bound frequency [3000]\n");
-    printf("-f2 N compression-upper-bound frequency [4000]\n");
+    printf("-bN   half-band-width  = N [1]\n");
     printf("-h    print help\n");
     printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
     printf("-v    print version\n");
+    printf("-s    exclude suppression\n");
     printf("-wN   window size = N [128]\n");
+    printf("-xN   expansion ratio = N [2]\n");
     exit(0);
 }
 
@@ -85,30 +86,28 @@ parse_args(int ac, char *av[])
 {
     args.play = 0;
     args.nrep = 1;
-    args.lbf  = 0;
-    args.ubf  = 0;
+    args.hbw  = 1;
+    args.xr   = 2;
     args.nw   = 0;
     args.mat  = 1;
     while (ac > 1) {
         if (av[1][0] == '-') {
-            if (av[1][1] == 'h') {
+            if (av[1][1] == 'b') {
+                args.hbw = atoi(av[1] + 2);
+            } else if (av[1][1] == 'h') {
                 usage();
-            } else if (av[1][1] == 'f') {
-                if (av[1][2] == '1') {
-                    args.lbf = atoi(av[2]);
-                } else if (av[1][2] == '2') {
-                    args.ubf = atoi(av[2]);
-                }
-                ac--;
-                av++;
             } else if (av[1][1] == 'P') {
                 args.play = 1;
             } else if (av[1][1] == 'r') {
                 args.nrep = atoi(av[1] + 2);
+            } else if (av[1][1] == 's') {
+                args.hbw = 0;
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
                 args.nw = atoi(av[1] + 2);
+            } else if (av[1][1] == 'x') {
+                args.xr = atoi(av[1] + 2);
             }
             ac--;
             av++;
@@ -308,41 +307,52 @@ prepare_io(I_O *io)
     return (0);
 }
 
-// prepare NFC
 
-static int
-nfc_map(int nw, double lbf, double ubf, double sr, int *map)
+// prepare SHA
+
+static void
+suppress_prepare(float *supp, int nf)
 {
-    double df, dk, kk;
-    int k, n1, n2, nn;
+    double si, oo, ee;
+    int k1, k2;
 
-    df  = sr / (2 * nw);
-    lbf = fmax( df,fmin(lbf, sr/2));
-    ubf = fmax(lbf,fmin(ubf, sr/2));
-    n1  = round(lbf / df);
-    n2  = round(ubf / df);
-    nn  = n2 - n1 + 1;
-    if (map) {
-        dk = log((double) nw / n1) / log((double) n2 / n1);
-        for (k = 0; k < nn; k++) {
-            kk = log((double) (k + n1) / n1);
-            map[k] = round(n1 * exp(kk * dk));
+    supp[0] = 1;
+    for (k1 = 1; k1 < nf; k1++) {
+        for (k2 = 1; k2 < nf; k2++) {
+            oo = log(k1 / (double) k2) / log(2);
+            if (oo < -1) {
+                ee = 2;
+            } else if (oo < 1) {
+                ee = 6;
+            } else {
+                ee = 16;
+            }
+            si = 1 / (1 + 1e4 * pow(fabs(oo), ee));
+            supp[k1 + k2 * nf] = (float) si;
         }
     }
-
-    return (nn);
 }
 
 static void
-prepare_nfc(CHA_PTR cp)
+prepare_sha(CHA_PTR cp)
 {
+    int nf;
 
-    if (nfc.lbf > 0) {
-        mm = calloc(nfc.nw, sizeof(int));
-        nfc.nm = nfc_map(nfc.nw, nfc.lbf, nfc.ubf, nfc.sr, mm);
-        nfc.mm = mm;
+    if (args.hbw > 0) {
+        nf = sha.nw + 1;
+        supp = calloc(nf * nf, sizeof(float));
+        suppress_prepare(supp, nf);
+        sha.supp = supp; 
+        sha.Gmax = 27.3;
+    } else {
+        sha.Gmax = 27.1;
     }
-    cha_nfc_prepare(cp, &nfc);
+    sha.Lmax = 105;
+    sha.Lckp = 40;
+    sha.Lekp = 10;
+    sha.xr   = args.xr;
+    sha.hbw  = args.hbw;
+    cha_sha_prepare(cp, &sha);
 }
 
 // prepare signal processing
@@ -353,7 +363,7 @@ prepare(I_O *io, CHA_PTR cp)
     prepare_io(io);
     srate = io->rate;
     chunk = io->cs;
-    prepare_nfc(cp);
+    prepare_sha(cp);
     prepared++;
     // generate C code from prepared data
     //cha_data_gen(cp, DATA_HDR);
@@ -403,21 +413,31 @@ static void
 write_wave(I_O *io)
 {
     float r[1], *w;
-    int   n, nm, nbits = 16;
+    int   n, nm, nf, nbits = 16;
     static VAR *vl;
 
     if (io->dfn) {
         printf(" MAT output: %s\n", io->dfn);
-        nm = nfc.nm;
-        vl = sp_var_alloc(8);
-        sp_var_add(vl, "ifn",   io->ifn,  1,  1, "f4str");
-        sp_var_add(vl, "ofn",   io->ofn,  1,  1, "f4str");
-        sp_var_add(vl, "lbf",  &nfc.lbf,  1,  1, "f8");
-        sp_var_add(vl, "ubf",  &nfc.ubf,  1,  1, "f8");
-        sp_var_add(vl,  "sr",   &nfc.sr,  1,  1, "f8");
-        sp_var_add(vl,  "nw",   &nfc.nw,  1,  1, "i4");
-        sp_var_add(vl,  "nm",   &nfc.nm,  1,  1, "i4");
-        sp_var_add(vl,  "mm",    nfc.mm,  1, nm, "i4");
+        nm = sha.nm;
+        vl = sp_var_alloc(12);
+        sp_var_add(vl,  "ifn",   io->ifn,  1,  1, "f4str");
+        sp_var_add(vl,  "ofn",   io->ofn,  1,  1, "f4str");
+        sp_var_add(vl, "Gmax", &sha.Gmax,  1,  1, "f8");
+        sp_var_add(vl, "Lmax", &sha.Lmax,  1,  1, "f8");
+        sp_var_add(vl, "Lckp", &sha.Lckp,  1,  1, "f8");
+        sp_var_add(vl, "Lekp", &sha.Lekp,  1,  1, "f8");
+        sp_var_add(vl,   "sr",   &sha.sr,  1,  1, "f8");
+        sp_var_add(vl,   "nw",   &sha.nw,  1,  1, "i4");
+        sp_var_add(vl,   "nm",   &sha.nm,  1,  1, "i4");
+        sp_var_add(vl,   "xr",   &sha.xr,  1,  1, "i4");
+        sp_var_add(vl,  "hbw",  &sha.hbw,  1,  1, "i4");
+        if (args.hbw > 0) {
+            nf = sha.nw + 1;
+            sp_var_add(vl, "supp",  sha.supp, nf, nf, "f4");
+        } else {
+            r[0] = 1;
+            sp_var_add(vl, "supp",         r,  1,  1, "f4");
+        }
         remove(io->dfn);
         sp_mat_save(io->dfn, vl);
         sp_var_clear(vl);
@@ -476,35 +496,38 @@ cleanup(I_O *io, CHA_PTR cp)
     }
     stop_wav(io);
     cha_cleanup(cp);
-    if (mm) free(mm);
+    if (supp) free(supp);
 }
 
 /***********************************************************/
 
 static void
-configure_nfc()
+configure_sha()
 {
-    // NFC parameters
-    nfc.cs  = chunk;     // chunk size
-    nfc.lbf = 3000;      // compression-lower-bound frequency
-    nfc.ubf = 4000;      // compression-upper-bound frequency
-    nfc.nw  = 128;       // window size
-    nfc.sr  = srate;     // sampling rate
+    // SHA parameters
+    sha.cs  = chunk;     // chunk size
+    sha.lbf = 3000;      // compression-lower-bound frequency
+    sha.ubf = 4000;      // compression-upper-bound frequency
+    sha.nw  =  64;       // window size
+    sha.sr  = srate;     // sampling rate
+    sha.Gmax = args.hbw ? 27.2 : 20.5;
+    sha.Lmax = 105;      // maximum output level (dB SPL)
+    sha.Lckp = 40;       // compression knee-point input level (dB SPL)
+    sha.Lekp = 10;       // expansion knee-point input level (dB SPL)
+    sha.xr   = 2;        // expansion ratio
     // update args
-    if (args.lbf > 0) nfc.lbf = args.lbf;
-    if (args.ubf > 0) nfc.ubf = args.ubf;
-    if (args.nw > 0)  nfc.nw = args.nw;
+    if (args.nw > 0)  sha.nw = args.nw;
 }
 
 static void
 configure(I_O *io)
 {
     static char *ifn = "test/cat.wav";
-    static char *wfn = "test/tst_nfc.wav";
-    static char *mfn = "test/tst_nfc.mat";
+    static char *wfn = "test/tst_sha.wav";
+    static char *mfn = "test/tst_sha.mat";
 
     // initialize CHAPRO variables
-    configure_nfc();
+    configure_sha();
     // initialize I/O
 #ifdef ARSCLIB_H
     io->iod = ar_find_dev(ARSC_PREF_SYNC); // find preferred audio device
@@ -522,7 +545,7 @@ static void
 report()
 {
     // report
-    printf("CHA simulation: NFC\n");
+    printf("CHA simulation: SHA\n");
 }
 
 /***********************************************************/

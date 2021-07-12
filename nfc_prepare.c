@@ -8,17 +8,17 @@
 #include "chapro.h"
 
 static int
-nfc_map(int nw, double f1, double f2, double sr, int *map)
+nfc_map(int nw, double lbf, double ubf, double sr, int *map)
 {
     double df, dk, kk;
     int k, n1, n2, nn;
 
-    df = sr / (2 * nw);
-    f1 = fmax(df,fmin(f1, sr/2));
-    f2 = fmax(f1,fmin(f2, sr/2));
-    n1 = round(f1 / df);
-    n2 = round(f2 / df);
-    nn = n2 - n1 + 1;
+    df  = sr / (2 * nw);
+    lbf = fmax( df,fmin(lbf, sr/2));
+    ubf = fmax(lbf,fmin(ubf, sr/2));
+    n1  = round(lbf / df);
+    n2  = round(ubf / df);
+    nn  = n2 - n1 + 1;
     if (map) {
         dk = log((double) nw / n1) / log((double) n2 / n1);
         for (k = 0; k < nn; k++) {
@@ -57,7 +57,7 @@ nfc_window(float *w, int nw, int wt, int nsw)
 FUNC(int)
 cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
 {
-    double  sr, f1, f2;
+    double  sr, lbf, ubf;
     float  *ww, *g1, *g2;
     int      cs, nf, nw, nn, wt, nm, *mm;
 
@@ -66,10 +66,10 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     nm = nfc->nm;
     wt = nfc->wt;
     sr = nfc->sr;
-    f1 = nfc->f1;
-    f2 = nfc->f2;
-    printf("NFC parameters: nw=%d f1=%.0f f2=%.0f nm=%d\n",
-        nw, f1, f2, nm);
+    lbf = nfc->lbf;
+    ubf = nfc->ubf;
+    printf("NFC parameters: nw=%d lbf=%.0f ubf=%.0f nm=%d\n",
+        nw, lbf, ubf, nm);
     if (cs <= 0) {
         return (1);
     }
@@ -87,13 +87,13 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
         mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
         memcpy(mm,nfc->mm,nm * sizeof(int32_t));
     } else {                   // compute log-frequency map
-        nm = CHA_IVAR[_nfc_nm] = nfc_map(nw, f1, f2, sr, 0);
+        nm = CHA_IVAR[_nfc_nm] = nfc_map(nw, lbf, ubf, sr, 0);
         mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
-        nfc_map(nw, f1, f2, sr, mm);
+        nfc_map(nw, lbf, ubf, sr, mm);
     }
     // compute chunks per shift
-        CHA_IVAR[_nfc_ics] = 0;
-        CHA_IVAR[_nfc_ncs] = (nw / 2) / cs;
+    CHA_IVAR[_nfc_ics] = 0;
+    CHA_IVAR[_nfc_ncs] = (nw / 2) / cs;
     // compute window
     ww = cha_allocate(cp, nw, sizeof(float), _nfc_ww);
     nfc_window(ww, nw, wt, 2);
@@ -109,7 +109,7 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
         fcopy(g1, nfc->g1, nw);
     }
     if (nfc->g2) {
-        nn = round(2 * f2 / sr);
+        nn = round(2 * ubf / sr);
         g2 = cha_allocate(cp, nn, sizeof(float), _nfc_g2);
         fcopy(g1, nfc->g2, nn);
     }

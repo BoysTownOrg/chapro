@@ -2,7 +2,7 @@
 function tst_nfc
 pfn='test/tst_nfc.mat';
 load(pfn)
-fprintf('tst_nfc: nw=%d f1=%.0f f1=%.0f nw=%d ',nw,f1,f2,nm);
+fprintf('tst_nfc: nw=%d lbf=%.0f ubf=%.0f nm=%d ',nw,lbf,ubf,nm);
 x=audioread(ifn);
 y=audioread(ofn);
 a1=sqrt(mean(x.^2));
@@ -36,10 +36,10 @@ playblocking(audioplayer(y,sr))
 return
 
 % NFC log-frequency map
-function map=nfc_prepare(nw,f1,f2,sr)
+function map=nfc_prepare(nw,lbf,ubf,sr)
 df=sr/(nw*2);
-n1=round(f1/df);
-n2=round(f2/df);
+n1=round(lbf/df);
+n2=round(ubf/df);
 dk=log(nw/n1)/log(n2/n1);
 kk=log((n1:n2)/n1);
 map=round(n1*exp(kk*dk));

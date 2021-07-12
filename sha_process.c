@@ -1,10 +1,14 @@
-// nfc_process.c - nonlinear-frequency-compression processing functions
+// sha_process.c - nonlinear-frequency-compression processing functions
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 #include "chapro.h"
+
+static double g0, a1, a2, a3;
+static float *AA, *II, *SS;
+static int xr, hbw;
 
 /***********************************************************/
 #ifdef ARM_DSP
@@ -39,42 +43,59 @@ rifft(float *x, int n)
 
 #endif // ARM_DSP
 
-// map frequencies
+// apply compression
 static __inline void
-fmap(float *y, float *x, int nf, int *mm, int nm, float *g1, float *g2)
+compress(float *y, float *x, int nf, float *g1)
 {
-    float g, *xx, *yy;
-    int k, kk, nn;
+    float g, gg, xr, xi, xx, JJ;
+    int e, k, kr, ki, k1, k2, k2mn, k2mx, kk;
+    static float spl_ref = 1.1219e-6;
 
-    // apply pre-map gain
-    if (g1) {
-        nn = mm[nm - 1];
-        for (k = 0; k < nn; k++) {
-            g = g1[k];
-            x[2 * k    ] *= g; // real
-            x[2 * k + 1] *= g; // imag
+    gg = 0.25 / (spl_ref * spl_ref); // reference intensity [11-Jul-2021]
+    // compute amplitude and intensity
+    for (k = 0; k < nf; k++) {
+        kr = 2 * k;
+        ki = kr + 1;
+        xr = x[kr];
+        xi = x[ki];
+        if (g1) {
+            xr *= g1[k];
+            xi *= g1[k];
+        }
+        xx = (xr * xr + xi * xi) * gg;
+        II[k] = xx;
+        AA[k] = sqrt(xx);
+    }
+    // apply suppression
+    if (hbw) {
+        for (k1 = 0; k1 < nf; k1++) {
+            y[k1] = 0;
+            k2mn = k1 - hbw;
+            k2mx = k1 + hbw;
+            k2mn = (k2mn <  0) ?  0 : k2mn;
+            k2mx = (k2mx > nf) ? nf : k2mx;
+            for (k2 = k2mn; k2 < k2mx; k2++) {
+                kk = k1 + k2 * nf;
+                y[k1] += (k2 == k1) ? SS[kk] : SS[kk] * II[k2];
+            }
+        }
+        for (k = 0; k < nf; k++) {
+            xx = y[k];
+            II[k1] = xx;
+            AA[k1] = sqrt(xx);
         }
     }
-    // perform frequency mapping
-    nn = mm[0] * 2;
-    fcopy(y, x, nn);
-    fzero(y + nn, nf - nn);
-    for (k = 0; k < (nm - 1); k++) {
-        yy = y + 2 * k + nn;
-        for (kk = mm[k]; kk < mm[k + 1]; kk++) {
-            xx = x + 2 * kk;
-            yy[0] += xx[0]; // real
-            yy[1] += xx[1]; // imag
+    // calculate compression and apply to input
+    for (k = 0; k < nf; k++) {
+        if (xr > 1) {                  // include expansion ??
+            JJ = 1 / (II[k] + 1e-12); e = xr; while (--e) JJ *= JJ;      // repeat xr times } else {
+            JJ = 0;
         }
-    }
-    // apply post-map gain
-    if (g2) {
-        nn = mm[0] + nm - 1;
-        for (k = 0; k < nn; k++) {
-            g = g2[k];
-            y[2 * k    ] *= g; // real
-            y[2 * k + 1] *= g; // imag
-        }
+        g = g0 / sqrt(1 + a1 * AA[k] + a2 * II[k] + a3 * JJ);
+        kr = 2 * k;
+        ki = kr + 1;
+        y[kr] = x[kr] * g; // real
+        y[ki] = x[ki] * g; // imag
     }
 }
 
@@ -109,16 +130,15 @@ short_term_synthesize(float *yy, float *YY, int ns, int nf)
 
 // nonlinear-frequency-compression short chunk
 static __inline void
-nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
+sha_sc(CHA_PTR cp, float *x, float *y, int cs,
     float *xx, float *yy, float *XX, float *YY, float *ww,
-    float *g1, float *g2,
-    int *mm, int nm, int nw)
+    float *g1, int nw)
 {
     int icp, ics, nn, nf, ns, ncs;
 
     // process chunk
-    ncs = CHA_IVAR[_nfc_ncs];
-    ics = CHA_IVAR[_nfc_ics];
+    ncs = CHA_IVAR[_sha_ncs];
+    ics = CHA_IVAR[_sha_ics];
     ns = nw / 2;
     nf = nw * 2;
     nn = ics * cs;
@@ -127,19 +147,18 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     icp = (ics + 1) % ncs;
     if (icp == 0) { // perform frequency-map after every shift
         short_term_analyze(xx, XX, ww, nw, ns, nf);
-        fmap(YY, XX, nf, mm, nm, g1, g2);    // compress frequency range
+        compress(YY, XX, nf, g1);
         short_term_synthesize(yy, YY, ns, nf);
     }
     // update chunk count
-    CHA_IVAR[_nfc_ics] = icp;
+    CHA_IVAR[_sha_ics] = icp;
 }
 
 // nonlinear-frequency-compression long chunk
 static __inline void
-nfc_lc(float *x, float *y, int cs,
+sha_lc(float *x, float *y, int cs,
     float *xx, float *yy, float *XX, float *YY, float *ww, 
-    float *g1, float *g2,
-    int *mm, int nm, int nw)
+    float *g1, int nw)
 {
     int k, nn, nf, ns;
 
@@ -152,7 +171,7 @@ nfc_lc(float *x, float *y, int cs,
         fcopy(y + k * ns, yy + nn, ns);
         // perform frequency-map after every shift
         short_term_analyze(xx, XX, ww, nw, ns, nf);
-        fmap(YY, XX, nf, mm, nm, g1, g2);    // compress frequency range
+        compress(YY, XX, nf, g1);
         short_term_synthesize(yy, YY, ns, nf);
     }
 }
@@ -161,25 +180,31 @@ nfc_lc(float *x, float *y, int cs,
 
 // nonlinear-frequency-compression analysis
 FUNC(void)
-cha_nfc_process(CHA_PTR cp, float *x, float *y, int cs)
+cha_sha_process(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float *ww, *xx, *yy, *XX, *YY, *g1, *g2;
-    int nw, nm, *mm;
+    float *ww, *xx, *yy, *XX, *YY, *g1;
+    int nw;
 
     // copy parameters and pointers from cha_data
-    nw = CHA_IVAR[_nfc_nw];
-    nm = CHA_IVAR[_nfc_nm];
-    mm = (int   *) cp[_nfc_mm];
-    ww = (float *) cp[_nfc_ww];
-    xx = (float *) cp[_nfc_xx];
-    yy = (float *) cp[_nfc_yy];
-    XX = (float *) cp[_nfc_XX];
-    YY = (float *) cp[_nfc_YY];
-    g1 = (float *) cp[_nfc_g1];
-    g2 = (float *) cp[_nfc_g2];
+    nw = CHA_IVAR[_sha_nw];
+    ww = (float *) cp[_sha_ww];
+    xx = (float *) cp[_sha_xx];
+    yy = (float *) cp[_sha_yy];
+    XX = (float *) cp[_sha_XX];
+    YY = (float *) cp[_sha_YY];
+    g1 = (float *) cp[_sha_g1];
+    SS = (float *) cp[_sha_SS];
+    AA = (float *) cp[_sha_AA];
+    II = (float *) cp[_sha_II];
+    g0 = CHA_DVAR[_sha_g0];
+    a1 = CHA_DVAR[_sha_a1];
+    a2 = CHA_DVAR[_sha_a2];
+    a3 = CHA_DVAR[_sha_a3];
+    xr = CHA_IVAR[_sha_xr];
+    hbw = CHA_IVAR[_sha_hbw];
     if (cs <= (nw / 2)) {       // short chunk ??
-        nfc_sc(cp, x, y, cs, xx, yy, XX, YY, ww, g1, g2, mm, nm, nw);
+        sha_sc(cp, x, y, cs, xx, yy, XX, YY, ww, g1, nw);
     } else {                   // long chunk (not yet implemented)
-        nfc_lc(x, y, cs, xx, yy, XX, YY, ww, g1, g2, mm, nm, nw);
+        sha_lc(x, y, cs, xx, yy, XX, YY, ww, g1, nw);
     }
 }
