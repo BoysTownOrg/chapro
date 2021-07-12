@@ -111,7 +111,7 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     if (nfc->g2) {
         nn = round(2 * ubf / sr);
         g2 = cha_allocate(cp, nn, sizeof(float), _nfc_g2);
-        fcopy(g1, nfc->g2, nn);
+        fcopy(g2, nfc->g2, nn);
     }
 
     return (0);
