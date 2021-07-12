@@ -25,7 +25,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	icmp_prepare.o icmp_process.o
 PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
      tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
-     tst_gha tst_nfc gha_demo opt_afc
+     tst_gha tst_nfc tst_sha gha_demo opt_afc
 HDRS=chapro.h 
 
 all: $(PGMS) tst_nad.c
@@ -52,6 +52,7 @@ tst: $(PGMS) test.lst
 	./tst_cifsc
 	./tst_gha
 	./tst_nfc
+	./tst_sha
 	./gha_demo
 
 test.lst:
@@ -97,6 +98,9 @@ tst_gha : tst_gha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 tst_nfc : tst_nfc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_sha : tst_sha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
 
 gha_demo : gha_demo.o  libchapro.a
@@ -171,6 +175,7 @@ tst_ffio.o: tst_ffio.c chapro.h
 tst_ffsc.o: tst_ffsc.c chapro.h 
 tst_gha.o: tst_gha.c chapro.h 
 tst_nfc.o: tst_nfc.c chapro.h 
+tst_sha.o: tst_sha.c chapro.h 
 tst_ifa.o: tst_ifa.c chapro.h 
 tst_ifio.o: tst_ifio.c chapro.h 
 tst_ifsc.o: tst_ifsc.c chapro.h 
