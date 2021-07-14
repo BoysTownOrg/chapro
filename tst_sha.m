@@ -36,9 +36,9 @@ text(tx,ty(2),sprintf('Lmax=%.0f',Lmax))
 text(tx,ty(3),sprintf('Lckp=%.0f',Lckp))
 text(tx,ty(4),sprintf('Lekp=%.0f',Lekp))
 subplot(2,1,2)
-ff=2.^((-8:12)'/4);
-nf=length(ff);
 df=(sr/2000)/nw;
+ff=(1:nw)'*df;
+nf=length(ff);
 fp=[0.5 1 2 4];
 if (hbw)
     np=length(fp);

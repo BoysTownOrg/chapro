@@ -1,5 +1,5 @@
 // tst_sha.c - test supression hearing aid (SHA)
-//              with WAV file input & ARSC output
+//              with WAV file input & output
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,8 +7,7 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
-
-#include <arsclib.h>
+//#include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
 #define DATA_HDR "tst_sha_data.h"
