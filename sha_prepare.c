@@ -99,6 +99,7 @@ cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
     // allocate compression buffers
     cha_allocate(cp, nf, sizeof(float), _sha_AA);
     cha_allocate(cp, nf, sizeof(float), _sha_II);
+    cha_allocate(cp, nf, sizeof(float), _sha_JJ);
     // copy SHA suppression
     if (sha->supp) { // copy suppressive-influence matrix
         nf = nw + 1;

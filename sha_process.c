@@ -7,7 +7,7 @@
 #include "chapro.h"
 
 static float g0, a1, a2, a3, gg;
-static float *AA, *II, *SS;
+static float *AA, *II, *JJ, *SS;
 static int exr, hbw;
 
 /***********************************************************/
@@ -47,7 +47,7 @@ rifft(float *x, int n)
 static __inline void
 compress(float *y, float *x, int nw, float *g1)
 {
-    float g, xr, xi, xx, JJ;
+    float g, xr, xi, xx, yy;
     int e, k, kr, ki, k1, k2, k2mn, k2mx, kk, nf;
     static float eps = 1e-12;
 
@@ -62,7 +62,17 @@ compress(float *y, float *x, int nw, float *g1)
             xr *= g1[k];
             xi *= g1[k];
         }
-        II[k] = (xr * xr + xi * xi) * gg; // scale to SPL reference
+        xx = (xr * xr + xi * xi) * gg; // scale to SPL reference
+        II[k] = xx;
+	// calculate expansion variable
+        if (exr > 1) {                  // include expansion ??
+            xx = yy = 1 / (II[k] + eps); 
+            e = exr;
+            while (--e) xx *= yy;      // repeat xr times 
+        } else {
+            xx = 0;
+        }
+	JJ[k] = xx;
     }
     if (hbw > 0) { // is suppression bandwidth > zero ??
         // calculate suppression and apply to intensity
@@ -75,7 +85,7 @@ compress(float *y, float *x, int nw, float *g1)
             xx = 0;
             for (k2 = k2mn; k2 < k2mx; k2++) {
                 kk = k1 + k2 * nf;
-                xx += (k1 == k2) ? II[k2] : SS[kk] * II[k2];
+                xx += SS[kk] * II[k2];
             }
             y[k1] = xx;
         }
@@ -89,14 +99,9 @@ compress(float *y, float *x, int nw, float *g1)
     }
     // calculate compression and apply to input
     for (k = 0; k < nf; k++) {
-        if (exr > 1) {                  // include expansion ??
-            JJ = 1 / (II[k] + eps); 
-            e = exr;
-            while (--e) JJ *= JJ;      // repeat xr times 
-        } else {
-            JJ = 0;
-        }
-        g = g0 / (float)sqrt(1 + a1 * AA[k] + a2 * II[k] + a3 * JJ);
+	// calculate compression gain
+        g = g0 / (float)sqrt(1 + a1 * AA[k] + a2 * II[k] + a3 * JJ[k]);
+	// apply compression compression to input
         kr = 2 * k;
         ki = kr + 1;
         y[kr] = x[kr] * g; // real
@@ -201,6 +206,7 @@ cha_sha_process(CHA_PTR cp, float *x, float *y, int cs)
     SS = (float *) cp[_sha_SS];
     AA = (float *) cp[_sha_AA];
     II = (float *) cp[_sha_II];
+    JJ = (float *) cp[_sha_JJ];
     g0 = (float)CHA_DVAR[_sha_g0];
     a1 = (float)CHA_DVAR[_sha_a1];
     a2 = (float)CHA_DVAR[_sha_a2];

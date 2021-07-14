@@ -432,6 +432,7 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _sha_SS   _offset+46
 #define _sha_AA   _offset+47
 #define _sha_II   _offset+48
+#define _sha_JJ   _offset+49
 
 /*****************************************************/
 
