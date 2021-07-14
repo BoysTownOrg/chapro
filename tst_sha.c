@@ -89,7 +89,7 @@ parse_args(int ac, char *av[])
 {
     args.play = 0;
     args.nrep = 1;
-    args.hbw  = 1;
+    args.hbw  = 3;
     args.xr   = 2;
     args.nw   = 0;
     args.mat  = 1;
