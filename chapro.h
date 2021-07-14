@@ -209,6 +209,7 @@ typedef struct {
     double   sr;             // sampling rate (Hz)
     double  lbf;             // compression-lower-bound frequency (Hz)
     double  ubf;             // compression-upper-bound frequency (Hz)
+    double  ref;             // SPL reference
     double Gmax;             // maximum gain (dB)
     double Lmax;             // maximum output level (dB SPL)
     double Lckp;             // compression knee-point input level (dB SPL)
@@ -537,6 +538,7 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _sha_a1   17
 #define _sha_a2   18
 #define _sha_a3   19
+#define _sha_gg   20
 
 /*****************************************************/
 

@@ -2,27 +2,25 @@
 function tst_sha
 pfn='test/tst_sha.mat';
 load(pfn)
-gx=3e5;    % scales input to 60 dB SPL
+gx=1/ref1;
+gy=ref1/ref2;
 [x,sr]=audioread(ifn);
 fprintf('tst_sha: nw=%d sr=%.0f hbw=%d ',nw,sr,hbw);
-fprintf('Gmax=%0.1f Lckp=%.0f ',Gmax,Lckp);
+fprintf('Gmax=%0.0f Lckp=%.0f ',Gmax,Lckp);
 sha_prepare(Gmax,Lmax,Lckp,Lekp,xr,nw,hbw);
 %----------------------
-y=audioread(ofn);
+y=audioread(ofn)*gy;
 ax=sqrt(mean(x.^2))*gx;
 ay=sqrt(mean(y.^2))*gx;
 Lx=20*log10(ax);
 Ly=20*log10(ay);
 fprintf('Lx=%.0f Ly=%.0f\n',Lx,Ly);
-if (round(Lx)~=round(Ly))
-    fprintf('Try Gmax=%.1f\n',Gmax+Lx-Ly);
-end
 %----------------------
 fig=1;
 figure(fig);clf
 L1=(0:120)';
 A1=10.^(L1/20);
-A2=compress(A1,0);
+A2=compress_gain(A1,0,1);
 L2=20*log10(A2);
 G2=L2-L1;
 tx=20;
@@ -75,8 +73,8 @@ text(tx,ty,sprintf('L_x=%.0f',Lx))
 axis([xlim ylim])
 subplot(2,1,2)
 plot(t,y)
-text(tx,ty,sprintf('L_y=%.0f',Ly))
-axis([xlim ylim])
+text(tx,ty*ay/ax,sprintf('L_y=%.0f',Ly))
+axis([xlim ylim*ay/ax])
 %----------------------
 fig=fig+1;
 figure(fig);clf
@@ -137,9 +135,9 @@ for k1=1:nw
 end
 end
 
-function X=compress(X,hbw)
+function X=compress_gain(X,hbw,spl_ref)
 global g0 a1 a2 a3 a4 AA
-A=abs(X);
+A=abs(X/spl_ref);
 I=A.^2;
 if (hbw)
     I=AA*I;

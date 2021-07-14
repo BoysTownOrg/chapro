@@ -30,6 +30,9 @@ typedef struct {
 
 static char   msg[MAX_MSG] = {0};
 static double srate = 24000;   // sampling rate (Hz)
+static double ref1 = 0;        // input waveform reference
+static double ref2 = 0;        // output waveform reference
+static double spl_ref = 1.1219e-6; // SPL reference
 static float *supp = NULL;
 static int    chunk = 32;      // chunk size
 static int    prepared = 0;
@@ -160,6 +163,9 @@ set_spl(float *x, int n, double rms_lev, double spl_ref)
     for (i = 0; i < n; i++) {
         x[i] *= scl;
     }
+    // set input and output waveform references
+    ref1 = rms / pow(10, rms_lev / 20);
+    ref2 = spl_ref;
 }
 
 static int
@@ -167,8 +173,7 @@ init_wav(I_O *io, char *msg)
 {
     float fs;
     VAR *vl;
-    static double spl_ref = 1.1219e-6;
-    static double rms_lev = 79.01;
+    static double rms_lev = 70;
 
     if (io->iwav) free(io->iwav);
     if (io->owav) free(io->owav);
@@ -343,7 +348,7 @@ prepare_sha(CHA_PTR cp)
 {
     int nf;
 
-    sha.Gmax = 28.9;
+    sha.Gmax = 20;
     sha.Lmax = 105;
     sha.Lckp = 40;
     sha.Lekp = 10;
@@ -384,7 +389,6 @@ process(I_O *io, CHA_PTR cp)
     float *x, *y;
     int i, j, m, n, cs, nk;
     double t1, t2;
-
     if (io->ofn) {
         sp_tic();
         // initialize i/o pointers
@@ -425,13 +429,15 @@ write_wave(I_O *io)
 
     if (io->dfn) {
         printf(" MAT output: %s\n", io->dfn);
-        vl = sp_var_alloc(12);
+        vl = sp_var_alloc(14);
         sp_var_add(vl,  "ifn",   io->ifn,  1,  1, "f4str");
         sp_var_add(vl,  "ofn",   io->ofn,  1,  1, "f4str");
         sp_var_add(vl, "Gmax", &sha.Gmax,  1,  1, "f8");
         sp_var_add(vl, "Lmax", &sha.Lmax,  1,  1, "f8");
         sp_var_add(vl, "Lckp", &sha.Lckp,  1,  1, "f8");
         sp_var_add(vl, "Lekp", &sha.Lekp,  1,  1, "f8");
+        sp_var_add(vl, "ref1",     &ref1,  1,  1, "f8");
+        sp_var_add(vl, "ref2",     &ref2,  1,  1, "f8");
         sp_var_add(vl,   "sr",   &sha.sr,  1,  1, "f8");
         sp_var_add(vl,   "nw",   &sha.nw,  1,  1, "i4");
         sp_var_add(vl,   "nm",   &sha.nm,  1,  1, "i4");
@@ -514,6 +520,7 @@ configure_sha()
     sha.cs  = chunk;     // chunk size
     sha.lbf = 3000;      // compression-lower-bound frequency
     sha.ubf = 4000;      // compression-upper-bound frequency
+    sha.ref = spl_ref;   // SPL reference
     sha.nw  =  64;       // window size
     sha.sr  = srate;     // sampling rate
     sha.Gmax = args.hbw ? 27.2 : 20.5;

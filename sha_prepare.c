@@ -34,7 +34,7 @@ FUNC(int)
 cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
 {
     double  sr, Gmax, Lmax, Lckp, Lekp;
-    double  g0, a1, a2, a3, aa;
+    double  g0, a1, a2, a3, gg, aa;
     float  *ww, *g1, *supp;
     int     cs, nf, nw, wt, xr, hbw;
 
@@ -87,10 +87,13 @@ cha_sha_prepare(CHA_PTR cp, CHA_SHA *sha)
     a1 = a1 * aa;
     a2 = a2 * aa;
     a3 = (Lckp <= 0) ? 0 : pow(10, xr * Lekp / 10);
+    gg = sha->ref * (nw / 4) * sqrt(2); // reference amplitude
+    gg = 1 / (gg*gg);                  // intensity reference
     CHA_DVAR[_sha_g0] = g0;
     CHA_DVAR[_sha_a1] = a1;
     CHA_DVAR[_sha_a2] = a2;
     CHA_DVAR[_sha_a3] = a3;
+    CHA_DVAR[_sha_gg] = gg;
     CHA_IVAR[_sha_xr] = xr;
     CHA_IVAR[_sha_hbw] = hbw;
     // allocate compression buffers

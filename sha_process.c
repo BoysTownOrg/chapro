@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "chapro.h"
 
-static float g0, a1, a2, a3;
+static float g0, a1, a2, a3, gg;
 static float *AA, *II, *SS;
 static int exr, hbw;
 
@@ -47,13 +47,11 @@ rifft(float *x, int n)
 static __inline void
 compress(float *y, float *x, int nw, float *g1)
 {
-    float g, gg, xr, xi, xx, JJ;
+    float g, xr, xi, xx, JJ;
     int e, k, kr, ki, k1, k2, k2mn, k2mx, kk, nf;
-    static float spl_ref = 1.1219e-6;
     static float eps = 1e-12;
 
     nf = nw + 1;
-    gg = 1 / (spl_ref * spl_ref) / 4; // reference intensity [11-Jul-2021]
     // compute intensity for each channel
     for (k = 0; k < nf; k++) {
         kr = 2 * k;
@@ -64,8 +62,7 @@ compress(float *y, float *x, int nw, float *g1)
             xr *= g1[k];
             xi *= g1[k];
         }
-        xx = (xr * xr + xi * xi) * gg;
-        II[k] = xx;
+        II[k] = (xr * xr + xi * xi) * gg; // scale to SPL reference
     }
     if (hbw > 0) { // is suppression bandwidth > zero ??
         // calculate suppression and apply to intensity
@@ -208,6 +205,7 @@ cha_sha_process(CHA_PTR cp, float *x, float *y, int cs)
     a1 = (float)CHA_DVAR[_sha_a1];
     a2 = (float)CHA_DVAR[_sha_a2];
     a3 = (float)CHA_DVAR[_sha_a3];
+    gg = (float)CHA_DVAR[_sha_gg];
     exr = CHA_IVAR[_sha_xr];
     hbw = CHA_IVAR[_sha_hbw];
     if (cs <= (nw / 2)) {       // short chunk ??
