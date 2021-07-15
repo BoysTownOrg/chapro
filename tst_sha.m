@@ -81,10 +81,11 @@ figure(fig);clf
 n=512;
 m=n/4;
 w=hamming(n/2);
+sgg=1e7;
 subplot(2,1,1)
-spectrogram(x*1e6,w,m,n,sr,'yaxis');
+spectrogram(x*sgg,w,m,n,sr,'yaxis');
 subplot(2,1,2)
-spectrogram(y*1e6,w,m,n,sr,'yaxis');
+spectrogram(y*sgg,w,m,n,sr,'yaxis');
 drawnow
 %----------------------
 playblocking(audioplayer(x,sr))
