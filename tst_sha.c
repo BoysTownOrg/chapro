@@ -65,7 +65,7 @@ usage()
 {
     printf("usage: tst_sha [-options] [input_file] [output_file]\n");
     printf("options\n");
-    printf("-bN   half-band-width  = N [1]\n");
+    printf("-bN   half-band-width  = N [5]\n");
     printf("-gN   maximum gain  = N \n");
     printf("-h    print help\n");
     printf("-P    play output\n");
@@ -89,7 +89,7 @@ parse_args(int ac, char *av[])
 {
     args.play = 0;
     args.nrep = 1;
-    args.hbw  = 3;
+    args.hbw  = 5;
     args.xr   = 2;
     args.nw   = 0;
     args.mat  = 1;
