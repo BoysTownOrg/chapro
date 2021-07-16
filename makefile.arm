@@ -10,7 +10,7 @@ AR=arm-linux-gnueabihf-ar
 CFLAGS=-Wall -Wno-unknown-pragmas -I$(INCDIR) -fPIC -O3
 LFLAGS=-L$(LIBDIR)
 
-LIBDIR=/usr/local/lib/arm
+LIBDIR=/usr/local/arm/lib
 INCDIR=/usr/local/include
 BINDIR=
 
