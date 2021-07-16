@@ -22,11 +22,14 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
 	afc_prepare.o afc_filters.o afc_process.o \
 	icmp_prepare.o icmp_process.o
-PGMS=tst_bbb
+PGMS=tst_nad tst_sha
 
 all: $(PGMS)
 
-tst_bbb : tst_bbb.o  libchapro.a
+tst_nad : tst_nad.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
+
+tst_sha : tst_sha.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
 
 libchapro.a: $(CHAPRO)
@@ -41,10 +44,9 @@ install: $(LIBDIR)/libchapro.a $(PGMS)
 
 zipsrc:
 	zip chaprosc *.mgw *.lnx *.mac *.arm *.sed
-	zip chaprosc *.h *.c *.m *.def
-	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters test/cat.wav
+	zip chaprosc *.h *.c *.m *.def test/cat.wav
+	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
 	zip chaprosc configure configure.bat 
-	zip chaprosc compress.bat suppress.bat shacmp.bat
 
 dist: zipsrc 
 	cp -f chapr*.zip ../dist
@@ -53,7 +55,7 @@ dist: zipsrc
 clean:
 	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
 	rm -f out*.mat out*.wav *.cfg *~ *.so
-	rm -f tst_bbb gprof*.txt gmon.out test.lst
+	rm -f $(PGMS) gprof*.txt gmon.out test.lst
 	rm -f test.lst test/*.mat test/tst_*.wav
 
 # dependencies
@@ -83,4 +85,5 @@ iirfb_design.o: iirfb_design.c chapro.h
 iirfb_prepare.o: iirfb_prepare.c chapro.h 
 iirfb_process.o: iirfb_process.c chapro.h 
 rfft.o: rfft.c chapro.h 
-tst_bbb.o: tst_bbb.c chapro.h 
+tst_nad.o: tst_nad.c chapro.h 
+tst_sha.o: tst_sha.c chapro.h 

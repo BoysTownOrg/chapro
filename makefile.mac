@@ -126,7 +126,6 @@ zipsrc:
 	zip chaprosc *.h *.c *.m *.def test/cat.wav
 	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
 	zip chaprosc configure configure.bat 
-	#zip chaprosc compress.bat suppress.bat shacmp.bat
 
 dist: zipsrc 
 	cp -f chapr*.zip ../dist

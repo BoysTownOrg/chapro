@@ -51,7 +51,6 @@ zipsrc:
 	zip chaprosc *.h *.c *.m *.def
 	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
 	zip chaprosc configure configure.bat 
-	zip chaprosc compress.bat # suppress.bat shacmp.bat
 
 dist: zipsrc 
 	cp -f chapr*.zip ../dist
