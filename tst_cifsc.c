@@ -431,6 +431,7 @@ prepare_filterbank(CHA_PTR cp)
     bw = cls.bw;
     cha_ciirfb_design(z, p, g, d, nc, fc, bw, sr, gd);
     cha_ciirfb_prepare(cp, z, p, g, d, nc, no, sr, cs);
+    printf(" prepare_fb: nc=%d gd=%.1f\n", nc, gd);
 }
 
 // prepare compressor
@@ -564,7 +565,7 @@ static void
 report(double sr)
 {
     // report
-    printf("CHA ARSC simulation: sampling rate=%.0f Hz, ", sr);
+    printf("CHA simulation: sampling rate=%.0f Hz, ", sr);
     printf("filterbank gd=%.1f ms; ", icmp.gd);
     printf("IIR + inst. compression\n");
 }
