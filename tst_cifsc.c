@@ -340,8 +340,10 @@ stop_wav(I_O *io)
     if (io->ofn) {
         free(io->owav);
     } else {
+#ifdef ARSCLIB_H
         ar_io_stop(io->iod);
         ar_io_close(io->iod);
+#endif // ARSCLIB_H
         if (io->siz) free(io->siz);
         if (io->out) free(io->out);
         if (io->owav) free(io->owav);
@@ -555,7 +557,9 @@ configure(I_O *io)
     // initialize CHAPRO variables
     configure_compressor();
     // initialize I/O
+#ifdef ARSCLIB_H
     io_dev = ar_find_dev(ARSC_PREF_SYNC) + 1; // find preferred audio device
+#endif // ARSCLIB_H
     io->iwav = NULL;
     io->owav = NULL;
     io->ifn  = args.ifn  ? args.ifn : ifn;

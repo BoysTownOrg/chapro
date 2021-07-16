@@ -24,14 +24,20 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	nfc_prepare.o nfc_process.o \
 	sha_prepare.o sha_process.o \
 	icmp_prepare.o icmp_process.o
-PGMS=tst_nad tst_sha
+PGMS=tst_nad tst_sha tst_gtfb
 
 all: $(PGMS)
+
+tst_gtfb.c : tst_cifsc.c nad.sed
+	sed -f nad.sed tst_gtfb.c > tst_cifsc.c
 
 tst_nad : tst_nad.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
 
 tst_sha : tst_sha.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
+
+tst_gtfb : tst_gtfb.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
 
 libchapro.a: $(CHAPRO)
