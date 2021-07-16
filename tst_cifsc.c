@@ -32,7 +32,6 @@ static char   msg[MAX_MSG] = {0};
 static double srate = 24000;   // sampling rate (Hz)
 static int    chunk = 32;      // chunk size
 static int    prepared = 0;
-static int    io_dev = 0;
 static int    io_wait = 40;
 static struct {
     char *ifn, *ofn, simfb, afc, mat, nrep, play;
@@ -240,7 +239,6 @@ init_aud(I_O *io)
     static int nswp = 0;        // number of sweeps (0=continuous)
     static int32_t fmt[2] = {ARSC_DATA_F4, 0};
 
-    io->iod = io_dev - 1;
     err = ar_out_open(io->iod, io->rate, nchn);
     if (err) {
         ar_err_msg(err, msg, MAX_MSG);
@@ -558,7 +556,7 @@ configure(I_O *io)
     configure_compressor();
     // initialize I/O
 #ifdef ARSCLIB_H
-    io_dev = ar_find_dev(ARSC_PREF_SYNC) + 1; // find preferred audio device
+    io->iod = ar_find_dev(ARSC_PREF_SYNC); // find preferred audio device
 #endif // ARSCLIB_H
     io->iwav = NULL;
     io->owav = NULL;
