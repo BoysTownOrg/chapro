@@ -233,6 +233,7 @@ init_wav(I_O *io, char *msg)
 static void
 init_aud(I_O *io)
 {
+#ifdef ARSCLIB_H
     char name[80];
     int i, j, err;
     static int nchn = 2;        // number of channels
@@ -260,12 +261,15 @@ init_aud(I_O *io)
     ar_out_prepare(io->iod, io->out, (int32_t *)io->siz, io->mseg, nswp);
     printf("audio output: %s\n", name);
     ar_io_start(io->iod);
+#endif // ARSCLIB_H
 }
 
 static int
 get_aud(I_O *io)
 {
+#ifdef ARSCLIB_H
     io->oseg = ar_io_cur_seg(io->iod);
+#endif // ARSCLIB_H
     return (io->oseg < io->nseg);
 }
 
