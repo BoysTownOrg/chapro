@@ -29,7 +29,7 @@ PGMS=tst_nad tst_sha tst_gtfb
 all: $(PGMS)
 
 tst_gtfb.c : tst_cifsc.c nad.sed
-	sed -f nad.sed tst_gtfb.c > tst_cifsc.c
+	sed -f nad.sed tst_cifsc.c > tst_gtfb.c
 
 tst_nad : tst_nad.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
