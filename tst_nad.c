@@ -247,12 +247,12 @@ init_wav(I_O *io, char *msg)
 static void
 init_aud(I_O *io)
 {
-#ifdef output (no audio device)
+#ifdef ARSCLIB_H
     char name[80];
     int i, j, err;
     static int nchn = 2;        // number of channels
     static int nswp = 0;        // number of sweeps (0=continuous)
-    static int32_t fmt[2] = {output (no audio device)
+    static int32_t fmt[2] = {ARSC_DATA_F4, 0};
 
     err = ar_out_open(io->iod, io->rate, nchn);
     if (err) {
@@ -274,15 +274,15 @@ init_aud(I_O *io)
     ar_out_prepare(io->iod, io->out, (int32_t *)io->siz, io->mseg, nswp);
     printf("audio output: %s\n", name);
     ar_io_start(io->iod);
-#endif // output (no audio device)
+#endif // ARSCLIB_H
 }
 
 static int
 get_aud(I_O *io)
 {
-#ifdef output (no audio device)
+#ifdef ARSCLIB_H
     io->oseg = ar_io_cur_seg(io->iod);
-#endif // output (no audio device)
+#endif // ARSCLIB_H
     return (io->oseg < io->nseg);
 }
 
@@ -492,10 +492,10 @@ stop_wav(I_O *io)
     if (io->ofn) {
         free(io->owav);
     } else {
-#ifdef output (no audio device)
+#ifdef ARSCLIB_H
         ar_io_stop(io->iod);
         ar_io_close(io->iod);
-#endif // output (no audio device)
+#endif // ARSCLIB_H
         if (io->siz) free(io->siz);
         if (io->out) free(io->out);
         if (io->owav) free(io->owav);
@@ -596,9 +596,9 @@ configure(I_O *io)
     configure_compressor();
     configure_feedback();
     // initialize I/O
-#ifdef output (no audio device)
-    io->iod = ar_find_dev(output (no audio device)
-#endif // output (no audio device)
+#ifdef ARSCLIB_H
+    io->iod = ar_find_dev(ARSC_PREF_SYNC); // find preferred audio device
+#endif // ARSCLIB_H
     io->iwav = NULL;
     io->owav = NULL;
     io->ifn  = args.ifn  ? args.ifn : ifn;

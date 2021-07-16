@@ -1,4 +1,4 @@
 # convert tst_gha.c to tst_nad.c
 s/gha/nad/
-s/ARSC.*/output (no audio device)/
+s/ARSC output/output (no audio device)/
 /arsclib.h/s/^/\/\//
