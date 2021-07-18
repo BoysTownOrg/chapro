@@ -27,7 +27,7 @@ tx=20;
 ty=5-5*(0:3);
 subplot(2,1,1)
 plot(L1,G2)
-axis([-5 125 [-45 5]+Gmax])
+axis([-5 125 -25 5+Gmax])
 xlabel('input level (dB)')
 ylabel('gain (dB)')
 title('compression gain')
