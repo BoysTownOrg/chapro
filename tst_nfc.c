@@ -1,5 +1,5 @@
 // tst_nfc.c - test NFC
-//              with WAV file input & ARSC output
+//              with WAV file input & output (no audio device)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include <time.h>
 #include <ctype.h>
 
-#include <arsclib.h>
+//#include <arsclib.h>
 #include <sigpro.h>
 #include "chapro.h"
 #define DATA_HDR "tst_nfc_data.h"

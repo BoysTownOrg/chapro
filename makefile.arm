@@ -24,7 +24,7 @@ CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
 	nfc_prepare.o nfc_process.o \
 	sha_prepare.o sha_process.o \
 	icmp_prepare.o icmp_process.o
-PGMS=tst_nad tst_sha tst_gtfb
+PGMS=tst_nad tst_sha tst_gtfb tst_nfc
 
 all: $(PGMS)
 
@@ -35,6 +35,9 @@ tst_nad : tst_nad.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
 
 tst_sha : tst_sha.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
+
+tst_nfc : tst_nfc.o  libchapro.a
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) 
 
 tst_gtfb : tst_gtfb.o  libchapro.a
@@ -95,3 +98,4 @@ iirfb_process.o: iirfb_process.c chapro.h
 rfft.o: rfft.c chapro.h 
 tst_nad.o: tst_nad.c chapro.h 
 tst_sha.o: tst_sha.c chapro.h 
+tst_nfc.o: tst_nfc.c chapro.h 
