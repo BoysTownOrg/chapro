@@ -525,7 +525,7 @@ write_wave(I_O *io)
     {
         printf(" MAT output: %s\n", io->dfn);
         meer = afc.qm ? afc.qm : (float *)calloc(sizeof(float), afc.nqm);
-        vl = sp_var_alloc(8);
+        vl = sp_var_alloc(9);
         sp_var_add(vl, "merr", meer, afc.nqm, 1, "f4");
         sp_var_add(vl, "sfbp", afc.sfbp, afc.fbl, 1, "f4");
         sp_var_add(vl, "efbp", afc.efbp, afc.afl, 1, "f4");
@@ -533,6 +533,7 @@ write_wave(I_O *io)
         sp_var_add(vl, "ffrp", afc.ffrp, afc.pfl, 1, "f4");
         sp_var_add(vl, "ifn", io->ifn, 1, 1, "f4str");
         sp_var_add(vl, "ofn", io->ofn, 1, 1, "f4str");
+        sp_var_add(vl, "sr", &srate, 1, 1, "f8");
         remove(io->dfn);
         sp_mat_save(io->dfn, vl);
         sp_var_clear(vl);

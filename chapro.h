@@ -75,7 +75,46 @@ extern "C"
     typedef uint32_t CHA_DATA;
     typedef void **CHA_PTR;
 
-    /*****************************************************/
+    typedef struct
+    {
+        // simulation parameters
+        double fbg; // simulated-feedback gain
+        // AFC parameters
+        double rho;   // forgetting factor
+        double eps;   // power threshold
+        double mu;    // step size
+        double alf;   // band-limit update
+        int32_t afl;  // adaptive-filter length
+        int32_t wfl;  // whiten-filter length
+        int32_t pfl;  // band-limit-filter length
+        int32_t fbl;  // simulated-feedback length
+        int32_t hdel; // output/input hardware delay
+        int32_t pup;  // band-limit update period
+        // feedback filter buffers
+        float *efbp; // estimated-feedback buffer pointer
+        float *sfbp; // simulated-feedback buffer pointer
+        float *wfrp; // whiten-feedback buffer pointer
+        float *ffrp; // persistent-feedback buffer pointer
+        // quality metric buffers & parameters
+        float *qm;     // quality-metric buffer pointer
+        int32_t *iqmp; // quality-metric index pointer
+        int32_t nqm;   // quality-metric buffer size
+        int32_t iqm;   // quality-metric index
+        int32_t sqm;   // save quality metric ?
+        CHA_PTR pcp;   // previous CHA_PTR
+    } CHA_AFC;
+
+    typedef struct
+    {
+        int32_t cs;  // chunk size
+        int32_t nw;  // window size (pow2)
+        int32_t wt;  // window type: 0=Hamming, 1=Blackman
+        int32_t nm;  // frequency-map size
+        double sr;   // sampling rate (Hz)
+        double f1;   // compression-lower-bound frequency (Hz)
+        double f2;   // compression-upper-bound frequency (Hz)
+        int32_t *mm; // frequency-map pointer
+    } CHA_NFC;
 
     // CHAPRO state
 
@@ -167,49 +206,6 @@ extern "C"
         int32_t po; // number of bands per octave above 1 kHz
         int32_t no; // gammatone filter order
     } CHA_ICMP;
-
-    /*****************************************************/
-
-    typedef struct
-    {
-        // simulation parameters
-        double fbg; // simulated-feedback gain
-        // AFC parameters
-        double rho;   // forgetting factor
-        double eps;   // power threshold
-        double mu;    // step size
-        double alf;   // band-limit update
-        int32_t afl;  // adaptive-filter length
-        int32_t wfl;  // whiten-filter length
-        int32_t pfl;  // band-limit-filter length
-        int32_t fbl;  // simulated-feedback length
-        int32_t hdel; // output/input hardware delay
-        int32_t pup;  // band-limit update period
-        // feedback filter buffers
-        float *efbp; // estimated-feedback buffer pointer
-        float *sfbp; // simulated-feedback buffer pointer
-        float *wfrp; // whiten-feedback buffer pointer
-        float *ffrp; // persistent-feedback buffer pointer
-        // quality metric buffers & parameters
-        float *qm;     // quality-metric buffer pointer
-        int32_t *iqmp; // quality-metric index pointer
-        int32_t nqm;   // quality-metric buffer size
-        int32_t iqm;   // quality-metric index
-        int32_t sqm;   // save quality metric ?
-        CHA_PTR pcp;   // previous CHA_PTR
-    } CHA_AFC;
-
-    typedef struct
-    {
-        int32_t cs;   // chunk size
-        int32_t nw;   // window size (pow2)
-        int32_t wt;   // window type: 0=Hamming, 1=Blackman
-        int32_t nm;   // frequency-map size
-        double sr;    // sampling rate (Hz)
-        double f1;    // compression-lower-bound frequency (Hz)
-        double f2;    // compression-upper-bound frequency (Hz)
-        int32_t *map; // frequency map pointer
-    } CHA_NFC;
 
     /*****************************************************/
 

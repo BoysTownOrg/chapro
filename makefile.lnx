@@ -30,7 +30,7 @@ HDRS=chapro.h
 
 all: $(PGMS) tst_nad.c
 
-tst_nad.c : tst_gha.c nad.sec
+tst_nad.c : tst_gha.c nad.sed
 	sed -f nad.sed tst_gha.c > tst_nad.c
 
 tst: $(PGMS) test.lst

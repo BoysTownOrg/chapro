@@ -51,8 +51,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
     if (prepared)
     {
         // next line switches to compiled data
-        //cp = (CHA_PTR) cha_data;
-        //float *z = CHA_CB;
+        //cp = (CHA_PTR) cha_data; 
         // process NFC
         cha_nfc_process(cp, x, y, cs);
     }
@@ -92,12 +91,10 @@ parse_args(int ac, char *av[])
     args.f1 = 0;
     args.f2 = 0;
     args.nw = 0;
-    while (ac > 1)
-    {
-        if (av[1][0] == '-')
-        {
-            if (av[1][1] == 'h')
-            {
+    args.mat = 1;
+    while (ac > 1) {
+        if (av[1][0] == '-') {
+            if (av[1][1] == 'h') {
                 usage();
             }
             else if (av[1][1] == 'f')
@@ -358,10 +355,38 @@ prepare_io(I_O *io)
     return (0);
 }
 
+
+// prepare NFC
+
+static int
+nfc_map(int nw, double f1, double f2, double sr, int *map)
+{
+    double df, dk, kk;
+    int k, n1, n2, nn;
+
+    df = sr / (2 * nw);
+    f1 = fmax(df,fmin(f1, sr/2));
+    f2 = fmax(f1,fmin(f2, sr/2));
+    n1 = round(f1 / df);
+    n2 = round(f2 / df);
+    nn = n2 - n1 + 1;
+    if (map) {
+        dk = log((double) nw / n1) / log((double) n2 / n1);
+        for (k = 0; k < nn; k++) {
+            kk = log((double) (k + n1) / n1);
+            map[k] = round(n1 * exp(kk * dk));
+        }
+    }
+
+    return (nn);
+}
 static void
 prepare_nfc(CHA_PTR cp)
 {
-    // prepare NFC
+    int mm[1024];
+
+    nfc.nm = nfc_map(nfc.nw, nfc.f1, nfc.f2, nfc.sr, mm);
+    nfc.mm = mm;
     cha_nfc_prepare(cp, &nfc);
 }
 
@@ -375,6 +400,8 @@ prepare(I_O *io, CHA_PTR cp)
     chunk = io->cs;
     prepare_nfc(cp);
     prepared++;
+    // generate C code from prepared data
+    //cha_data_gen(cp, DATA_HDR);
 }
 
 // process signal
@@ -427,15 +454,22 @@ static void
 write_wave(I_O *io)
 {
     float r[1], *w;
-    int n, nbits = 16;
+    int   n, nm, nbits = 16;
     static VAR *vl;
 
     if (io->dfn)
     {
         printf(" MAT output: %s\n", io->dfn);
-        vl = sp_var_alloc(2);
-        sp_var_add(vl, "ifn", io->ifn, 1, 1, "f4str");
-        sp_var_add(vl, "ofn", io->ofn, 1, 1, "f4str");
+        nm = nfc.nm;
+        vl = sp_var_alloc(8);
+        sp_var_add(vl, "ifn",   io->ifn,  1,  1, "f4str");
+        sp_var_add(vl, "ofn",   io->ofn,  1,  1, "f4str");
+        sp_var_add(vl,  "f1",   &nfc.f1,  1,  1, "f8");
+        sp_var_add(vl,  "f2",   &nfc.f2,  1,  1, "f8");
+        sp_var_add(vl,  "sr",   &nfc.sr,  1,  1, "f8");
+        sp_var_add(vl,  "nw",   &nfc.nw,  1,  1, "i4");
+        sp_var_add(vl,  "nm",   &nfc.nm,  1,  1, "i4");
+        sp_var_add(vl,  "mm",    nfc.mm,  1, nm, "i4");
         remove(io->dfn);
         sp_mat_save(io->dfn, vl);
         sp_var_clear(vl);
@@ -536,6 +570,7 @@ configure(I_O *io)
 {
     static char *ifn = "test/cat.wav";
     static char *wfn = "test/tst_nfc.wav";
+    static char *mfn = "test/tst_nfc.mat";
 
     // initialize CHAPRO variables
     configure_nfc();
@@ -545,10 +580,10 @@ configure(I_O *io)
 #endif                                     // ARSCLIB_H
     io->iwav = NULL;
     io->owav = NULL;
-    io->ifn = args.ifn ? args.ifn : ifn;
-    io->ofn = args.play ? args.ofn : wfn;
-    io->dfn = 0;
-    io->mat = 0;
+    io->ifn  = args.ifn  ? args.ifn : ifn;
+    io->ofn  = args.play ? args.ofn : wfn; 
+    io->dfn  = mfn; 
+    io->mat  = args.mat;
     io->nrep = (args.nrep < 1) ? 1 : args.nrep;
 }
 
@@ -556,8 +591,7 @@ static void
 report()
 {
     // report
-    printf("CHA simulation: nw=%d ", nfc.nw);
-    printf("f1=%.0f f2=%.0f\n", nfc.f1, nfc.f2);
+    printf("CHA simulation: NFC\n");
 }
 
 /***********************************************************/
