@@ -50,7 +50,7 @@ fmap(float *y, float *x, int nf, int *mm, int nm)
     float *xx, *yy;
     int k, kk, nn;
 
-    seriallog("fmap");
+    //seriallog("fmap");
 
     nn = mm[0] * 2;
     fcopy(y, x, nn);
@@ -107,7 +107,7 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
 {
     int icp, ics, nn, nf, ns, ncs;
 
-    seriallog("nfc_sc");
+    //seriallog("nfc_sc");
 
     // process chunk
     ncs = CHA_IVAR[_nfc_ncs];
@@ -136,7 +136,7 @@ nfc_lc(float *x, float *y, int cs,
 {
     int k, nn, nf, ns;
 
-    seriallog("nfc_lc");
+    //seriallog("nfc_lc");
 
     // process chunk
     ns = nw / 2;
@@ -162,7 +162,7 @@ cha_nfc_process(CHA_PTR cp, float *x, float *y, int cs)
     float *ww, *xx, *yy, *XX, *YY;
     int nw, nm, *mm;
 
-    seriallog("cha_nfc_process");
+    //seriallog("cha_nfc_process");
 
     // copy parameters and pointers from cha_data
     nw = CHA_IVAR[_nfc_nw];
