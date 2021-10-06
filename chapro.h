@@ -528,7 +528,7 @@ extern "C"
 #define _rho 11
 #define _eps 12
 #define _alf 13
-#define _hdel 14
+#define _hdel 26  //Changed from 14 to 26 per Steve Neely email 10/5/2021
 #define _fbm 15
 
     /*****************************************************/
