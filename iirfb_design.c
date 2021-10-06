@@ -476,7 +476,7 @@ align_peak(float *z, float *p, float *g, int *d, double td, double fs, int nb, i
 }
 
 // adjust filterbank gains for combined unity gain
-static void
+static void   //changed from void to int, WEA debugging
 adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb, int nz)
 {
     double *G, e, f, mag, sum, avg;
@@ -488,19 +488,28 @@ adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb,
 	
 	//Added WEA (Creare) August 2021.  Loop until memory is successfully allocated.  Decrease nt as needed.
 	G = NULL; h = NULL;  H = NULL; x = NULL; y = NULL;   //Added WEA
-	while ( (nt > 2048) && (y == NULL) ) { //added WEA
+	while ( (nt > 128) && (y == NULL) ) { //added WEA
 		printf("iirfb_design: adjust_gain: allocating memory for nt = %i\n", nt);
 	
 		//original in CHAPRO
-		H = (float *) calloc((nt + 2) * nb, sizeof(float));
-		h = (float *) calloc((nt + 2) * nb, sizeof(float));
-		G = (double *) calloc(nb, sizeof(double));
-		x = (float *) calloc(nt, sizeof(float));
-		y = (float *) calloc(nt * nb, sizeof(float));
+		int any_fail = 0;
+		H = (float *) calloc((nt + 2) * nb, sizeof(float));  if (H==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate H\n"); }
+		if (!any_fail) {		
+			h = (float *) calloc((nt + 2) * nb, sizeof(float));  if (h==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate h\n"); }
+			if (!any_fail) {
+				G = (double *) calloc(nb, sizeof(double));           if (G==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate G\n"); }
+				if (!any_fail) {
+					x = (float *) calloc(nt, sizeof(float));             if (x==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate x\n"); }
+					if (!any_fail) {
+						y = (float *) calloc(nt * nb, sizeof(float));        if (y==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate y\n"); }
+					}
+				}
+			}
+		}
 		
 		//Added WEA (Creare) August 2021.  Test if memory was allcoated
-		if (y == NULL) {
-			printf("iirfb_design: adjust_gain: memroy allcoation failed.  Reducing nt...\n");
+		if (any_fail == 1) {
+			printf("iirfb_design: adjust_gain: memory allocation failed.  Reducing nt...\n");
 			
 			//de-allocate
 			free(y); free(x); free(G); free(h); free(H);
@@ -512,7 +521,7 @@ adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb,
 		}
 	} // end of while() loop that was added by WEA (Creare) August 2021
 	
-	if (y != NULL) {  //check to see if the memroy was allocated. Added by WEA (Creare) August 2021
+	if (y != NULL) {  //check to see if the memory was allocated. Added by WEA (Creare) August 2021
 
 		//Original from CHAPRO
 	    x[0] = 1;
@@ -553,6 +562,7 @@ adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb,
     free(G);
     free(x);
     free(y);
+
 }
 
 /***********************************************************/
