@@ -479,7 +479,6 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _afc      16
 #define _pup      17
 #define _puc      18
-#define _hdel     26 // <-- OUT OF ORDER !!
 
 // nfc integer variable indices
 
@@ -498,6 +497,8 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _sha_ics  23 // chunks-per-shift count
 #define _sha_xr   24 // expansion ratio
 #define _sha_hbw  25 // half-band-width of suppression
+
+#define _hdel     26 // AFC hardware delay
 
 /*****************************************************/
 
