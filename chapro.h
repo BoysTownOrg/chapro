@@ -479,6 +479,7 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _afc      16
 #define _pup      17
 #define _puc      18
+#define _hdel     26 // <-- OUT OF ORDER !!
 
 // nfc integer variable indices
 
@@ -530,7 +531,6 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _rho      11
 #define _eps      12
 #define _alf      13
-#define _hdel     14
 #define _fbm      15
 
 // sha double variable indices
