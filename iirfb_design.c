@@ -486,7 +486,11 @@ adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb,
     nt = 1024;
     while (nt < fs) nt *= 2;
 	
+	
 	//Added WEA (Creare) August 2021.  Loop until memory is successfully allocated.  Decrease nt as needed.
+	#ifdef ARDUINO
+		if (nt > 4096) nt = 4096; //this is the length that ends up working on Tympan RevE...so let's just shortcut to this value
+	#endif
 	G = NULL; h = NULL;  H = NULL; x = NULL; y = NULL;   //Added WEA
 	while ( (nt > 128) && (y == NULL) ) { //added WEA
 		printf("iirfb_design: adjust_gain: allocating memory for nt = %i\n", nt);
