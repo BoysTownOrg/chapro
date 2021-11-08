@@ -105,13 +105,16 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // update adaptive feedback coefficients
         if (afl > 0) {
             uf = rng2[id & mask];
-            //pwr = rho * pwr + ef * ef + uf * uf;
-            pwr = rho * ((ef * ef + uf * uf) - pwr);
+            //pwr = rho * pwr + ef * ef + uf * uf;       //In original, was commented out (WEA, Nov 2021)
+            //pwr = rho * ((ef * ef + uf * uf) - pwr);   //In original, was active (WEA, Nov 2021)
+			//pwr = rho * sqrtf(ef * ef + uf * uf) + (1.0f - rho) * pwr;  //possible replacement, per Steve Neely email Nov 8, 2021
+			pwr = rho * (ef * ef + uf * uf) + (1.0f - rho) * pwr;  //possible replacement, per Steve Neely email later on Nov 8, 2021
+			
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
                 ij = (id - j) & mask;
                 uf = rng2[ij];
-                efbp[j] += mmu * ef * uf;
+                efbp[j] += mmu * ef * uf;	
             }
         }
         // update band-limit filter coefficients
