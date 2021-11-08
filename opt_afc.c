@@ -472,21 +472,20 @@ configure_feedback()
     if (args.afl >= 0) afc.afl = args.afl;
     if (args.wfl >= 0) afc.wfl = args.wfl;
     if (args.pfl >= 0) afc.pfl = args.pfl;
-    afc.alf  = 0;         // band-limit update
-    if (afc.pfl) { // optimized for pfl=23
-        afc.rho  = 0.002577405; // forgetting factor
-        afc.eps  = 0.000008689; // power threshold
-        afc.mu   = 0.000050519; // step size
-        afc.alf  = 0.000001825; // band-limit update
-    } else if (afc.wfl) {
-        afc.rho  = 0.000360459; // forgetting factor
-        afc.eps  = 0.000018848; // power threshold
-        afc.mu   = 0.000048112; // step size
-   
+    afc.alf  = 0;             // band-limit update
+    if (afc.pfl) {             // optimized for wfl=9 & pfl=21
+        afc.rho  = 0.012644742; // forgetting factor
+        afc.eps  = 0.001722509; // power threshold
+        afc.mu   = 0.008796135; // step size
+        afc.alf  = 0.000001372; // band-limit update
+    } else if (afc.wfl) {      // optimized for wfl=9
+        afc.rho  = 0.008542769; // forgetting factor
+        afc.eps  = 0.001128440; // power threshold
+        afc.mu   = 0.004373509; // step size
     } else {
-        afc.rho  = 0.000169571; // forgetting factor
-        afc.eps  = 0.000927518; // power threshold
-        afc.mu   = 0.000255915; // step size
+        afc.rho  = 0.000002380; // forgetting factor
+        afc.eps  = 0.001404689; // power threshold
+        afc.mu   = 0.000409022; // step size
     }
     afc.pup  = 1;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay

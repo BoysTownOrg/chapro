@@ -106,7 +106,8 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         if (afl > 0) {
             uf = rng2[id & mask];
             //pwr = rho * pwr + ef * ef + uf * uf;
-            pwr = rho * ((ef * ef + uf * uf) - pwr);
+            //pwr = rho * ((ef * ef + uf * uf) - pwr);
+            pwr = rho * (ef * ef + uf * uf) + (1 - rho) * pwr;
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
                 ij = (id - j) & mask;
