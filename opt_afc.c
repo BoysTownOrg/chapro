@@ -478,10 +478,10 @@ configure_feedback()
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;             // band-limit update rate
     if (afc.pfl) {             // optimized for wfl=9 & pfl=21
-        afc.rho  = 0.006689625; // forgetting factor
-        afc.eps  = 0.000910802; // power threshold
-        afc.mu   = 0.004542824; // step size
-        afc.alf  = 0.000010409; // band-limit update rate
+        afc.rho  = 0.007218985; // forgetting factor
+        afc.eps  = 0.000919300; // power threshold
+        afc.mu   = 0.004607254; // step size
+        afc.alf  = 0.000010658; // band-limit update
     } else if (afc.wfl) {      // optimized for wfl=9
         afc.rho  = 0.008542769; // forgetting factor
         afc.eps  = 0.001128440; // power threshold
