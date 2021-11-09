@@ -27,10 +27,12 @@ if (exist('sfbp','var'))
     ny=length(sfbp);
     if (exist('ffrp','var'))
         cfbp=conv(efbp,ffrp);
+        pfl=length(ffrp);
     else
         cfbp=efbp;
         ffrp=zeros(size(efbp));
         ffrp(1)=1;
+        pfl=0;
     end
     % plot feedback path
     figure(2);clf
@@ -77,11 +79,21 @@ if (exist('sfbp','var'))
     semilogx(f,db1,'b',f,db2,'g',f,db3,'r',f,db4,'k');
     axis([0.1 20 -60 10])
     legend('W','H','WH','F','Location','south')
+    drawnow
     if (wd)
+        if (pfl<=1)
+            fn1='gha2a.txt';
+            fn2='gha3a.txt';
+            fn3='gha4a.txt';
+        else
+            fn1='gha2b.txt';
+            fn2='gha3b.txt';
+            fn3='gha4b.txt';
+        end
         ii=1:ny;
-        write_data('gha2.txt',[ty(ii) sfbp(ii) cfbp(ii)]);
-        write_data('gha3.txt',[tt merr(:)]);
-        write_data('gha4.txt',[f db1 db2 db3 db4]);
+        write_data(fn1,[ty(ii) sfbp(ii) cfbp(ii)]);
+        write_data(fn2,[tt merr(:)]);
+        write_data(fn3,[f db1 db2 db3 db4]);
     end
 end
 if play_audio

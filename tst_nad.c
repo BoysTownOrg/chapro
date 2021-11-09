@@ -35,7 +35,7 @@ static int    prepared = 0;
 static int    io_wait = 40;
 static struct {
     char *ifn, *ofn, simfb, afc, mat, nrep, play;
-    int afl, wfl, pfl;
+    int afl, wfl, pfl, pup;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -79,6 +79,7 @@ usage()
     printf("-pN   band-limit filter length = n\n");
     printf("-P    play output\n");
     printf("-rN   number of input file repetitions = N\n");
+    printf("-uN   band-limit filter update period = N\n");
     printf("-v    print version\n");
     printf("-wN   whiten filter length = n\n");
     exit(0);
@@ -121,6 +122,7 @@ parse_args(int ac, char *av[])
     args.afl = -1;
     args.wfl = -1;
     args.pfl = -1;
+    args.pup = -1;
     while (ac > 1) {
         if (av[1][0] == '-') {
             if (av[1][1] == 'a') {
@@ -139,6 +141,8 @@ parse_args(int ac, char *av[])
                 args.play = 1;
             } else if (av[1][1] == 'r') {
                 args.nrep = atoi(av[1] + 2);
+            } else if (av[1][1] == 'u') {
+                args.pup = atof(av[1] + 2);
             } else if (av[1][1] == 'v') {
                 version();
             } else if (av[1][1] == 'w') {
@@ -554,7 +558,7 @@ static void
 configure_feedback()
 {
     // AFC parameters
-    afc.afl  = 45;        // adaptive filter length
+    afc.afl  = 42;        // adaptive filter length
     afc.wfl  = 9;         // whiten-filter length
     afc.pfl  = 0;         // band-limit-filter length
     // update args
@@ -563,24 +567,25 @@ configure_feedback()
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;             // band-limit update
     if (afc.pfl) {             // optimized for wfl=9 & pfl=21
-        afc.rho  = 0.012644742; // forgetting factor
-        afc.eps  = 0.001722509; // power threshold
-        afc.mu   = 0.008796135; // step size
-        afc.alf  = 0.000001372; // band-limit update
+        afc.rho  = 0.006689625; // forgetting factor
+        afc.eps  = 0.000910802; // power threshold
+        afc.mu   = 0.004542824; // step size
+        afc.alf  = 0.000010409; // band-limit update
     } else if (afc.wfl) {      // optimized for wfl=9
         afc.rho  = 0.008542769; // forgetting factor
         afc.eps  = 0.001128440; // power threshold
         afc.mu   = 0.004373509; // step size
     } else {
-        afc.rho  = 0.000002380; // forgetting factor
-        afc.eps  = 0.001404689; // power threshold
-        afc.mu   = 0.000409022; // step size
+        afc.rho  = 0.000002279; // forgetting factor
+        afc.eps  = 0.001394894; // power threshold
+        afc.mu   = 0.000417949; // step size
     }
-    afc.pup  = 1;         // band-limit update period
+    afc.pup  = 8;         // band-limit update period
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 
     afc.nqm  = 0;         // initialize quality-metric length
+    if (args.pup >= 0) afc.pup = args.pup;
 }
 
 static void
