@@ -14,7 +14,7 @@ cha_afc_filters(CHA_PTR cp, CHA_AFC *afc)
         // copy quality-metric info info to CHA_AFC
         afc->qm = (float *) cp[_qm];
         afc->iqm = 0;
-        afc->iqmp = (int *) cp[_iqmp];
+        afc->iqmp = (int32_t *) cp[_iqmp];  //updated WEA 11/17/2021 from (int *) to better match the data type (to avoid compiler warning)
         // copy filters info to CHA_AFC
         afc->fbl = CHA_IVAR[_fbl];
         afc->wfl = CHA_IVAR[_wfl];

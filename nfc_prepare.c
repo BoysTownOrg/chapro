@@ -84,11 +84,11 @@ cha_nfc_prepare(CHA_PTR cp, CHA_NFC *nfc)
     // specify NFC frequency map 
     if (nfc->mm && nfc->nm) { // copy from NFC struct ??
         nm = CHA_IVAR[_nfc_nm] = nfc->nm;
-        mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
+        mm = (int *)cha_allocate(cp, nm, sizeof(int), _nfc_mm);  //WEA 11/17/2021 changing both int32_t to both be int to avoid compiler warnings
         memcpy(mm,nfc->mm,nm * sizeof(int32_t));
     } else {                   // compute log-frequency map
         nm = CHA_IVAR[_nfc_nm] = nfc_map(nw, lbf, ubf, sr, 0);
-        mm = (int32_t *)cha_allocate(cp, nm, sizeof(int32_t), _nfc_mm);
+        mm = (int *)cha_allocate(cp, nm, sizeof(int), _nfc_mm);
         nfc_map(nw, lbf, ubf, sr, mm);
     }
     // compute chunks per shift
