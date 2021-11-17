@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_ifa.c - test IIR-filterbank analysis
 
 #include <stdio.h>
@@ -10,7 +11,8 @@
 #include <sigpro.h>
 #include "chapro.h"
 
-typedef struct {
+typedef struct
+{
     char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
@@ -28,7 +30,7 @@ init_wav(I_O *io)
 {
     /* impulse input */
     io->nwav = round(io->rate);
-    io->iwav = (float *) calloc(io->nwav, sizeof(float));
+    io->iwav = (float *)calloc(io->nwav, sizeof(float));
     fprintf(stdout, "IIR filterbank impulse response: \n");
     io->ofn = "test/tst_ifa.mat";
     io->iwav[0] = 1;
@@ -42,7 +44,7 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 {
     char *ft;
     float r[1], *x, *y;
-    int   n;
+    int n;
     static VAR *vl;
 
     ft = "MAT";
@@ -51,11 +53,11 @@ write_waves(I_O *io, CHA_PTR cp, int c)
     n = io->nwav;
     x = io->iwav;
     y = io->owav;
-    r[0] = (float) io->rate;
+    r[0] = (float)io->rate;
     vl = sp_var_alloc(3);
     sp_var_add(vl, "rate", r, 1, 1, "f4");
-    sp_var_add(vl,    "x", x, n, 1, "f4");
-    sp_var_add(vl,    "y", y, n, c, "f4");
+    sp_var_add(vl, "x", x, n, 1, "f4");
+    sp_var_add(vl, "y", y, n, c, "f4");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
 }
@@ -67,15 +69,15 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 static void
 prepare_filterbank(CHA_PTR cp)
 {
-    float   z[64], p[64], g[8];
-    int     d[8];
-    static double  sr = 24000;   // sampling rate (Hz)
-    static int     cs = 32;      // chunk size
+    float z[64], p[64], g[8];
+    int d[8];
+    static double sr = 24000; // sampling rate (Hz)
+    static int cs = 32;       // chunk size
     // filterbank parameters
     static int nc = 8;
     static int nz = 4;
     static double td = 2.5;
-    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
+    static double cf[7] = {317.2, 503.0, 797.6, 1265, 2006, 3181, 5045};
 
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
@@ -88,7 +90,7 @@ static void
 prepare(I_O *io, CHA_PTR cp)
 {
     double fs;
-    int nc, nz, ns; 
+    int nc, nz, ns;
 
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
@@ -101,7 +103,7 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     ns = io->nsmp;
     // output buffer
-    io->owav = (float *) calloc(nc * ns, sizeof(float));
+    io->owav = (float *)calloc(nc * ns, sizeof(float));
 }
 
 // unscramble channel outputs
@@ -110,7 +112,8 @@ unscramble_out(float *y, float *z, int nc, int ns, int cs, int j)
 {
     int k;
 
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         fcopy(y + j * cs + k * ns, z + k * cs, cs);
     }
 }
@@ -132,7 +135,8 @@ process(I_O *io, CHA_PTR cp)
     // process IIR filterbank
     cs = CHA_IVAR[_cs]; // chunk size
     nk = ns / cs;       // number of chunks
-    for (j = 0; j < nk; j++) {
+    for (j = 0; j < nk; j++)
+    {
         cha_iirfb_analyze(cp, x + j * cs, z, cs);
         unscramble_out(y, z, nc, ns, cs, j);
     }
@@ -149,8 +153,7 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-int
-main(int ac, char *av[])
+int main(int ac, char *av[])
 {
     static I_O io;
     static void *cp[NPTR] = {0};
@@ -160,3 +163,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

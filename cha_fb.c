@@ -17,11 +17,12 @@ cha_compressor_default_level(float *Lc, int np, int nc, double lv)
     int k, kk;
     static float Lmx = 120;
 
-    Lcs = (float) lv;
+    Lcs = (float)lv;
     Lce = (Lcs < 100) ? 100 : Lcs;
     Lcm = (Lcs + Lce) / 2;
     /* loop over filterbank channel */
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         kk = k * np;
         Lc[kk + 0] = Lcs;
         Lc[kk + 1] = Lcm;
@@ -37,11 +38,12 @@ cha_compressor_default_gain(float *Gc, int np, int nc, double gn)
     int k, kk;
     static float Gmx = 90;
 
-    Gcs = (float) gn;
+    Gcs = (float)gn;
     Gce = 0;
     Gcm = (Gcs + Gce) / 2;
     /* loop over filterbank channel */
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         kk = k * np;
         Gc[kk + 0] = Gcs;
         Gc[kk + 1] = Gcm;
@@ -52,25 +54,27 @@ cha_compressor_default_gain(float *Gc, int np, int nc, double gn)
 
 /***********************************************************/
 
-FUNC(char *) 
+#ifndef CHAPRO_H
+FUNC(char *)
 cha_version(void)
 {
-    return (VER);                  
+    return (VER);
 };
+#endif
 
 FUNC(void)
-cha_fb_prepare(CHA *ss, double sr, double gn, double kp, int ds)
+cha_fb_prepare(CHA_CLS *ss, double sr, double gn, double kp, int ds)
 {
-    float Lc[32*4], Gc[32*4];
-    static int np = 4;          /* number of level & gain parameters */
-    static double gd = 4;       /* filterbank target delay (ms) [4] */
-    static double tw = 200;     /* zero_gain buffer size (ms) [500] */
-    static double lr = 2e-5;    /* level reference (Pa) */
+    float Lc[32 * 4], Gc[32 * 4];
+    static int np = 4;       /* number of level & gain parameters */
+    static double gd = 4;    /* filterbank target delay (ms) [4] */
+    static double tw = 200;  /* zero_gain buffer size (ms) [500] */
+    static double lr = 2e-5; /* level reference (Pa) */
 
-	// prepare filterbank
+    // prepare filterbank
     cha_filterbank_configure(ss, sr, gd, tw);
     cha_filterbank_prepare(ss);
-	// prepare compressor
+    // prepare compressor
     cha_compressor_default_level(Lc, np, ss->nc, kp);
     cha_compressor_default_gain(Gc, np, ss->nc, gn);
     cha_compressor_set_level(ss, Lc, lr, np, ds);
@@ -78,7 +82,7 @@ cha_fb_prepare(CHA *ss, double sr, double gn, double kp, int ds)
 }
 
 FUNC(void)
-cha_fb_process(CHA *ss, float *x, float *y, int n)
+cha_fb_process(CHA_CLS *ss, float *x, float *y, int n)
 {
     cha_filterbank_analyze(ss, x, n);
     cha_compressor_process(ss, n);
@@ -86,7 +90,7 @@ cha_fb_process(CHA *ss, float *x, float *y, int n)
 }
 
 FUNC(void)
-cha_fb_cleanup(CHA *ss)
+cha_fb_cleanup(CHA_CLS *ss)
 {
     cha_filterbank_cleanup(ss);
     cha_compressor_cleanup(ss);

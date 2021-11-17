@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_ffa.c - test FIR-filterbank analysis
 
 #include <stdio.h>
@@ -10,7 +11,8 @@
 #include <sigpro.h>
 #include "chapro.h"
 
-typedef struct {
+typedef struct
+{
     char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
@@ -28,7 +30,7 @@ init_wav(I_O *io)
 {
     /* impulse input */
     io->nwav = round(io->rate);
-    io->iwav = (float *) calloc(io->nwav, sizeof(float));
+    io->iwav = (float *)calloc(io->nwav, sizeof(float));
     fprintf(stdout, "impulse response: \n");
     io->ofn = "test/tst_ffa.mat";
     io->iwav[0] = 1;
@@ -42,7 +44,7 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 {
     char *ft;
     float r[1], *x, *y;
-    int   n;
+    int n;
     static VAR *vl;
 
     ft = "MAT";
@@ -51,11 +53,11 @@ write_waves(I_O *io, CHA_PTR cp, int c)
     n = io->nwav;
     x = io->iwav;
     y = io->owav;
-    r[0] = (float) io->rate;
+    r[0] = (float)io->rate;
     vl = sp_var_alloc(3);
     sp_var_add(vl, "rate", r, 1, 1, "f4");
-    sp_var_add(vl,    "x", x, n, 1, "f4");
-    sp_var_add(vl,    "y", y, n, c, "f4");
+    sp_var_add(vl, "x", x, n, 1, "f4");
+    sp_var_add(vl, "y", y, n, c, "f4");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
 }
@@ -67,14 +69,14 @@ write_waves(I_O *io, CHA_PTR cp, int c)
 static void
 prepare_filterbank(CHA_PTR cp)
 {
-    static double sr = 24000;   // sampling rate (Hz)
-    static int    cs = 32;      // chunk size
-    static int    nw = 256;     // window size
-    static int    wt = 0;       // window type: 0=Hamming, 1=Blackman
-    static int    nc = 8;       // number of frequency bands
+    static double sr = 24000; // sampling rate (Hz)
+    static int cs = 32;       // chunk size
+    static int nw = 256;      // window size
+    static int wt = 0;        // window type: 0=Hamming, 1=Blackman
+    static int nc = 8;        // number of frequency bands
     // cross frequencies
     static double cf[] = {
-        317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7};
+        317.1666, 502.9734, 797.6319, 1264.9, 2005.9, 3181.1, 5044.7};
 
     // prepare FIRFB
     cha_firfb_prepare(cp, cf, nc, sr, nw, wt, cs);
@@ -86,7 +88,7 @@ static void
 prepare(I_O *io, CHA_PTR cp)
 {
     double fs;
-    int nc, ns, nw; 
+    int nc, ns, nw;
 
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
@@ -97,7 +99,7 @@ prepare(I_O *io, CHA_PTR cp)
     init_wav(io);
     ns = io->nsmp;
     // output buffer
-    io->owav = (float *) calloc(nc * ns, sizeof(float));
+    io->owav = (float *)calloc(nc * ns, sizeof(float));
     // report
     fprintf(stdout, "CHA firfb_analyze: sampling rate=%.1f kHz, ", fs);
     fprintf(stdout, "FIRFB: nw=%d \n", nw);
@@ -109,7 +111,8 @@ unscramble_out(float *y, float *z, int nc, int ns, int cs, int j)
 {
     int k;
 
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         fcopy(y + j * cs + k * ns, z + k * cs, cs);
     }
 }
@@ -131,7 +134,8 @@ process(I_O *io, CHA_PTR cp)
     // process FIR filterbank
     cs = CHA_IVAR[_cs]; // chunk size
     nk = ns / cs;       // number of chunks
-    for (j = 0; j < nk; j++) {
+    for (j = 0; j < nk; j++)
+    {
         cha_firfb_analyze(cp, x + j * cs, z, cs);
         unscramble_out(y, z, nc, ns, cs, j);
     }
@@ -148,8 +152,7 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-int
-main(int ac, char *av[])
+int main(int ac, char *av[])
 {
     static I_O io;
     static void *cp[NPTR] = {0};
@@ -159,3 +162,5 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+
+#endif

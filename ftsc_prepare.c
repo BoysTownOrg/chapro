@@ -1,11 +1,14 @@
+
 // ftsc_prepare.c - stft+agc preparation functions
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "chapro.h"
-#include "cha_ft.h"
 
+#ifndef ARDUINO
+#include "cha_ft.h"
+#endif
 /***********************************************************/
 
 // configure suppressor
@@ -16,7 +19,8 @@ compressor_get_level(float *Lc, int np, int nc)
     int k, kcs, kcm, kce, kmx;
 
     /* loop over stft channel */
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         kcs = k * np + 0;
         kcm = k * np + 1;
         kce = k * np + 2;
@@ -34,13 +38,14 @@ compressor_get_gain(float *Gc, double gn, int np, int nc)
     int k, kcs, kcm, kce, kmx;
 
     /* loop over stft channel */
-    for (k = 0; k < nc; k++) {
+    for (k = 0; k < nc; k++)
+    {
         kcs = k * np + 0;
         kcm = k * np + 1;
         kce = k * np + 2;
         kmx = k * np + 3;
-        Gc[kcs] = (float) gn;
-        Gc[kcm] = (float) gn / 2;
+        Gc[kcs] = (float)gn;
+        Gc[kcm] = (float)gn / 2;
         Gc[kce] = 0;
         Gc[kmx] = 90;
     }
@@ -48,15 +53,14 @@ compressor_get_gain(float *Gc, double gn, int np, int nc)
 
 /***********************************************************/
 
-void
-cha_ftsc_prepare(CHA_PTR cp, double sr, double gn, double kp, int ds, int cs)
+void cha_ftsc_prepare(CHA_PTR cp, double sr, double gn, double kp, int ds, int cs)
 {
-    float Lc[32*4], Gc[32*4];   /* arrays of level & gain parameters */
+    float Lc[32 * 4], Gc[32 * 4]; /* arrays of level & gain parameters */
     int nc;
-    static double gd = 4;       /* stft target delay (ms) [4] */
-    static double tw = 500;     /* stft_zero_gain buffer size (ms) [500] */
-    static double lr = 2e-5;    /* signal-level reference (Pa) */
-    static int np = 4;          /* number of level & gain parameters */
+    static double gd = 4;    /* stft target delay (ms) [4] */
+    static double tw = 500;  /* stft_zero_gain buffer size (ms) [500] */
+    static double lr = 2e-5; /* signal-level reference (Pa) */
+    static int np = 4;       /* number of level & gain parameters */
 
     cha_prepare(cp);
     cha_stft_prepare(cp, sr, gd, tw);

@@ -476,7 +476,7 @@ align_peak(float *z, float *p, float *g, int *d, double td, double fs, int nb, i
 }
 
 // adjust filterbank gains for combined unity gain
-static void
+static void   //changed from void to int, WEA debugging
 adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb, int nz)
 {
     double *G, e, f, mag, sum, avg;
@@ -485,44 +485,88 @@ adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb,
 
     nt = 1024;
     while (nt < fs) nt *= 2;
-    H = (float *) calloc((nt + 2) * nb, sizeof(float));
-    h = (float *) calloc((nt + 2) * nb, sizeof(float));
-    G = (double *) calloc(nb, sizeof(double));
-    x = (float *) calloc(nt, sizeof(float));
-    y = (float *) calloc(nt * nb, sizeof(float));
-    x[0] = 1;
-    ones(G, nb);
-    // iteration loop
-    filterbank(y, x, nt, z, p, g, nb, nz);
-    peak_align(y, d, nb, nt);
-    fb_fft(y, H, nb, nt);
-    for (i = 0; i < ni; i++) {
-        combine(H, h, G, nb, nt + 2); // sum across bands
-        // loop over frequency bands
-        for (j = 0; j < (nb - 2); j++) {
-            sum = 0;
-            for (jj = 0; jj < nf; jj++) {
-                e = jj / (nf - 1.0);
-                f = pow(cf[j], e) * pow(cf[j + 1], 1 - e);
-                m = round(f * (nt / fs));
-                mr = m * 2;
-                mi = mr + 1;
-                mag = sqrt(h[mr] * h[mr] + h[mi] * h[mi]);
-                sum += log(mag);
-            }
-            avg = exp(sum / nf);
-            G[j + 1] /= avg;
-        }
-    }
-    // loop over frequency bands
-    for (j = 0; j < nb - 1; j++) {
-        g[j] *= (float) G[j];
-    }
+	
+	
+	//Added WEA (Creare) August 2021.  Loop until memory is successfully allocated.  Decrease nt as needed.
+	#ifdef ARDUINO
+		if (nt > 4096) nt = 4096; //this is the length that ends up working on Tympan RevE...so let's just shortcut to this value
+	#endif
+	G = NULL; h = NULL;  H = NULL; x = NULL; y = NULL;   //Added WEA
+	while ( (nt > 128) && (y == NULL) ) { //added WEA
+		printf("iirfb_design: adjust_gain: allocating memory for nt = %i\n", nt);
+	
+		//original in CHAPRO
+		int any_fail = 0;
+		H = (float *) calloc((nt + 2) * nb, sizeof(float));  if (H==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate H\n"); }
+		if (!any_fail) {		
+			h = (float *) calloc((nt + 2) * nb, sizeof(float));  if (h==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate h\n"); }
+			if (!any_fail) {
+				G = (double *) calloc(nb, sizeof(double));           if (G==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate G\n"); }
+				if (!any_fail) {
+					x = (float *) calloc(nt, sizeof(float));             if (x==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate x\n"); }
+					if (!any_fail) {
+						y = (float *) calloc(nt * nb, sizeof(float));        if (y==NULL) { any_fail=1; printf("iirfb_design: adjust_gain: failed to allocate y\n"); }
+					}
+				}
+			}
+		}
+		
+		//Added WEA (Creare) August 2021.  Test if memory was allcoated
+		if (any_fail == 1) {
+			printf("iirfb_design: adjust_gain: memory allocation failed.  Reducing nt...\n");
+			
+			//de-allocate
+			free(y); free(x); free(G); free(h); free(H);
+				
+			//reduce size of nt in preparation for trying again
+			nt = nt / 2;
+		} else {
+			printf("iirfb_design: adjust_gain: memory successfully allocated for nt = %i\n", nt);
+		}
+	} // end of while() loop that was added by WEA (Creare) August 2021
+	
+	if (y != NULL) {  //check to see if the memory was allocated. Added by WEA (Creare) August 2021
+
+		//Original from CHAPRO
+	    x[0] = 1;
+	    ones(G, nb);
+	    // iteration loop
+	    filterbank(y, x, nt, z, p, g, nb, nz);
+	    peak_align(y, d, nb, nt);
+	    fb_fft(y, H, nb, nt);
+	    for (i = 0; i < ni; i++) {
+	        combine(H, h, G, nb, nt + 2); // sum across bands
+	        // loop over frequency bands
+	        for (j = 0; j < (nb - 2); j++) {
+	            sum = 0;
+	            for (jj = 0; jj < nf; jj++) {
+	                e = jj / (nf - 1.0);
+	                f = pow(cf[j], e) * pow(cf[j + 1], 1 - e);
+	                m = round(f * (nt / fs));
+	                mr = m * 2;
+	                mi = mr + 1;
+	                mag = sqrt(h[mr] * h[mr] + h[mi] * h[mi]);
+	                sum += log(mag);
+	            }
+	            avg = exp(sum / nf);
+	            G[j + 1] /= avg;
+	        }
+	    }
+	    // loop over frequency bands
+	    for (j = 0; j < nb - 1; j++) {
+	        g[j] *= (float) G[j];
+	    }
+
+	} else {   // Added by WEA (Creare) August 2021
+		printf("iirfb_design: adjust_gain: *** ERROR *** out of memory!  returning without adjusting gains.");
+	}  // End Added Added by WEA (Creare) August 2021
+
     free(H);
-    free(h);
+	free(h);
     free(G);
     free(x);
     free(y);
+
 }
 
 /***********************************************************/

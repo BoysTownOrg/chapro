@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_ifio.c - test IIR-filterbank i/o with impulse signal
 
 #include <stdio.h>
@@ -12,7 +13,8 @@
 #define DATA_HDR "tst_ifio_data.h"
 //#include DATA_HDR
 
-typedef struct {
+typedef struct
+{
     char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
@@ -21,7 +23,8 @@ typedef struct {
     void **out;
 } I_O;
 
-static struct {
+static struct
+{
     char *ifn, *ofn, mat, tone_io;
 } args;
 
@@ -52,18 +55,27 @@ static void
 parse_args(int ac, char *av[])
 {
     args.tone_io = 0;
-    while (ac > 1) {
-        if (av[1][0] == '-') {
-            if (av[1][1] == 'h') {
+    while (ac > 1)
+    {
+        if (av[1][0] == '-')
+        {
+            if (av[1][1] == 'h')
+            {
                 usage();
-            } else if (av[1][1] == 't') {
+            }
+            else if (av[1][1] == 't')
+            {
                 args.tone_io = 1;
-            } else if (av[1][1] == 'v') {
+            }
+            else if (av[1][1] == 'v')
+            {
                 version();
             }
             ac--;
             av++;
-        } else {
+        }
+        else
+        {
             break;
         }
     }
@@ -77,25 +89,29 @@ init_wav(I_O *io)
 
     /* second impulse input */
     io->nwav = round(io->rate);
-    io->iwav = (float *) calloc(io->nwav, sizeof(float));
+    io->iwav = (float *)calloc(io->nwav, sizeof(float));
     fprintf(stdout, "IIRFB i/o with ");
-    if (args.tone_io == 0) {
+    if (args.tone_io == 0)
+    {
         fprintf(stdout, "impulse: \n");
         io->ofn = "test/ifio_impulse.mat";
         io->iwav[0] = 1;
-    } else {
+    }
+    else
+    {
         fprintf(stdout, "tone: \n");
         f = 1000;
-        p = (float) ((2 * M_PI * f) / io->rate);
+        p = (float)((2 * M_PI * f) / io->rate);
         io->ofn = "test/ifio_tone.mat";
-        for (i = 0; i < io->nwav; i++) {
-            io->iwav[i] = (float) sin(i * p);
+        for (i = 0; i < io->nwav; i++)
+        {
+            io->iwav[i] = (float)sin(i * p);
         }
     }
     io->nsmp = io->nwav;
     io->mseg = 1;
     io->nseg = 1;
-    io->owav = (float *) calloc(io->nsmp, sizeof(float));
+    io->owav = (float *)calloc(io->nsmp, sizeof(float));
 }
 
 static void
@@ -103,7 +119,7 @@ write_wave(I_O *io)
 {
     char *ft;
     float r[1], *x, *y;
-    int   n;
+    int n;
     static VAR *vl;
 
     ft = "MAT";
@@ -112,11 +128,11 @@ write_wave(I_O *io)
     n = io->nwav;
     x = io->iwav;
     y = io->owav;
-    r[0] = (float) io->rate;
+    r[0] = (float)io->rate;
     vl = sp_var_alloc(3);
     sp_var_add(vl, "rate", r, 1, 1, "f4");
-    sp_var_add(vl,    "x", x, n, 1, "f4");
-    sp_var_add(vl,    "y", y, n, 1, "f4");
+    sp_var_add(vl, "x", x, n, 1, "f4");
+    sp_var_add(vl, "y", y, n, 1, "f4");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
 }
@@ -128,15 +144,15 @@ write_wave(I_O *io)
 static void
 prepare_filterbank(CHA_PTR cp)
 {
-    float   z[64], p[64], g[8];
-    int     d[8];
-    static double  sr = 24000;   // sampling rate (Hz)
-    static int     cs = 32;      // chunk size
+    float z[64], p[64], g[8];
+    int d[8];
+    static double sr = 24000; // sampling rate (Hz)
+    static int cs = 32;       // chunk size
     // filterbank parameters
     static int nc = 8;
     static int nz = 4;
     static double td = 2.5;
-    static double cf[7] = {317.2,503.0,797.6,1265,2006,3181,5045};
+    static double cf[7] = {317.2, 503.0, 797.6, 1265, 2006, 3181, 5045};
 
     // prepare IIRFB
     cha_iirfb_design(z, p, g, d, cf, nc, nz, sr, td);
@@ -149,7 +165,7 @@ static void
 prepare(I_O *io, CHA_PTR cp)
 {
     double fs;
-    int nc, nz; 
+    int nc, nz;
 
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
@@ -175,7 +191,7 @@ process(I_O *io, CHA_PTR cp)
     int i, n, cs, nk;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data; 
+    //cp = (CHA_PTR) cha_data;
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;
@@ -184,7 +200,8 @@ process(I_O *io, CHA_PTR cp)
     // process IIRFB
     cs = CHA_IVAR[_cs]; // chunk size
     nk = n / cs;        // number of chunks
-    for (i = 0; i < nk; i++) {
+    for (i = 0; i < nk; i++)
+    {
         cha_iirfb_analyze(cp, x + i * cs, z, cs);
         cha_iirfb_synthesize(cp, z, y + i * cs, cs);
     }
@@ -201,8 +218,7 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-int
-main(int ac, char *av[])
+int main(int ac, char *av[])
 {
     static I_O io;
     static void *cp[NPTR] = {0};
@@ -213,3 +229,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif
