@@ -110,7 +110,7 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
         cha_allocate(cp, 1, sizeof(int), _iqmp);
         CHA_IVAR[_nqm] = nqm;
     } else {
-        CHA_IVAR[_iqmp] = 0;
+		cp[_iqmp] = 0;  //original CHA_IVAR[_iqmp] = 0;  Corrected by WEA 11/19/2021
         CHA_IVAR[_nqm] = 0;
     }
     // initialize hardware delay
