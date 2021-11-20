@@ -17,12 +17,11 @@ cha_compressor_default_level(float *Lc, int np, int nc, double lv)
     int k, kk;
     static float Lmx = 120;
 
-    Lcs = (float)lv;
+    Lcs = (float) lv;
     Lce = (Lcs < 100) ? 100 : Lcs;
     Lcm = (Lcs + Lce) / 2;
     /* loop over filterbank channel */
-    for (k = 0; k < nc; k++)
-    {
+    for (k = 0; k < nc; k++) {
         kk = k * np;
         Lc[kk + 0] = Lcs;
         Lc[kk + 1] = Lcm;
@@ -38,12 +37,11 @@ cha_compressor_default_gain(float *Gc, int np, int nc, double gn)
     int k, kk;
     static float Gmx = 90;
 
-    Gcs = (float)gn;
+    Gcs = (float) gn;
     Gce = 0;
     Gcm = (Gcs + Gce) / 2;
     /* loop over filterbank channel */
-    for (k = 0; k < nc; k++)
-    {
+    for (k = 0; k < nc; k++) {
         kk = k * np;
         Gc[kk + 0] = Gcs;
         Gc[kk + 1] = Gcm;
@@ -59,17 +57,18 @@ FUNC(char *)
 cha_version(void)
 {
     return (VER);
+	return (VER);
 };
 #endif
 
 FUNC(void)
 cha_fb_prepare(CHA_CLS *ss, double sr, double gn, double kp, int ds)
 {
-    float Lc[32 * 4], Gc[32 * 4];
-    static int np = 4;       /* number of level & gain parameters */
-    static double gd = 4;    /* filterbank target delay (ms) [4] */
-    static double tw = 200;  /* zero_gain buffer size (ms) [500] */
-    static double lr = 2e-5; /* level reference (Pa) */
+    float Lc[32*4], Gc[32*4];
+    static int np = 4;         /* number of level & gain parameters */
+    static double gd = 4;      /* filterbank target delay (ms) [4] */
+    static double tw = 200;    /* zero_gain buffer size (ms) [500] */
+    static double lr = 2e-5;   /* level reference (Pa) */
 
     // prepare filterbank
     cha_filterbank_configure(ss, sr, gd, tw);
