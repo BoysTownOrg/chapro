@@ -57,7 +57,6 @@ FUNC(char *)
 cha_version(void)
 {
     return (VER);
-	return (VER);
 };
 #endif
 
