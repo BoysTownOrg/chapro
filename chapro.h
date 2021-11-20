@@ -16,7 +16,7 @@ extern "C"
 #else
 typedef short int16_t;
 typedef long int32_t;
-typedef unsigned long uint32_t;
+typedef unsigned long  uint32_t;
 #endif
 
 #ifdef DLL
@@ -25,23 +25,23 @@ typedef unsigned long uint32_t;
 #define FUNC(type) type
 #endif
 
-#define NPTR	  64
-#define NVAR	  32
-#define CHA_IVAR  ((int *)cp[_ivar])
-#define CHA_DVAR  ((double *)cp[_dvar])
-#define CHA_CB    ((float *)cp[_cc])
+#define NPTR		64
+#define NVAR		32
+#define CHA_IVAR    ((int *)cp[_ivar])
+#define CHA_DVAR    ((double *)cp[_dvar])
+#define CHA_CB      ((float *)cp[_cc])
 
 #ifndef M_PI
-#define M_PI         3.14159265358979323846
+#define M_PI         	3.14159265358979323846
 #endif
 #ifndef M_LN2
-#define M_LN2        0.693147180559945309417
+#define M_LN2        	0.693147180559945309417
 #endif
 #ifndef M_SQRT1_2
-#define M_SQRT1_2    0.707106781186547524401
+#define M_SQRT1_2    	0.707106781186547524401
 #endif
 #ifndef M_SQRT2
-#define M_SQRT2      1.41421356237309504880
+#define M_SQRT2      	1.41421356237309504880
 #endif
 #ifdef MGW
 #undef WIN32
@@ -315,6 +315,13 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
+// suppression module
+
+FUNC(int) cha_sha_prepare(CHA_PTR, CHA_SHA *);
+FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
+
+/*****************************************************/
+
 // global pointer indices
 
 #define _size     0
@@ -541,7 +548,7 @@ FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _sha_a3   19
 #define _sha_gg   20
 
-    /*****************************************************/
+/*****************************************************/
 
 #endif /* CHAPRO_H */
 #ifdef __cplusplus
