@@ -65,10 +65,10 @@ FUNC(void)
 cha_fb_prepare(CHA_CLS *ss, double sr, double gn, double kp, int ds)
 {
     float Lc[32*4], Gc[32*4];
-    static int np = 4;         /* number of level & gain parameters */
-    static double gd = 4;      /* filterbank target delay (ms) [4] */
-    static double tw = 200;    /* zero_gain buffer size (ms) [500] */
-    static double lr = 2e-5;   /* level reference (Pa) */
+    static int np = 4;          /* number of level & gain parameters */
+    static double gd = 4;       /* filterbank target delay (ms) [4] */
+    static double tw = 200;     /* zero_gain buffer size (ms) [500] */
+    static double lr = 2e-5;    /* level reference (Pa) */
 
     // prepare filterbank
     cha_filterbank_configure(ss, sr, gd, tw);
