@@ -52,25 +52,25 @@ typedef unsigned long uint32_t;
 #define __inline     inline
 #endif
 
-#define fmin(x, y) ((x < y) ? (x) : (y))
-#define fmove(x, y, n) memmove(x, y, (n) * sizeof(float))
-#define fcopy(x, y, n) memcpy(x, y, (n) * sizeof(float))
-#define fzero(x, n) memset(x, 0, (n) * sizeof(float))
-#define dcopy(x, y, n) memcpy(x, y, (n) * sizeof(double))
-#define dzero(x, n) memset(x, 0, (n) * sizeof(double))
+#define fmin(x, y) ((x<y)?(x):(y))
+#define fmove(x, y, n) memmove(x,y,(n)*sizeof(float))
+#define fcopy(x, y, n) memcpy(x,y,(n)*sizeof(float))
+#define fzero(x, n) memset(x,0,(n)*sizeof(float))
+#define dcopy(x, y, n) memcpy(x,y,(n)*sizeof(double))
+#define dzero(x, n) memset(x,0,(n)*sizeof(double))
 
 #ifndef ARDUINO
 #define round(x) ((int)floorf((float)(x) + 0.5f))
 #endif
 
 #ifndef log2
-#define log2(x) (logf(x) / M_LN2)
+#define log2(x) (logf(x)/M_LN2)
 #endif
 
-#define db1(x) (logf(x) * 4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
-#define db2(x) (logf(x) * 8.685889638065035f) //   db2(x)=(log(x)*20/log(10))
-#define undb1(x) expf((x)*0.230258509299405f) // undb1(x)=exp((x)*log(10)/10)
-#define undb2(x) expf((x)*0.115129254649702f) // undb2(x)=exp((x)*log(10)/20)
+#define db1(x)     (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
+#define db2(x)     (logf(x)*8.685889638065035f) //   db2(x)=(log(x)*20/log(10))
+#define undb1(x)   expf((x)*0.230258509299405f) // undb1(x)=exp((x)*log(10)/10)
+#define undb2(x)   expf((x)*0.115129254649702f) // undb2(x)=exp((x)*log(10)/20)
 
 typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
@@ -166,8 +166,7 @@ typedef struct {
 
 /*****************************************************/
 
-typedef struct
-{
+typedef struct {
     // simulation parameters
     double fbg;                  // simulated-feedback gain
     // AFC parameters
@@ -195,8 +194,7 @@ typedef struct
     CHA_PTR  pcp;                // previous CHA_PTR
 } CHA_AFC;
 
-typedef struct
-{
+typedef struct {
     int32_t  cs;             // chunk size
     int32_t  nw;             // window size (pow2)
     int32_t  wt;             // window type: 0=Hamming, 1=Blackman
@@ -230,8 +228,6 @@ typedef struct {
     float *supp;             // suppressive influence pointer
 } CHA_SHA;
 
-
-
 /*****************************************************/
 
 // CHA common functions
@@ -257,94 +253,65 @@ FUNC(char *) cha_version(void);
 
 // firfb module
 
-FUNC(int)
-cha_firfb_prepare(CHA_PTR, double *, int, double, int, int, int);
-FUNC(void)
-cha_firfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_firfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_firfb_prepare(CHA_PTR, double *, int, double, int, int, int);
+FUNC(void) cha_firfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_firfb_synthesize(CHA_PTR, float *, float *, int);
 
 // iirfb module
 
-FUNC(int)
-cha_iirfb_design(float *, float *, float *, int *, double *, int, int, double, double);
-FUNC(int)
-cha_iirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
-FUNC(void)
-cha_iirfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_iirfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_iirfb_design(float *, float *, float *, int *, double *, int, int, double, double);
+FUNC(int) cha_iirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
+FUNC(void) cha_iirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_iirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // cfirfb module
 
-FUNC(int)
-cha_cfirfb_prepare(CHA_PTR, double *, int, double, int, int, int);
-FUNC(void)
-cha_cfirfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_cfirfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_cfirfb_prepare(CHA_PTR, double *, int, double, int, int, int);
+FUNC(void) cha_cfirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_cfirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // ciirfb module
 
-FUNC(int)
-cha_ciirfb_design(float *, float *, float *, int *, int, double *, double *, double, double);
-FUNC(int)
-cha_ciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
-FUNC(void)
-cha_ciirfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_ciirfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_ciirfb_design(float *, float *, float *, int *, int, double *, double *, double, double);
+FUNC(int) cha_ciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
+FUNC(void) cha_ciirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_ciirfb_synthesize(CHA_PTR, float *, float *, int);
 
 // double ciirfb module
 
-FUNC(int)
-cha_dciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
-FUNC(void)
-cha_dciirfb_analyze(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_dciirfb_synthesize(CHA_PTR, float *, float *, int);
+FUNC(int) cha_dciirfb_prepare(CHA_PTR, float *, float *, float *, int *, int, int, double, int);
+FUNC(void) cha_dciirfb_analyze(CHA_PTR, float *, float *, int);
+FUNC(void) cha_dciirfb_synthesize(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
 // AGC compressor module
 
-FUNC(int)
-cha_agc_prepare(CHA_PTR, CHA_DSL *, CHA_WDRC *);
-FUNC(void)
-cha_agc_input(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_agc_channel(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_agc_output(CHA_PTR, float *, float *, int);
+FUNC(int) cha_agc_prepare(CHA_PTR, CHA_DSL *, CHA_WDRC *);
+FUNC(void) cha_agc_input(CHA_PTR, float *, float *, int);
+FUNC(void) cha_agc_channel(CHA_PTR, float *, float *, int);
+FUNC(void) cha_agc_output(CHA_PTR, float *, float *, int);
 
 // instantanous compressor module
 
-FUNC(int)
-cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, double, int);
-FUNC(void)
-cha_icmp_process(CHA_PTR, float *, float *, int);
+FUNC(int) cha_icmp_prepare(CHA_PTR, CHA_CLS *, double, double, int);
+FUNC(void) cha_icmp_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
 // feedback module
 
-FUNC(int)
-cha_afc_prepare(CHA_PTR, CHA_AFC *);
-FUNC(int)
-cha_afc_filters(CHA_PTR, CHA_AFC *);
-FUNC(void)
-cha_afc_input(CHA_PTR, float *, float *, int);
-FUNC(void)
-cha_afc_output(CHA_PTR, float *, int);
+FUNC(int) cha_afc_prepare(CHA_PTR, CHA_AFC *);
+FUNC(int) cha_afc_filters(CHA_PTR, CHA_AFC *);
+FUNC(void) cha_afc_input(CHA_PTR, float *, float *, int);
+FUNC(void) cha_afc_output(CHA_PTR, float *, int);
 
 /*****************************************************/
 
 // frequency-compression module
 
-FUNC(int)
-cha_nfc_prepare(CHA_PTR, CHA_NFC *);
-FUNC(void)
-cha_nfc_process(CHA_PTR, float *, float *, int);
+FUNC(int) cha_nfc_prepare(CHA_PTR, CHA_NFC *);
+FUNC(void) cha_nfc_process(CHA_PTR, float *, float *, int);
 
 /*****************************************************/
 
@@ -573,7 +540,6 @@ cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _sha_a2   18
 #define _sha_a3   19
 #define _sha_gg   20
-
 
     /*****************************************************/
 
