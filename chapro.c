@@ -8,7 +8,7 @@
 int _stdcall
 LibMain(void *hinstDll, unsigned long dwReason, void *reserved)
 {
-    return (1);
+		return(1);
 }
 
 /**************************************************************************/

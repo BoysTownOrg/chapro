@@ -14,9 +14,9 @@ extern "C"
 #if !defined(_MSC_VER) || (_MSC_VER > 1500)
 #include <stdint.h>
 #else
-    typedef short int16_t;
-    typedef long int32_t;
-    typedef unsigned long uint32_t;
+typedef short int16_t;
+typedef long int32_t;
+typedef unsigned long uint32_t;
 #endif
 
 #ifdef DLL
@@ -25,31 +25,31 @@ extern "C"
 #define FUNC(type) type
 #endif
 
-#define NPTR 64
-#define NVAR 32
-#define CHA_IVAR ((int *)cp[_ivar])
-#define CHA_DVAR ((double *)cp[_dvar])
-#define CHA_CB ((float *)cp[_cc])
+#define NPTR	  64
+#define NVAR	  32
+#define CHA_IVAR  ((int *)cp[_ivar])
+#define CHA_DVAR  ((double *)cp[_dvar])
+#define CHA_CB    ((float *)cp[_cc])
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#define M_PI         3.14159265358979323846
 #endif
 #ifndef M_LN2
-#define M_LN2 0.693147180559945309417
+#define M_LN2        0.693147180559945309417
 #endif
 #ifndef M_SQRT1_2
-#define M_SQRT1_2 0.707106781186547524401
+#define M_SQRT1_2    0.707106781186547524401
 #endif
 #ifndef M_SQRT2
-#define M_SQRT2 1.41421356237309504880
+#define M_SQRT2      1.41421356237309504880
 #endif
 #ifdef MGW
 #undef WIN32
 #endif
 #ifndef WIN32
-#define _hypot hypot
-#define _strdup strdup
-#define __inline inline
+#define _hypot       hypot
+#define _strdup      strdup
+#define __inline     inline
 #endif
 
 #define fmin(x, y) ((x < y) ? (x) : (y))
