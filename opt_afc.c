@@ -31,7 +31,7 @@ static struct
 {
     char *ifn, *ofn, mat, nrep;
     double tqm;
-    int afl, wfl, pfl;
+    int afl, wfl, pfl, pup;
 } args;
 static CHA_AFC afc = {0};
 static CHA_DSL dsl = {0};
@@ -71,6 +71,7 @@ usage()
     printf("-pN   band-limit filter length = n\n");
     printf("-rN   number of input file repetitions = N\n");
     printf("-tN   AFC optimize time = N\n");
+    printf("-uN   band-limit filter update period = N\n");
     printf("-v    print version\n");
     printf("-wN   whiten filter length = n\n");
     exit(0);
@@ -112,12 +113,10 @@ parse_args(int ac, char *av[])
     args.afl = -1;
     args.wfl = -1;
     args.pfl = -1;
-    while (ac > 1)
-    {
-        if (av[1][0] == '-')
-        {
-            if (av[1][1] == 'b')
-            {
+    args.pup = -1;
+    while (ac > 1) {
+        if (av[1][0] == '-') {
+            if (av[1][1] == 'b') {
                 args.pfl = atoi(av[1] + 2);
             }
             else if (av[1][1] == 'h')
@@ -143,9 +142,9 @@ parse_args(int ac, char *av[])
             else if (av[1][1] == 't')
             {
                 args.tqm = atof(av[1] + 2);
-            }
-            else if (av[1][1] == 'v')
-            {
+            } else if (av[1][1] == 'u') {
+                args.pup = atof(av[1] + 2);
+            } else if (av[1][1] == 'v') {
                 version();
             }
             else if (av[1][1] == 'w')
@@ -525,41 +524,34 @@ static void
 configure_feedback()
 {
     // AFC parameters
-    afc.afl = 45; // adaptive filter length
-    afc.wfl = 9;  // whiten-filter length
-    afc.pfl = 0;  // band-limit-filter length
+    afc.afl  = 42;        // adaptive filter length
+    afc.wfl  = 9;         // whiten-filter length
+    afc.pfl  = 0;         // band-limit-filter length
     // update args
-    if (args.afl >= 0)
-        afc.afl = args.afl;
-    if (args.wfl >= 0)
-        afc.wfl = args.wfl;
-    if (args.pfl >= 0)
-        afc.pfl = args.pfl;
-    afc.alf = 0; // band-limit update
-    if (afc.pfl)
-    {                          // optimized for pfl=23
-        afc.rho = 0.002577405; // forgetting factor
-        afc.eps = 0.000008689; // power threshold
-        afc.mu = 0.000050519;  // step size
-        afc.alf = 0.000001825; // band-limit update
+    if (args.afl >= 0) afc.afl = args.afl;
+    if (args.wfl >= 0) afc.wfl = args.wfl;
+    if (args.pfl >= 0) afc.pfl = args.pfl;
+    afc.alf  = 0;             // band-limit update rate
+    if (afc.pfl) {             // optimized for wfl=9 & pfl=21
+        afc.rho  = 0.007218985; // forgetting factor
+        afc.eps  = 0.000919300; // power threshold
+        afc.mu   = 0.004607254; // step size
+        afc.alf  = 0.000010658; // band-limit update
+    } else if (afc.wfl) {      // optimized for wfl=9
+        afc.rho  = 0.008542769; // forgetting factor
+        afc.eps  = 0.001128440; // power threshold
+        afc.mu   = 0.004373509; // step size
+    } else {
+        afc.rho  = 0.000002279; // forgetting factor
+        afc.eps  = 0.001394894; // power threshold
+        afc.mu   = 0.000417949; // step size
     }
-    else if (afc.wfl)
-    {
-        afc.rho = 0.000360459; // forgetting factor
-        afc.eps = 0.000018848; // power threshold
-        afc.mu = 0.000048112;  // step size
-    }
-    else
-    {
-        afc.rho = 0.000169571; // forgetting factor
-        afc.eps = 0.000927518; // power threshold
-        afc.mu = 0.000255915;  // step size
-    }
-    afc.pup = 1;  // band-limit update period
-    afc.hdel = 0; // output/input hardware delay
-    afc.sqm = 1;  // save quality metric ?
-    afc.fbg = 1;  // simulated-feedback gain
-    afc.nqm = 0;  // initialize quality-metric length
+    afc.pup  = 8;         // band-limit update period
+    afc.hdel = 0;         // output/input hardware delay
+    afc.sqm  = 1;         // save quality metric ?
+    afc.fbg  = 1;         // simulated-feedback gain 
+    afc.nqm  = 0;         // initialize quality-metric length
+    if (args.pup >= 0) afc.pup = args.pup;
 }
 
 static void
@@ -576,8 +568,8 @@ report(double sr)
     fprintf(stdout, "CHA IIR+AGC+AFC with AFC optimization\n");
     fprintf(stdout, "sampling_rate=%.0f Hz ", sr);
     fprintf(stdout, "nchannel=%d nz=%d\n", dsl.nchannel, agc.nz);
-    fprintf(stdout, "AFC: afl=%d wfl=%d pfl=%d tgm=%.3g\n",
-            afc.afl, afc.wfl, afc.pfl, args.tqm);
+    fprintf(stdout, "AFC: afl=%d wfl=%d pfl=%d pup=%d tgm=%.3g\n",
+        afc.afl, afc.wfl, afc.pfl, afc.pup, args.tqm);
 }
 
 /***********************************************************/
@@ -610,6 +602,8 @@ int main(int ac, char *av[])
     fprintf(stdout, "nopt=%d\n", nopt);
     sp_fminsearch(par, nopt, &afc_error, NULL, &sta);
     // report
+    fprintf(stdout, "AFC: afl=%d wfl=%d pfl=%d pup=%d tgm=%.3g\n",
+        afc.afl, afc.wfl, afc.pfl, afc.pup, args.tqm);
     prn = 1;
     print_par(par0);
     afc_error(par0, &sta);

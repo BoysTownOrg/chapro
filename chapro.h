@@ -510,7 +510,7 @@ cha_nfc_process(CHA_PTR, float *, float *, int);
 #define _in1      13
 #define _in2      14
 #define _rhd      15
-#define _hdel     16 
+#define _hdel     16
 #define _pup      17
 #define _puc      18
 
