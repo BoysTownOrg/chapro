@@ -1,4 +1,3 @@
-
 // ftsc_prepare.c - stft+agc preparation functions
 
 #include <stdlib.h>
