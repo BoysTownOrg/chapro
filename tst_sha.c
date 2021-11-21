@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_sha.c - test supression hearing aid (SHA)
 //              with WAV file input & output
 
@@ -576,3 +577,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

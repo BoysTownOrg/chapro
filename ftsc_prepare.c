@@ -4,8 +4,9 @@
 #include <string.h>
 #include <math.h>
 #include "chapro.h"
+#ifndef ARDUINO
 #include "cha_ft.h"
-
+#endif
 /***********************************************************/
 
 // configure suppressor

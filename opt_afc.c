@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // opt_afc.c - optimize AFC for IIR-filterbank + AGC
 
 #include <stdio.h>
@@ -559,3 +560,4 @@ main(int ac, char *av[])
     free(owav);
     return (0);
 }
+#endif

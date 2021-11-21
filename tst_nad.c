@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_nad.c - test IIR-filterbank + AGC + NFC
 //              with WAV file input & output (no audio device)
 
@@ -642,3 +643,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

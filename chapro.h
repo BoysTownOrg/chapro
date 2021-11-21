@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 // chapro.h - function prototypes for CHA common functions
 #ifndef CHAPRO_H
 #define CHAPRO_H
@@ -54,7 +58,11 @@ typedef unsigned long  uint32_t;
 #define fzero(x,n)      memset(x,0,(n)*sizeof(float))
 #define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
 #define dzero(x,n)      memset(x,0,(n)*sizeof(double))
-#define round(x)        ((int)floorf((float)(x)+0.5f))
+
+#ifndef ARDUINO
+#define round(x) ((int)floorf((float)(x) + 0.5f))
+#endif
+
 #ifndef log2
 #define log2(x)         (logf(x)/M_LN2)
 #endif
@@ -545,3 +553,6 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 /*****************************************************/
 
 #endif /* CHAPRO_H */
+#ifdef __cplusplus
+} // extern "C"
+#endif

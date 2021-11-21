@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // sp_fmins.c - parameter fitting routine using simplex method
 
 #include <stdio.h>
@@ -350,3 +351,4 @@ sp_fmins(
 
     return (0);
 }
+#endif

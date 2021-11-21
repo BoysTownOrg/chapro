@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_cffa.c - test complex FIR-filterbank analysis
 
 #include <stdio.h>
@@ -181,3 +182,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

@@ -52,14 +52,16 @@ cha_compressor_default_gain(float *Gc, int np, int nc, double gn)
 
 /***********************************************************/
 
+#ifndef CHAPRO_H
 FUNC(char *) 
 cha_version(void)
 {
     return (VER);                  
 };
+#endif
 
 FUNC(void)
-cha_fb_prepare(CHA *ss, double sr, double gn, double kp, int ds)
+cha_fb_prepare(CHA_CLS *ss, double sr, double gn, double kp, int ds)
 {
     float Lc[32*4], Gc[32*4];
     static int np = 4;          /* number of level & gain parameters */
@@ -78,7 +80,7 @@ cha_fb_prepare(CHA *ss, double sr, double gn, double kp, int ds)
 }
 
 FUNC(void)
-cha_fb_process(CHA *ss, float *x, float *y, int n)
+cha_fb_process(CHA_CLS *ss, float *x, float *y, int n)
 {
     cha_filterbank_analyze(ss, x, n);
     cha_compressor_process(ss, n);
@@ -86,7 +88,7 @@ cha_fb_process(CHA *ss, float *x, float *y, int n)
 }
 
 FUNC(void)
-cha_fb_cleanup(CHA *ss)
+cha_fb_cleanup(CHA_CLS *ss)
 {
     cha_filterbank_cleanup(ss);
     cha_compressor_cleanup(ss);

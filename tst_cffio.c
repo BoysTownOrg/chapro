@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_cffio.c - test complex FIR-filterbank i/o with impulse signal
 
 #include <stdio.h>
@@ -280,3 +281,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

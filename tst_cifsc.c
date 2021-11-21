@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_cifsc.c - test gammatone-filterbank & instantaneous-compression
 //              with WAV file input & ARSC output 
 
@@ -594,3 +595,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

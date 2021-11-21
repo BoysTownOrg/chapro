@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_nfc.c - test NFC
 //              with WAV file input & output (no audio device)
 
@@ -541,3 +542,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

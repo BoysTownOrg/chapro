@@ -73,7 +73,7 @@ data_plan(CHA_PTR cp, int *psz, int *asz)
         if (cp[i]) ptsiz = i + 1;
     }
     // sum array sizes
-    cpsiz = (int *) cp[_size];
+    cpsiz = (int32_t *) cp[_size]; //altered 11/17/2021 from (int *) to (int32_t *) to better match data type and avoid compiler warnings
     arsiz = 0;
     if (cpsiz) {
         for (i = 0; i < NPTR; i++) {
@@ -399,7 +399,7 @@ cha_state_copy(CHA_STA *new_state, CHA_STA *old_state)
     void **cp;
 
     cp = old_state->cp;
-    cpsiz = (int *) cp[_size];
+    cpsiz = (int32_t *) cp[_size]; //altered 11/17/2021 from (int *) to (int32_t *) to better match data type and avoid compiler warnings
     ptsiz = old_state->ptsiz;
     arsiz = old_state->arsiz;
     state_make(new_state, cpsiz, cp, ptsiz, arsiz);

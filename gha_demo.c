@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // gha_demo.c - demonstrate GHA processing (FIR+AGC)
 
 #include <stdio.h>
@@ -143,3 +144,4 @@ main(int ac, char *av[])
 
     return (0);
 }
+#endif

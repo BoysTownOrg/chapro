@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_ifsc.c - test IIR-filterbank & AGC-compression
 //              with WAV file input & ARSC output
 
@@ -527,3 +528,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

@@ -1,3 +1,4 @@
+#ifndef ARDUINO
 // tst_ifa.c - test IIR-filterbank analysis
 
 #include <stdio.h>
@@ -160,3 +161,4 @@ main(int ac, char *av[])
     cleanup(&io, cp);
     return (0);
 }
+#endif

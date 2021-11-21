@@ -105,6 +105,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // update adaptive feedback coefficients
         if (afl > 0) {
             uf = rng2[id & mask];
+            //pwr = rho * sqrtf(ef * ef + uf * uf) + (1.0f - rho) * pwr;  //WEA Nov 2021...per Steve Neely email Nov 8, 2021
             pwr = rho * (ef * ef + uf * uf) + (1 - rho) * pwr;
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
