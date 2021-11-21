@@ -204,7 +204,7 @@ typedef struct {
     double  ubf;             // compression-upper-bound frequency (Hz)
     int32_t *mm;             // frequency-map pointer
     float   *g1;             // pre-map gain pointer
-    float   *g2;             // post-map gain pointer		
+    float   *g2;             // post-map gain pointer
 } CHA_NFC;
 
 typedef struct {
