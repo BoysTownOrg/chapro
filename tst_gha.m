@@ -1,7 +1,7 @@
 % tst_gha - derive AFC filters
 function tst_gha
 pfn='test/tst_gha.mat';
-wd=1; % write data?
+wd=0; % write data?
 load(pfn)
 play_audio=1;
 gn=2; % audioread scale factor 
