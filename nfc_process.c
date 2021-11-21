@@ -6,8 +6,6 @@
 #include <assert.h>
 #include "chapro.h"
 
-#include "seriallog.h"
-
 /***********************************************************/
 #ifdef ARM_DSP
 
@@ -17,10 +15,9 @@ static arm_rfft_fast_instance_f32 fft_instance;
 static __inline void
 rfft(float *x, int n)
 {
-    if (!fft_initialized)
-    {
+    if (!fft_initialized) {
         arm_rfft_fast_init_f32(&fft_instance, n);
-        fft_initialized++;
+	fft_initialized++;
     }
     arm_rfft_fast_f32(&fft_instance, x, x, 0);
 }
@@ -28,18 +25,17 @@ rfft(float *x, int n)
 static __inline void
 rifft(float *x, int n)
 {
-    if (!fft_initialized)
-    {
+    if (!fft_initialized) {
         arm_rfft_fast_init_f32(&fft_instance, n);
-        fft_initialized++;
+	fft_initialized++;
     }
     arm_rfft_fast_f32(&fft_instance, x, x, 1);
 }
 
 #else // ARM_DSP
 
-#define rfft(x, n) cha_fft_rc(x, n)
-#define rifft(x, n) cha_fft_cr(x, n)
+#define rfft(x,n)    cha_fft_rc(x,n)
+#define rifft(x,n)   cha_fft_cr(x,n)
 
 #endif // ARM_DSP
 
@@ -59,18 +55,14 @@ fmap(float *y, float *x, int nw, int *mm, int nm, float *g1, float *g2)
             x[2 * k + 1] *= g; // imag
         }
     }
-
     // perform frequency mapping
     nn = mm[0] * 2;
     nf = nw * 2;
     fcopy(y, x, nn);
     fzero(y + nn, nf - nn);
-
-    for (k = 0; k < (nm - 1); k++)
-    {
+    for (k = 0; k < (nm - 1); k++) {
         yy = y + 2 * k + nn;
-        for (kk = mm[k]; kk < mm[k + 1]; kk++)
-        {
+        for (kk = mm[k]; kk < mm[k + 1]; kk++) {
             xx = x + 2 * kk;
             yy[0] += xx[0]; // real
             yy[1] += xx[1]; // imag
@@ -98,8 +90,8 @@ short_term_analyze(float *xx, float *XX, int nw, int ns, float *ww)
         XX[i] = xx[i] * ww[i];   // apply window to input
     }
     fzero(XX + nw, nw);
-    rfft(XX, nf);           // FFT
-    fcopy(xx, xx + ns, ns); // save last half of input window
+    rfft(XX, nf);                // FFT
+    fcopy(xx, xx + ns, ns);      // save last half of input window
 }
 
 // short-term FFT synthesize
@@ -111,10 +103,9 @@ short_term_synthesize(float *yy, float *YY, int nw, int ns)
     nf = nw * 2;
     rifft(YY, nf);               // IFFT
     nn = nf - ns;
-    fmove(yy, yy + ns, nn); // shift previous output
-    for (i = 0; i < nn; i++)
-    {
-        yy[i] += YY[i]; // overlap-add output
+    fmove(yy, yy + ns, nn);      // shift previous output
+    for (i = 0; i < nn; i++) {
+        yy[i] += YY[i];          // overlap-add output
     }
     fcopy(yy + nn, YY + nn, ns); // save response tail
 }
@@ -127,8 +118,6 @@ nfc_sc(CHA_PTR cp, float *x, float *y, int cs,
     int *mm, int nm, int nw)
 {
     int icp, ics, nn, ns, ncs;
-
-    //seriallog("nfc_sc");
 
     // process chunk
     ncs = CHA_IVAR[_nfc_ncs];
@@ -156,13 +145,10 @@ nfc_lc(float *x, float *y, int cs,
 {
     int k, nn, ns;
 
-    //seriallog("nfc_lc");
-
     // process chunk
     ns = nw / 2;
     nn = cs / ns;
-    for (k = 0; k < nn; k++)
-    {
+    for (k = 0; k < nn; k++) {
         fcopy(xx + nn + ns, x + k * ns, ns);
         fcopy(y + k * ns, yy + nn, ns);
         // perform frequency-map after every shift
@@ -180,8 +166,6 @@ cha_nfc_process(CHA_PTR cp, float *x, float *y, int cs)
 {
     float *ww, *xx, *yy, *XX, *YY, *g1, *g2;
     int nw, nm, *mm;
-
-    //seriallog("cha_nfc_process");
 
     // copy parameters and pointers from cha_data
     nw = CHA_IVAR[_nfc_nw];

@@ -16,8 +16,7 @@ audio_read(char *fn, float *fs, int *nwav)
     VAR *vl;
 
     vl = sp_wav_read(fn, 0, 0, fs);
-    if (vl == NULL)
-    {
+    if (vl == NULL) {
         fprintf(stderr, "can't open %s\n", fn);
         return (NULL);
     }
@@ -34,16 +33,14 @@ set_spl(float *x, int n, double rms_lev, double spl_ref)
     int i;
 
     smsq = 0;
-    for (i = 0; i < n; i++)
-    {
+    for (i = 0; i < n; i++) {
         xx = x[i];
         smsq += xx * xx;
     }
     rms = sqrt(smsq / n);
     lev = 20 * log10(rms / spl_ref);
-    scl = (float)pow(10, (rms_lev - lev) / 20);
-    for (i = 0; i < n; i++)
-    {
+    scl = (float) pow(10,(rms_lev - lev) / 20);
+    for (i = 0; i < n; i++) {
         x[i] *= scl;
     }
 }
@@ -55,9 +52,8 @@ save_mat(char *fn, float fs, float *x, float *y, int n)
     int i;
     static VAR *vl;
 
-    t = (float *)calloc(n, sizeof(float));
-    for (i = 0; i < n; i++)
-    {
+    t = (float *) calloc(n, sizeof(float));
+    for (i = 0; i < n; i++) {
         t[i] = i / fs;
     }
     vl = sp_var_alloc(3);
@@ -75,15 +71,14 @@ WDRC(CHA_PTR cp, float *x, float *y, int n, int nc)
     float *ww, *xx, *yy, *zz;
     int i, cs, nk;
 
-    ww = (float *)calloc(n, sizeof(float));
-    xx = (float *)calloc(n, sizeof(float));
-    yy = (float *)calloc(n * nc * 2, sizeof(float));
-    zz = (float *)calloc(n * nc * 2, sizeof(float));
+    ww = (float *) calloc(n, sizeof(float));
+    xx = (float *) calloc(n, sizeof(float));
+    yy = (float *) calloc(n * nc * 2, sizeof(float));
+    zz = (float *) calloc(n * nc * 2, sizeof(float));
     // process FIR+AGC
     cs = CHA_IVAR[_cs]; // chunk size
     nk = n / cs;        // number of chunks
-    for (i = 0; i < nk; i++)
-    {
+    for (i = 0; i < nk; i++) {
         cha_agc_input(cp, x + i * cs, xx, cs);
         cha_firfb_analyze(cp, xx, yy, cs);
         cha_agc_channel(cp, yy, zz, cs);
@@ -100,9 +95,9 @@ static double
 amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 {
     int nc;
-    static int nw = 256; // window size
-    static int cs = 32;  // chunk size
-    static int wt = 0;   // window type: 0=Hamming, 1=Blackman
+    static int    nw = 256;         // window size
+    static int    cs = 32;          // chunk size
+    static int    wt = 0;           // window type: 0=Hamming, 1=Blackman
     static void *cp[NPTR] = {0};
     static CHA_WDRC agc = {1, 50, 24000, 119, 0, 105, 10, 105};
 
@@ -116,7 +111,8 @@ amplify(float *x, float *y, int n, double fs, CHA_DSL *dsl)
 
 /***********************************************************/
 
-int main(int ac, char *av[])
+int
+main(int ac, char *av[])
 {
     double t1, t2;
     float fs, *x, *y;
@@ -126,10 +122,16 @@ int main(int ac, char *av[])
     static double spl_ref = 1.1219e-6;
     static double rms_lev = 65;
     // DSL prescription - (first subject, left ear) from LD_RX.mat
-    static CHA_DSL dsl = {5, 50, 119, 0, 8, {317.1666, 502.9734, 797.6319, 1264.9, 2005.9, 3181.1, 5044.7}, {-13.5942, -16.5909, -3.7978, 6.6176, 11.3050, 23.7183, 35.8586, 37.3885}, {0.7, 0.9, 1, 1.1, 1.2, 1.4, 1.6, 1.7}, {32.2, 26.5, 26.7, 26.7, 29.8, 33.6, 34.3, 32.7}, {78.7667, 88.2, 90.7, 92.8333, 98.2, 103.3, 101.9, 99.8}};
+    static CHA_DSL dsl = {5, 50, 119, 0, 8,
+        {317.1666,502.9734,797.6319,1264.9,2005.9,3181.1,5044.7},
+        {-13.5942,-16.5909,-3.7978,6.6176,11.3050,23.7183,35.8586,37.3885},
+        {0.7,0.9,1,1.1,1.2,1.4,1.6,1.7},
+        {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
+        {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
+    };
 
     x = audio_read(ifn, &fs, &n);
-    y = (float *)calloc(n, sizeof(float));
+    y = (float *) calloc(n, sizeof(float));
     set_spl(x, n, rms_lev, spl_ref);
     t1 = amplify(x, y, n, fs, &dsl);
     save_mat(ofn, fs, x, y, n);
