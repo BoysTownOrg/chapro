@@ -13,8 +13,7 @@
 #define DATA_HDR "tst_cifio_data.h"
 //#include DATA_HDR
 
-typedef struct
-{
+typedef struct {
     char *ifn, *ofn, cs, mat;
     double rate;
     float *iwav, *owav;
@@ -24,8 +23,7 @@ typedef struct
 } I_O;
 
 static double target_delay = 4;
-static struct
-{
+static struct {
     char *ifn, *ofn, mat, tone_io;
     double gn;
     int ds;
@@ -63,39 +61,26 @@ parse_args(int ac, char *av[])
     args.ds = 0;
     args.gn = 0;
     args.tone_io = 0;
-    while (ac > 1)
-    {
-        if (av[1][0] == '-')
-        {
-            if (av[1][1] == 'c')
-            {
+    while (ac > 1) {
+        if (av[1][0] == '-') {
+            if (av[1][1] == 'c') {
                 args.gn = atof(av[2]);
                 ac--;
                 av++;
-            }
-            else if (av[1][1] == 'd')
-            {
+            } else if (av[1][1] == 'd') {
                 args.ds = atoi(av[2]);
                 ac--;
                 av++;
-            }
-            else if (av[1][1] == 'h')
-            {
+            } else if (av[1][1] == 'h') {
                 usage();
-            }
-            else if (av[1][1] == 't')
-            {
+            } else if (av[1][1] == 't') {
                 args.tone_io = 1;
-            }
-            else if (av[1][1] == 'v')
-            {
+            } else if (av[1][1] == 'v') {
                 version();
             }
             ac--;
             av++;
-        }
-        else
-        {
+        } else {
             break;
         }
     }
@@ -109,29 +94,25 @@ init_wav(I_O *io)
 
     /* second impulse input */
     io->nwav = round(io->rate);
-    io->iwav = (float *)calloc(io->nwav, sizeof(float));
+    io->iwav = (float *) calloc(io->nwav, sizeof(float));
     fprintf(stdout, "filterbank i/o with ");
-    if (args.tone_io == 0)
-    {
+    if (args.tone_io == 0) {
         fprintf(stdout, "impulse: \n");
         io->ofn = "test/cifio_impulse.mat";
         io->iwav[0] = 1;
-    }
-    else
-    {
+    } else {
         fprintf(stdout, "tone: \n");
         f = 1000;
-        p = (float)((2 * M_PI * f) / io->rate);
+        p = (float) ((2 * M_PI * f) / io->rate);
         io->ofn = "test/cifio_tone.mat";
-        for (i = 0; i < io->nwav; i++)
-        {
-            io->iwav[i] = (float)sin(i * p);
+        for (i = 0; i < io->nwav; i++) {
+            io->iwav[i] = (float) sin(i * p);
         }
     }
     io->nsmp = io->nwav;
     io->mseg = 1;
     io->nseg = 1;
-    io->owav = (float *)calloc(io->nsmp, sizeof(float));
+    io->owav = (float *) calloc(io->nsmp, sizeof(float));
 }
 
 static void
@@ -139,7 +120,7 @@ write_wave(I_O *io)
 {
     char *ft;
     float r[1], *x, *y;
-    int n;
+    int   n;
     static VAR *vl;
 
     ft = "MAT";
@@ -148,11 +129,11 @@ write_wave(I_O *io)
     n = io->nwav;
     x = io->iwav;
     y = io->owav;
-    r[0] = (float)io->rate;
+    r[0] = (float) io->rate;
     vl = sp_var_alloc(3);
     sp_var_add(vl, "rate", r, 1, 1, "f4");
-    sp_var_add(vl, "x", x, n, 1, "f4");
-    sp_var_add(vl, "y", y, n, 1, "f4");
+    sp_var_add(vl,    "x", x, n, 1, "f4");
+    sp_var_add(vl,    "y", y, n, 1, "f4");
     sp_mat_save(io->ofn, vl);
     sp_var_clear(vl);
 }
@@ -168,18 +149,16 @@ cgtfb_init(CHA_CLS *cls, double sr, int nm, int cpo)
     int i, nh, nc;
 
     lfbw = fmid / nm;
-    nh = (int)floor(log2((float)sr / 2000) * cpo);
+    nh = (int) floor(log2((float)sr / 2000) * cpo);
     nc = nh + nm;
     cls->nc = nc;
-    for (i = 0; i < (nm - 1); i++)
-    {
+    for (i = 0; i < (nm - 1); i++) {
         cls->fc[i] = lfbw * (i + 1);
         cls->bw[i] = lfbw;
     }
     cls->fc[nm - 1] = fmid;
     cls->bw[nm - 1] = fmid * (pow(2.0, 0.5 / cpo) - (nm - 0.5) / nm);
-    for (i = nm; i < nc; i++)
-    {
+    for (i = nm; i < nc; i++) {
         cls->fc[i] = fmid * pow(2.0, (i - nm + 1.0) / cpo);
         cls->bw[i] = fmid * (pow(2.0, (i - nm + 1.5) / cpo) - pow(2.0, (i - nm + 0.5) / cpo));
     }
@@ -198,14 +177,13 @@ compressor_init(CHA_CLS *cls, double gn)
     cls->cm = 1;
     // loop over filterbank channel
     nc = cls->nc;
-    for (k = 0; k < nc; k++)
-    {
+    for (k = 0; k < nc; k++) {
         cls->Lcs[k] = 0;
         cls->Lcm[k] = 50;
         cls->Lce[k] = 100;
         cls->Lmx[k] = 120;
-        cls->Gcs[k] = (float)gn;
-        cls->Gcm[k] = (float)gn / 2;
+        cls->Gcs[k] = (float) gn;
+        cls->Gcm[k] = (float) gn / 2;
         cls->Gce[k] = 0;
         cls->Gmx[k] = 90;
     }
@@ -219,13 +197,13 @@ static void
 prepare_filterbank(CHA_PTR cp)
 {
     double gd, *fc, *bw;
-    float z[256], p[256], g[64];
+    float z[256], p[256], g[64]; 
     int nc, d[32];
-    static double sr = 24000; // sampling rate (Hz)
-    static int cs = 32;       // chunk size
-    static int nm = 5;        // number of frequency bands below 1 kHz
-    static int po = 3;        // number of bands per octave above 1 kHz
-    static int no = 4;        // gammatone filter order
+    static double sr = 24000;   // sampling rate (Hz)
+    static int    cs = 32;      // chunk size
+    static int    nm =  5;      // number of frequency bands below 1 kHz
+    static int    po =  3;      // number of bands per octave above 1 kHz
+    static int    no =  4;      // gammatone filter order
 
     gd = target_delay = cgtfb_init(&cls, sr, nm, po);
     // prepare filterbank
@@ -241,19 +219,17 @@ prepare_filterbank(CHA_PTR cp)
 static void
 prepare(I_O *io, CHA_PTR cp)
 {
-    double fs, gd, sr;
-    static double lr = 2e-5; // signal-level reference (Pa)
-    static double gn = 0;    // flat suppressor gain (dB)
-    static int ds = 24;      // downsample factor
+    double fs, gd, sr; 
+    static double lr = 2e-5;    // signal-level reference (Pa)
+    static double gn = 0;       // flat suppressor gain (dB)
+    static int    ds = 24;      // downsample factor
 
     prepare_filterbank(cp);
     fs = CHA_DVAR[_fs];
     gd = target_delay;
     sr = fs * 1000;
-    if (args.ds)
-        ds = args.ds;
-    if (args.gn)
-        gn = args.gn;
+    if (args.ds) ds = args.ds;
+    if (args.gn) gn = args.gn;
     // prepare compressor
     compressor_init(&cls, gn);
     cha_icmp_prepare(cp, &cls, sr, lr, ds);
@@ -279,7 +255,7 @@ process(I_O *io, CHA_PTR cp)
     int j, cs, ns, nk;
 
     // next line switches to compiled data
-    //cp = (CHA_PTR) cha_data;
+    //cp = (CHA_PTR) cha_data; 
     // initialize i/o pointers
     x = io->iwav;
     y = io->owav;
@@ -288,8 +264,7 @@ process(I_O *io, CHA_PTR cp)
     // process gammatone filterbank
     cs = CHA_IVAR[_cs]; // chunk size
     nk = ns / cs;       // number of chunks
-    for (j = 0; j < nk; j++)
-    {
+    for (j = 0; j < nk; j++) {
         cha_ciirfb_analyze(cp, x + j * cs, z, cs);
         cha_icmp_process(cp, z, z, cs);
         cha_ciirfb_synthesize(cp, z, y + j * cs, cs);
@@ -307,7 +282,8 @@ cleanup(I_O *io, CHA_PTR cp)
 
 /***********************************************************/
 
-int main(int ac, char *av[])
+int
+main(int ac, char *av[])
 {
     static I_O io;
     static void *cp[NPTR] = {0};
