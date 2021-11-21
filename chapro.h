@@ -479,24 +479,25 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _hdel     16
 #define _pup      17
 #define _puc      18
+#define _rtl      19
 
 // nfc integer variable indices
 
-#define _nfc_nw   19 // window size
-#define _nfc_nm   20 // frequency-map size
-#define _nfc_wt   21 // window window type
-#define _nfc_ncs  22 // chunks-per-shift number
-#define _nfc_ics  23 // chunks-per-shift count
+#define _nfc_nw   20 // window size
+#define _nfc_nm   21 // frequency-map size
+#define _nfc_wt   22 // window window type
+#define _nfc_ncs  23 // chunks-per-shift number
+#define _nfc_ics  24 // chunks-per-shift count
 
 // sha integer variable indices
 
-#define _sha_nw   19 // window size
-#define _sha_nm   20 // frequency-map size
-#define _sha_wt   21 // window window type
-#define _sha_ncs  22 // chunks-per-shift number
-#define _sha_ics  23 // chunks-per-shift count
-#define _sha_xr   24 // expansion ratio
-#define _sha_hbw  25 // half-band-width of suppression
+#define _sha_nw   20 // window size
+#define _sha_nm   21 // frequency-map size
+#define _sha_wt   22 // window window type
+#define _sha_ncs  23 // chunks-per-shift number
+#define _sha_ics  24 // chunks-per-shift count
+#define _sha_xr   25 // expansion ratio
+#define _sha_hbw  26 // half-band-width of suppression
 
 /*****************************************************/
 
@@ -531,14 +532,15 @@ FUNC(void) cha_sha_process(CHA_PTR, float *, float *, int);
 #define _eps      12
 #define _alf      13
 #define _fbm      15
+#define _pwr      16
 
 // sha double variable indices
 
-#define _sha_g0   16
-#define _sha_a1   17
-#define _sha_a2   18
-#define _sha_a3   19
-#define _sha_gg   20
+#define _sha_g0   17
+#define _sha_a1   18
+#define _sha_a2   19
+#define _sha_a3   20
+#define _sha_gg   21
 
 /*****************************************************/
 

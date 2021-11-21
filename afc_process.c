@@ -10,12 +10,11 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc, sum;
+    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc, sum, pwr;
     int i, ih, ij, is, id, j, jp1, k, nfc, puc, iqm = 0;
     static float *rng0, *rng1, *rng2, *rng3;
     static float *efbp, *sfbp, *wfrp, *ffrp, *qm;
     static float mu, rho, eps, alf, fbm;
-    static float pwr = 0;
     static int rhd, rsz, mask, afl, wfl, pfl, fbl, nqm, hdel, pup, *iqmp; 
 
     if (CHA_IVAR[_mxl] == 0) { // if no AFC, do nothing
@@ -55,6 +54,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
     // ee -> rng3
     rhd = CHA_IVAR[_rhd];
     puc = CHA_IVAR[_puc];
+    pwr = (float) CHA_DVAR[_pwr];
     if (nqm) iqm = iqmp[0];
     // loop over chunk
     for (i = 0; i < cs; i++) {
@@ -105,8 +105,6 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // update adaptive feedback coefficients
         if (afl > 0) {
             uf = rng2[id & mask];
-            //pwr = rho * pwr + ef * ef + uf * uf;
-            //pwr = rho * ((ef * ef + uf * uf) - pwr);
             pwr = rho * (ef * ef + uf * uf) + (1 - rho) * pwr;
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
@@ -159,6 +157,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         y[i] = ee;
     }
     CHA_IVAR[_puc] = puc;
+    CHA_DVAR[_pwr] = pwr;
     if (nqm) {
         iqmp[0] = iqm;
         if ((iqm + cs) > nqm) nqm = 0;
@@ -168,10 +167,9 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 FUNC(void)
 cha_afc_output(CHA_PTR cp, float *x, int cs)
 {
-    int i, j, rhd;
+    int i, j, rhd, rtl;
     static float *rng0;
     static int rsz, mask;
-    static int rtl = 0;
 
     if (CHA_IVAR[_mxl] == 0) { // if no AFC, do nothing
         return;
@@ -182,7 +180,8 @@ cha_afc_output(CHA_PTR cp, float *x, int cs)
         mask = rsz - 1;
         CHA_IVAR[_in1] = CHA_IVAR[_in2];
     }
-        rsz = CHA_IVAR[_rsz];
+    rsz = CHA_IVAR[_rsz];
+    rtl = CHA_IVAR[_rtl];
     // copy chunk to ring buffer
     rhd = rtl;
     for (i = 0; i < cs; i++) {
@@ -191,4 +190,5 @@ cha_afc_output(CHA_PTR cp, float *x, int cs)
     }
     rtl = (rhd + cs) % rsz;
     CHA_IVAR[_rhd] = rhd;
+    CHA_IVAR[_rtl] = rtl;
 }

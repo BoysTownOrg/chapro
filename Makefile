@@ -1,0 +1,183 @@
+# makefile for CHAPRO under MacOS
+# Library requirement: sigpro
+# Package requirement: gcc-arm-linux-gnueabihf
+
+LIBS=-lsigpro -lm -lz
+SCLIB=-larsc $(LIBS)
+CC=gcc
+AR=ar
+
+CFLAGS = -Wall -DALSA -DANSI_C -fPIC -I$(INCDIR) -fPIC -O2
+LFLAGS= -framework CoreServices  -framework CoreAudio \
+        -framework AudioUnit -framework AudioToolbox -L$(LIBDIR)
+
+LIBDIR=/usr/local/lib
+INCDIR=/usr/local/include
+BINDIR=/usr/local/bin
+
+CHAPRO=cha_core.o cha_scale.o db.o fft.o rfft.o \
+	agc_prepare.o agc_process.o \
+	cfirfb_prepare.o cfirfb_process.o \
+	firfb_prepare.o firfb_process.o \
+	iirfb_design.o iirfb_prepare.o iirfb_process.o \
+	ciirfb_design.o ciirfb_prepare.o ciirfb_process.o \
+	afc_prepare.o afc_filters.o afc_process.o \
+	nfc_prepare.o nfc_process.o \
+	sha_prepare.o sha_process.o \
+	icmp_prepare.o icmp_process.o
+PGMS=tst_cffa tst_cffio tst_cffsc tst_ffa tst_ffio tst_ffsc \
+     tst_cifa tst_cifio tst_cifsc tst_ifa tst_ifio tst_ifsc \
+     tst_gha tst_nfc tst_sha gha_demo opt_afc 
+HDRS=chapro.h
+
+all: $(PGMS) tst_nad.c
+
+tst_nad.c : tst_gha.c nad.sed
+	sed -f nad.sed tst_gha.c > tst_nad.c
+
+tst: $(PGMS) test.lst
+	./tst_ffa
+	./tst_ffio
+	./tst_ffio -t
+	./tst_ffsc
+	./tst_ifa
+	./tst_ifio
+	./tst_ifio -t
+	./tst_ifsc
+	./tst_cffa
+	./tst_cffio
+	./tst_cffio -t
+	./tst_cffsc
+	./tst_cifa
+	./tst_cifio
+	./tst_cifio -t
+	./tst_cifsc
+	./tst_gha
+	./tst_nfc
+	./tst_sha
+	./gha_demo
+
+test.lst:
+	ls -l test > test.lst
+
+tst_cffa : tst_cffa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_cffio : tst_cffio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_cffsc : tst_cffsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ffa : tst_ffa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_ffio : tst_ffio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_ffsc : tst_ffsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_cifa : tst_cifa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_cifio : tst_cifio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tst_cifsc : tst_cifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifa : tst_ifa.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifio : tst_ifio.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_ifsc : tst_ifsc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_gha : tst_gha.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_nfc : tst_nfc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_sha : tst_sha.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+tst_nad : tst_nad.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+opt_afc : opt_afc.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+gha_demo : gha_demo.o  libchapro.a
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS) $(SCLIB)
+
+libchapro.a: $(CHAPRO)
+	$(AR) rus libchapro.a $(CHAPRO)
+
+install: libchapro.a
+	cp -f libchapro.a $(LIBDIR)
+	cp -f $(HDRS) $(INCDIR)
+
+zipsrc:
+	zip chaprosc *.mgw *.lnx *.mac *.arm *.sed
+	zip chaprosc *.h *.c *.m *.def test/cat.wav
+	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
+	zip chaprosc configure configure.bat 
+
+dist: zipsrc 
+	cp -f chapr*.zip ../dist
+	rm -f *.zip
+
+clean:
+	rm -f *.o *.obj *.bak *.a *.exe $(PGMS) 
+	rm -f out*.mat out*.wav *.cfg *~ *.so
+	rm -f tst_nad gprof*.txt gmon.out test.lst
+	rm -f test/*.mat test/tst_*.wav
+
+# dependencies
+afc_prepare.o: afc_prepare.c chapro.h ite_fb.h iltass.h
+afc_filters.o: afc_filters.c chapro.h 
+afc_process.o: afc_process.c chapro.h 
+agc_prepare.o: agc_prepare.c chapro.h 
+agc_process.o: agc_process.c chapro.h
+cfirfb_prepare.o: cfirfb_prepare.c chapro.h 
+cfirfb_process.o: cfirfb_process.c chapro.h 
+cha_core.o: cha_core.c chapro.h
+cha_scale.o: cha_scale.c chapro.h
+chapro.o: chapro.c 
+ciirfb_design.o: ciirfb_design.c chapro.h 
+ciirfb_prepare.o: ciirfb_prepare.c chapro.h 
+ciirfb_process.o: ciirfb_process.c chapro.h 
+db.o: db.c chapro.h 
+dciirfb_prepare.o: dciirfb_prepare.c chapro.h 
+dciirfb_process.o: dciirfb_process.c chapro.h 
+fft.o: fft.c chapro.h 
+firfb_prepare.o: firfb_prepare.c chapro.h 
+firfb_process.o: firfb_process.c chapro.h 
+gha_demo.o: gha_demo.c chapro.h 
+icmp_prepare.o: icmp_prepare.c chapro.h 
+icmp_process.o: icmp_process.c chapro.h 
+iirfb_design.o: iirfb_design.c chapro.h 
+iirfb_prepare.o: iirfb_prepare.c chapro.h 
+iirfb_process.o: iirfb_process.c chapro.h 
+opt_afc.o: opt_afc.c chapro.h 
+rfft.o: rfft.c chapro.h 
+tst_nad.o: tst_nad.c chapro.h 
+tst_cffa.o: tst_cffa.c chapro.h 
+tst_cffio.o: tst_cffio.c chapro.h 
+tst_cffsc.o: tst_cffsc.c chapro.h 
+tst_cifa.o: tst_cifa.c chapro.h 
+tst_cifio.o: tst_cifio.c chapro.h 
+tst_cifsc.o: tst_cifsc.c chapro.h 
+tst_ffa.o: tst_ffa.c chapro.h 
+tst_ffio.o: tst_ffio.c chapro.h 
+tst_ffsc.o: tst_ffsc.c chapro.h 
+tst_gha.o: tst_gha.c chapro.h 
+tst_nfc.o: tst_nfc.c chapro.h 
+tst_sha.o: tst_sha.c chapro.h 
+tst_ifa.o: tst_ifa.c chapro.h 
+tst_ifio.o: tst_ifio.c chapro.h 
+tst_ifsc.o: tst_ifsc.c chapro.h 
