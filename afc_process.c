@@ -113,7 +113,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
             for (j = 0; j < afl; j++) {
                 ij = (id - j) & mask;
                 uf = rng2[ij];
-                efbp[j] += mmu * ef * uf;	
+                efbp[j] += mmu * ef * uf;
             }
         }
         // update band-limit filter coefficients

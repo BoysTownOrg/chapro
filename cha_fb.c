@@ -53,10 +53,10 @@ cha_compressor_default_gain(float *Gc, int np, int nc, double gn)
 /***********************************************************/
 
 #ifndef CHAPRO_H
-FUNC(char *)
+FUNC(char *) 
 cha_version(void)
 {
-    return (VER);
+    return (VER);                  
 };
 #endif
 
@@ -69,10 +69,10 @@ cha_fb_prepare(CHA_CLS *ss, double sr, double gn, double kp, int ds)
     static double tw = 200;     /* zero_gain buffer size (ms) [500] */
     static double lr = 2e-5;    /* level reference (Pa) */
 
-    // prepare filterbank
+	// prepare filterbank
     cha_filterbank_configure(ss, sr, gd, tw);
     cha_filterbank_prepare(ss);
-    // prepare compressor
+	// prepare compressor
     cha_compressor_default_level(Lc, np, ss->nc, kp);
     cha_compressor_default_gain(Gc, np, ss->nc, gn);
     cha_compressor_set_level(ss, Lc, lr, np, ds);

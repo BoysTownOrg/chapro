@@ -476,7 +476,7 @@ align_peak(float *z, float *p, float *g, int *d, double td, double fs, int nb, i
 }
 
 // adjust filterbank gains for combined unity gain
-static void   //changed from void to int, WEA debugging
+static void
 adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb, int nz)
 {
     double *G, e, f, mag, sum, avg;
@@ -562,11 +562,10 @@ adjust_gain(float *z, float *p, float *g, int *d, double *cf, double fs, int nb,
 	}  // End Added Added by WEA (Creare) August 2021
 
     free(H);
-	free(h);
+    free(h);
     free(G);
     free(x);
     free(y);
-
 }
 
 /***********************************************************/
