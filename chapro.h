@@ -25,52 +25,52 @@ typedef unsigned long  uint32_t;
 #define FUNC(type) type
 #endif
 
-#define NPTR		64
-#define NVAR		32
-#define CHA_IVAR    ((int *)cp[_ivar])
-#define CHA_DVAR    ((double *)cp[_dvar])
-#define CHA_CB      ((float *)cp[_cc])
+#define NPTR       64
+#define NVAR       32
+#define CHA_IVAR   ((int *)cp[_ivar])
+#define CHA_DVAR   ((double *)cp[_dvar])
+#define CHA_CB     ((float *)cp[_cc])
 
 #ifndef M_PI
-#define M_PI         	3.14159265358979323846
+#define M_PI            3.14159265358979323846
 #endif
 #ifndef M_LN2
-#define M_LN2        	0.693147180559945309417
+#define M_LN2           0.693147180559945309417
 #endif
 #ifndef M_SQRT1_2
-#define M_SQRT1_2    	0.707106781186547524401
+#define M_SQRT1_2       0.707106781186547524401
 #endif
 #ifndef M_SQRT2
-#define M_SQRT2      	1.41421356237309504880
+#define M_SQRT2         1.41421356237309504880 
 #endif
 #ifdef MGW
 #undef WIN32
 #endif
 #ifndef WIN32
-#define _hypot       hypot
-#define _strdup      strdup
-#define __inline     inline
+#define _hypot          hypot
+#define _strdup         strdup
+#define __inline        inline
 #endif
 
-#define fmin(x, y) ((x<y)?(x):(y))
-#define fmove(x, y, n) memmove(x,y,(n)*sizeof(float))
-#define fcopy(x, y, n) memcpy(x,y,(n)*sizeof(float))
-#define fzero(x, n) memset(x,0,(n)*sizeof(float))
-#define dcopy(x, y, n) memcpy(x,y,(n)*sizeof(double))
-#define dzero(x, n) memset(x,0,(n)*sizeof(double))
+#define fmin(x,y)       ((x<y)?(x):(y))
+#define fmove(x,y,n)    memmove(x,y,(n)*sizeof(float))
+#define fcopy(x,y,n)    memcpy(x,y,(n)*sizeof(float))
+#define fzero(x,n)      memset(x,0,(n)*sizeof(float))
+#define dcopy(x,y,n)    memcpy(x,y,(n)*sizeof(double))
+#define dzero(x,n)      memset(x,0,(n)*sizeof(double))
 
 #ifndef ARDUINO
 #define round(x) ((int)floorf((float)(x) + 0.5f))
 #endif
 
 #ifndef log2
-#define log2(x) (logf(x)/M_LN2)
+#define log2(x)         (logf(x)/M_LN2)
 #endif
 
-#define db1(x)     (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
-#define db2(x)     (logf(x)*8.685889638065035f) //   db2(x)=(log(x)*20/log(10))
-#define undb1(x)   expf((x)*0.230258509299405f) // undb1(x)=exp((x)*log(10)/10)
-#define undb2(x)   expf((x)*0.115129254649702f) // undb2(x)=exp((x)*log(10)/20)
+#define db1(x)          (logf(x)*4.342944819032518f) //   db1(x)=(log(x)*10/log(10))
+#define db2(x)          (logf(x)*8.685889638065035f) //   db2(x)=(log(x)*20/log(10))
+#define undb1(x)        expf((x)*0.230258509299405f) // undb1(x)=exp((x)*log(10)/10)
+#define undb2(x)        expf((x)*0.115129254649702f) // undb2(x)=exp((x)*log(10)/20)
 
 typedef uint32_t CHA_DATA;
 typedef void **CHA_PTR;
