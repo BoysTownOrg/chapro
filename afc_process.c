@@ -131,7 +131,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
                     ssq += ffrp[j] * ffrp[j];
                 }
                 avg = sum / pfl;
-                rms = sqrt(ssq / pfl);
+                rms = sqrt(ssq);
                 for (j = 0; j < pfl; j++) {
                     ffrp[j] = (ffrp[j] - avg) / rms;
                 }
