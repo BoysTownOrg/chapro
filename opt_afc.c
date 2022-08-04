@@ -65,10 +65,10 @@ usage()
     printf("-h    print help\n");
     printf("-m    output MAT file\n");
     printf("-nN   AFC filter length = n\n");
-    printf("-pN   band-limit filter length = n\n");
+    printf("-pN   pre-emphasis filter length = n\n");
     printf("-rN   number of input file repetitions = N\n");
     printf("-tN   AFC optimize time = N\n");
-    printf("-uN   band-limit filter update period = N\n");
+    printf("-uN   pre-emphasis filter update period = N\n");
     printf("-v    print version\n");
     printf("-wN   whiten filter length = n\n");
     exit(0);
@@ -440,7 +440,7 @@ print_par(float *par)
     if (nopt > 0) printf("%s.rho  = %11.9f; // forgetting factor\n", in, par[0]);
     if (nopt > 1) printf("%s.eps  = %11.9f; // power threshold\n",   in, par[1]);
     if (nopt > 2) printf("%s.mu   = %11.9f; // step size\n",         in, par[2]);
-    if (nopt > 3) printf("%s.alf  = %11.9f; // band-limit update\n", in, par[3]);
+    if (nopt > 3) printf("%s.alf  = %11.9f; // pre-emphasis update\n", in, par[3]);
 }
 
 /***********************************************************/
@@ -472,17 +472,17 @@ configure_feedback()
     // AFC parameters
     afc.afl  = 42;        // adaptive filter length
     afc.wfl  = 9;         // whiten-filter length
-    afc.pfl  = 0;         // band-limit-filter length
+    afc.pfl  = 0;         // pre-emphasis-filter length
     // update args
     if (args.afl >= 0) afc.afl = args.afl;
     if (args.wfl >= 0) afc.wfl = args.wfl;
     if (args.pfl >= 0) afc.pfl = args.pfl;
-    afc.alf  = 0;             // band-limit update rate
+    afc.alf  = 0;             // pre-emphasis update rate
     if (afc.pfl) {             // optimized for wfl=9 & pfl=21
         afc.rho  = 0.007218985; // forgetting factor
         afc.eps  = 0.000919300; // power threshold
         afc.mu   = 0.004607254; // step size
-        afc.alf  = 0.000010658; // band-limit update
+        afc.alf  = 0.000010658; // pre-emphasis update
     } else if (afc.wfl) {      // optimized for wfl=9
         afc.rho  = 0.008542769; // forgetting factor
         afc.eps  = 0.001128440; // power threshold
@@ -492,7 +492,7 @@ configure_feedback()
         afc.eps  = 0.001394894; // power threshold
         afc.mu   = 0.000417949; // step size
     }
-    afc.pup  = 8;         // band-limit update period
+    afc.pup  = 8;         // pre-emphasis update period
     afc.hdel = 0;         // output/input hardware delay
     afc.sqm  = 1;         // save quality metric ?
     afc.fbg  = 1;         // simulated-feedback gain 

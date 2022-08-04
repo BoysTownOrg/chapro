@@ -176,15 +176,15 @@ typedef struct {
     double   alf;                // band-limit update
     int32_t  afl;                // adaptive-filter length
     int32_t  wfl;                // whiten-filter length
-    int32_t  pfl;                // band-limit-filter length
+    int32_t  pfl;                // pre-emphasis-filter length
     int32_t  fbl;                // simulated-feedback length
     int32_t  hdel;               // output/input hardware delay
     int32_t  pup;                // band-limit update period
     // feedback filter buffers
     float   *efbp;               // estimated-feedback buffer pointer
     float   *sfbp;               // simulated-feedback buffer pointer
-    float   *wfrp;               // whiten-feedback buffer pointer
-    float   *ffrp;               // persistent-feedback buffer pointer
+    float   *wfrp;               // whiten-filter buffer pointer
+    float   *ffrp;               // pre-emphasis-filter buffer pointer
     // quality metric buffers & parameters
     float *qm;                   // quality-metric buffer pointer
     int32_t *iqmp;               // quality-metric index pointer

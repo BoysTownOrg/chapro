@@ -10,7 +10,8 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc, sum, pwr;
+    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc;
+    float sum, ssq, avg, rms, pwr;
     int i, ih, ij, is, id, j, jp1, k, nfc, puc, iqm = 0;
     static float *rng0, *rng1, *rng2, *rng3;
     static float *efbp, *sfbp, *wfrp, *ffrp, *qm;
@@ -69,7 +70,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
             ij = (id - j) & mask;
             yy += sfbp[j] * rng0[ij];
         }
-        // apply band-limit filter
+        // apply pre-emphasis filter
         if (pfl > 0) {
             uu = 0;
             for (j = 0; j < pfl; j++) {
@@ -105,7 +106,6 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         // update adaptive feedback coefficients
         if (afl > 0) {
             uf = rng2[id & mask];
-            //pwr = rho * sqrtf(ef * ef + uf * uf) + (1.0f - rho) * pwr;  //WEA Nov 2021...per Steve Neely email Nov 8, 2021
             pwr = rho * (ef * ef + uf * uf) + (1 - rho) * pwr;
             mmu = mu / (eps + pwr);  // modified mu
             for (j = 0; j < afl; j++) {
@@ -114,11 +114,11 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
                 efbp[j] += mmu * ef * uf;
             }
         }
-        // update band-limit filter coefficients
+        // update pre-emphasis filter coefficients
         if (pup) {
             puc = (puc + 1) % pup;
             if (puc == 0) {
-                sum = 0;
+                sum = ssq = 0;
                 for (j = 0; j < pfl; j++) {
                         jp1 = j + 1;
 		        nfc = (jp1 < pfl) ? jp1 : pfl;
@@ -128,10 +128,12 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
                         }
                     ffrp[j] += alf * (cfc - ffrp[j]);
                     sum += ffrp[j];
+                    ssq += ffrp[j] * ffrp[j];
                 }
-                sum /= pfl;
+                avg = sum / pfl;
+                rms = sqrt(ssq / pfl);
                 for (j = 0; j < pfl; j++) {
-                    ffrp[j] -= sum;
+                    ffrp[j] = (ffrp[j] - avg) / rms;
                 }
             }
         }

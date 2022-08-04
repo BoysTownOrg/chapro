@@ -81,7 +81,7 @@ cha_afc_prepare(CHA_PTR cp, CHA_AFC *afc)
         white_filt(wfrp, wfl);
     }
     CHA_IVAR[_wfl] = wfl;
-    // initialize band-limit filter
+    // initialize pre-emphasis filter
     if (pfl > 0) {
         cha_allocate(cp, rsz, sizeof(float), _rng1); // uu -> rng1
         ffrp = cha_allocate(cp, pfl, sizeof(float), _ffrp);

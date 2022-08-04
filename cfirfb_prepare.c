@@ -43,7 +43,7 @@ anasig(float *x, int n)
 static __inline void
 fir_filterbank(float *bb, double *cf, int nc, int nw, int wt, double sr)
 {
-    double   p, w, a = 0.16, sm = 0;
+    double   p, w, a = 0.16;
     float   *ww, *bk, *xx, *yy;
     int      j, k, kk, nt, nf, ns, *be;
 
@@ -62,7 +62,6 @@ fir_filterbank(float *bb, double *cf, int nc, int nw, int wt, double sr)
         } else {
             w = (1 - a + cos(p) + a * cos(2 * p)) / 2;  // Blackman
         }
-        sm += w;
         ww[j] = (float) w;
     }
     // frequency bands
@@ -95,16 +94,14 @@ fir_filterbank(float *bb, double *cf, int nc, int nw, int wt, double sr)
 
 // Fourier-transform FIR coefficients for short chunk (cs < nw)
 static __inline void
-fir_transform_sc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
+fir_transform_sc(float *bb, float *hh, int nc, int nw, int cs)
 {
-    float *bk, *hk, *hh;
+    float *bk, *hk;
     int j, k, nk, ns, nt;
 
     nk = nw / cs;
     nt = cs * 2;
     ns = nt * 2;
-    cha_allocate(cp, nc * ns * nk, sizeof(float), _ffhh);
-    hh = cp[_ffhh];
     bk = (float *) calloc(nw * 2, sizeof(float));
     for (k = 0; k < nc; k++) {
         fcopy(bk, bb + k * nw, nw);
@@ -120,15 +117,13 @@ fir_transform_sc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
 
 // Fourier-transform FIR coefficients for long chunk (cs >= nw)
 static __inline void
-fir_transform_lc(CHA_PTR cp, float *bb, int nc, int nw, int cs)
+fir_transform_lc(float *bb, float *hh, int nc, int nw, int cs)
 {
-    float *hk, *hh;
+    float *hk;
     int k, ns, nt;
 
     nt = nw * 2;
     ns = nt * 2;
-    cha_allocate(cp, nc * ns, sizeof(float), _ffhh);
-    hh = cp[_ffhh];
     for (k = 0; k < nc; k++) {
         hk = hh + k * ns;
         fcopy(hk, bb + k * nw, nw);
@@ -162,8 +157,8 @@ FUNC(int)
 cha_cfirfb_prepare(CHA_PTR cp, double *cf, int nc, double sr, 
     int nw, int wt, int cs)
 {
-    float   *bb;
-    int      ns, nt;
+    float   *bb, *hh;
+    int      ns, nt, nh;
 
     if (cs <= 0) {
         return (1);
@@ -176,19 +171,22 @@ cha_cfirfb_prepare(CHA_PTR cp, double *cf, int nc, double sr,
     CHA_IVAR[_nc] = nc;
     nt = nw * 2;
     ns = nt + 2;
+    nh = (cs < nw) ? (cs * 4) * (nw / cs) : (nw * 4);
     cha_allocate(cp, ns * 2, sizeof(float), _ffxx);
     cha_allocate(cp, ns * 2, sizeof(float), _ffyy);
     cha_allocate(cp, nc * (nw + cs) * 2, sizeof(float), _ffzz);
+    cha_allocate(cp, nc * nh, sizeof(float), _ffhh);
     // save bandwidths
     save_bw(cp, cf, nc);
     // compute FIR-filterbank coefficients
     bb = calloc(nc * nw, sizeof(float));
     fir_filterbank(bb, cf, nc, nw, wt, sr);
     // Fourier-transform FIR coefficients
+    hh = cp[_ffhh];
     if (cs < nw) {  // short chunk
-        fir_transform_sc(cp, bb, nc, nw, cs);
+        fir_transform_sc(bb, hh, nc, nw, cs);
     } else {        // long chunk
-        fir_transform_lc(cp, bb, nc, nw, cs);
+        fir_transform_lc(bb, hh, nc, nw, cs);
     }
     free(bb);
     // allocate chunk buffer
