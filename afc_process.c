@@ -10,8 +10,7 @@
 FUNC(void)
 cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
 {
-    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc;
-    float sum, ssq, avg, rms, pwr;
+    float ye, yy, mmu, dif, dm, xx, ee, uu, ef, uf, cfc, sum, pwr;
     int i, ih, ij, is, id, j, jp1, k, nfc, puc, iqm = 0;
     static float *rng0, *rng1, *rng2, *rng3;
     static float *efbp, *sfbp, *wfrp, *ffrp, *qm;
@@ -118,7 +117,7 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
         if (pup) {
             puc = (puc + 1) % pup;
             if (puc == 0) {
-                sum = ssq = 0;
+                sum = 0;
                 for (j = 0; j < pfl; j++) {
                         jp1 = j + 1;
 		        nfc = (jp1 < pfl) ? jp1 : pfl;
@@ -128,12 +127,10 @@ cha_afc_input(CHA_PTR cp, float *x, float *y, int cs)
                         }
                     ffrp[j] += alf * (cfc - ffrp[j]);
                     sum += ffrp[j];
-                    ssq += ffrp[j] * ffrp[j];
                 }
-                avg = sum / pfl;
-                rms = sqrt(ssq);
+                sum /= pfl;
                 for (j = 0; j < pfl; j++) {
-                    ffrp[j] = (ffrp[j] - avg) / rms;
+                    ffrp[j] -= sum;
                 }
             }
         }
