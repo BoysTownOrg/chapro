@@ -561,25 +561,25 @@ configure_feedback()
     // AFC parameters
     afc.afl  = 42;        // adaptive filter length
     afc.wfl  = 9;         // whiten-filter length
-    afc.pfl  = 0;         // pre-emphasis-filter length
+    afc.pfl  = 20;        // pre-emphasis-filter length
     // update args
     if (args.afl >= 0) afc.afl = args.afl;
     if (args.wfl >= 0) afc.wfl = args.wfl;
     if (args.pfl >= 0) afc.pfl = args.pfl;
     afc.alf  = 0;             // pre-emphasis update rate
-    if (afc.pfl) {             // optimized for wfl=9 & pfl=21
-        afc.rho  = 0.007218985; // forgetting factor
-        afc.eps  = 0.000919300; // power threshold
-        afc.mu   = 0.004607254; // step size
-        afc.alf  = 0.000010658; // pre-emphasis update
-    } else if (afc.wfl) {      // optimized for wfl=9
-        afc.rho  = 0.008542769; // forgetting factor
-        afc.eps  = 0.001128440; // power threshold
-        afc.mu   = 0.004373509; // step size
-    } else {
-        afc.rho  = 0.000002279; // forgetting factor
-        afc.eps  = 0.001394894; // power threshold
-        afc.mu   = 0.000417949; // step size
+    if (afc.pfl) {             // optimized for afl=42 wfl=9 pfl=20
+        afc.rho  = 0.007513830; // forgetting factor
+        afc.eps  = 0.000931434; // power threshold
+        afc.mu   = 0.004664711; // step size
+        afc.alf  = 0.000010595; // pre-emphasis update
+    } else if (afc.wfl) {      // optimized for afl=42 wfl=9
+        afc.rho  = 0.006851891; // forgetting factor
+        afc.eps  = 0.001175113; // power threshold
+        afc.mu   = 0.004682255; // step size
+    } else {                   // optimized for afl=42
+        afc.rho  = 0.000005212; // forgetting factor
+        afc.eps  = 0.000000001; // power threshold
+        afc.mu   = 0.000004257; // step size
     }
     afc.pup  = 8;         // pre-emphasis update period
     afc.hdel = 0;         // output/input hardware delay
