@@ -54,5 +54,5 @@ Contact Stephen.Neely@boystown.org to contribute code to the repo.
 
 License
 
-Creative Commons?
+MIT License
 
