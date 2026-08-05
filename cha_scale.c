@@ -10,4 +10,4 @@ cha_scale(float *x, int cs, float scale)
     for (k = 0; k < cs; k++) {
         x[k] *= scale;
     }
-};
+}

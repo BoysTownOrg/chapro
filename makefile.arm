@@ -54,10 +54,10 @@ install: $(LIBDIR)/libchapro.a $(PGMS)
 	scp $(PGMS) mha@192.168.7.2:/home/mha
 
 zipsrc:
-	zip chaprosc *.mgw *.lnx *.mac *.arm *.sed
+	zip chaprosc *.lnx *.mac *.arm *.sed
 	zip chaprosc *.h *.c *.m *.def test/cat.wav
 	zip chaprosc VS16/*.sln VS16/*.vcxproj VS16/*.filters
-	zip chaprosc configure configure.bat 
+	zip chaprosc configure 
 
 dist: zipsrc 
 	cp -f chapr*.zip ../dist

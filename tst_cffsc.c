@@ -64,7 +64,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 // initialize io
 
 static void
-usage()
+usage(void)
 {
     printf("usage: tst_cffsc [-options] [input_file] [output_file]\n");
     printf("options\n");
@@ -79,7 +79,7 @@ usage()
 }
 
 static void
-version()
+version(void)
 {
     printf("%s\n", cha_version());
     exit(0);
@@ -522,7 +522,7 @@ cleanup(I_O *io, CHA_PTR cp)
 /***********************************************************/
 
 static void
-configure_compressor()
+configure_compressor(void)
 {
     // Example of instantaneous compression with FIR filterbank
     icmp.gn = 20;      // flat compressor gain (dB)

@@ -49,10 +49,10 @@ install: libchapro.a
 	cp -f chapro.h $(INCDIR)
 
 zipsrc:
-	zip chaprosc *.mgw *.lnx *.mac
+	zip chaprosc *.lnx *.mac
 	zip chaprosc *.h *.c *.m *.def
 	zip chaprosc VS9/*.sln VS9/*.vcproj test/cat.wav
-	zip chaprosc configure configure.bat 
+	zip chaprosc configure 
 
 dist: zipsrc 
 	cp -f chapr*.zip ../dist

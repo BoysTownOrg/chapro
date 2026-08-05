@@ -65,7 +65,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 // initialize io
 
 static void
-usage()
+usage(void)
 {
     printf("usage: tst_ffsc [-options] [input_file] [output_file]\n");
     printf("options\n");
@@ -78,7 +78,7 @@ usage()
 }
 
 static void
-version()
+version(void)
 {
     printf("%s\n", cha_version());
     exit(0);
@@ -461,7 +461,7 @@ cleanup(I_O *io, CHA_PTR cp)
 /***********************************************************/
 
 static void
-configure_compressor()
+configure_compressor(void)
 {
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
@@ -471,7 +471,7 @@ configure_compressor()
         {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
         {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
     };
-    static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
+    static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105, 0, 0, 0, 0};
     // FIR
     static int    nw = 256;     // window size
     static int    wt = 0;       // window type: 0=Hamming, 1=Blackman

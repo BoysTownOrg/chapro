@@ -360,7 +360,7 @@ cha_data_load(CHA_PTR cp, char *fn)
     arsiz = NPTR * dtsiz;
     file_size = (CHA_DATA *) cha_allocate(cp, NPTR, dtsiz, 0);
     rv = fread(file_size, NPTR, dtsiz, fp);
-    if (file_size[0] != arsiz) {
+    if (file_size[0] != (CHA_DATA)arsiz) {
         return (4);
     }
     // read data arrays

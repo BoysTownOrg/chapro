@@ -58,7 +58,7 @@ process_chunk(CHA_PTR cp, float *x, float *y, int cs)
 // initialize io
 
 static void
-usage()
+usage(void)
 {
     printf("usage: opt_afc [-options] [input_file] [output_file]\n");
     printf("options\n");
@@ -75,7 +75,7 @@ usage()
 }
 
 static void
-version()
+version(void)
 {
     fprintf(stdout, "%s\n", cha_version());
     exit(0);
@@ -446,7 +446,7 @@ print_par(float *par)
 /***********************************************************/
 
 static void
-configure_compressor()
+configure_compressor(void)
 {
     // DSL prescription example
     static CHA_DSL dsl_ex = {5, 50, 119, 0, 8,
@@ -456,7 +456,7 @@ configure_compressor()
         {32.2,26.5,26.7,26.7,29.8,33.6,34.3,32.7},
         {78.7667,88.2,90.7,92.8333,98.2,103.3,101.9,99.8}
     };
-    static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105};
+    static CHA_WDRC agc_ex = {1, 50, 24000, 119, 0, 105, 10, 105, 0, 0, 0, 0};
     static int    nz = 4;
     static double td = 2.5;
 
@@ -467,7 +467,7 @@ configure_compressor()
 }
 
 static void
-configure_feedback()
+configure_feedback(void)
 {
     // AFC parameters
     afc.afl  = 42;        // adaptive filter length
@@ -501,7 +501,7 @@ configure_feedback()
 }
 
 static void
-configure()
+configure(void)
 {
     // initialize local variables
     configure_compressor();

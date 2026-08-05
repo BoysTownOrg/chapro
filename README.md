@@ -28,7 +28,7 @@ Installation
 
 Install BTNRH libraries for streaming audio (ARSC) and basic signal processing (SigPro) from repos https://github.com/BTNRH/arsc and https://github.com/BTNRH/sigpro.   
 
-Download CHAPRO repo from https://github.com/BTNRH/chapro. Makefiles are provided for building test programs at Linux or MinGW command lines. A solution file is provided in the VS9 folder for building under Visual Studio. Note: when running test programs under VS, set the "Working Directory" to "..". Test program inputs and outputs are located in the subdirectory "test".
+Download CHAPRO repo from https://github.com/BTNRH/chapro. Makefiles are provided for building test programs at Linux command lines. A solution file is provided in the VS9 folder for building under Visual Studio. Note: when running test programs under VS, set the "Working Directory" to "..". Test program inputs and outputs are located in the subdirectory "test".
 
 API Reference
 

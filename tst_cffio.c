@@ -34,7 +34,7 @@ static struct {
 // initialize io
 
 static void
-usage()
+usage(void)
 {
     fprintf(stdout, "usage: tst_ffio [-options]\n");
     fprintf(stdout, "options\n");
@@ -47,7 +47,7 @@ usage()
 }
 
 static void
-version()
+version(void)
 {
     fprintf(stdout, "%s\n", cha_version());
     exit(0);
