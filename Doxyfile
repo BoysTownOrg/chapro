@@ -1,0 +1,9 @@
+PROJECT_NAME           = "CHAPRO"
+PROJECT_BRIEF          = "Compression Hearing-Aid Signal Processing Library"
+OUTPUT_DIRECTORY       = docs
+INPUT                  = chapro.h README.md
+USE_MDFILE_AS_MAINPAGE = README.md
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+OPTIMIZE_OUTPUT_FOR_C  = YES
+EXTRACT_ALL            = YES

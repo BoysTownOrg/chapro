@@ -1,0 +1,52 @@
+name: CHAPRO CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Checkout CHAPRO
+      uses: actions/checkout@v3
+
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libasound2-dev
+
+    - name: Clone and install SigPro
+      run: |
+        git clone https://github.com/BTNRH/sigpro.git
+        cd sigpro
+        make -f makefile.lnx || make -f makefile.mac || true
+        sudo mkdir -p /usr/local/include /usr/local/lib
+        sudo cp *.h /usr/local/include/ || true
+        sudo cp *.a /usr/local/lib/ || true
+
+    - name: Clone and install ARSC
+      run: |
+        git clone https://github.com/BTNRH/arsc.git
+        cd arsc
+        make -f makefile.lnx || make -f makefile.mac || true
+        sudo mkdir -p /usr/local/include /usr/local/lib
+        sudo cp *.h /usr/local/include/ || true
+        sudo cp *.a /usr/local/lib/ || true
+
+    - name: Configure CMake
+      run: cmake -B build -DBUILD_TESTING=ON
+
+    - name: Build CHAPRO
+      run: cmake --build build --config Release
+
+    - name: Run Tests
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure -C Release
